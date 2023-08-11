@@ -1,0 +1,16 @@
+{
+  "name": "@at/geometry",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@at/basic": "workspace:^",
+    "ts-invariant": "^0.10.3"
+  }
+}
