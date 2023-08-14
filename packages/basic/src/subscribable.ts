@@ -14,7 +14,7 @@ export class Subscribable<T extends SubscribeHandle = SubscribeHandle> {
   protected subscribers: Subscriber<T>[] = []
 
   /**
-   * 
+   * 订阅消息
    * @param {T} handler 
    * @param {unknown} context?
    * @param {boolean} once = false
@@ -31,6 +31,11 @@ export class Subscribable<T extends SubscribeHandle = SubscribeHandle> {
     this.subscribers.push({ handler, context, once })    
   }
 
+  /**
+   * 一次订阅
+   * @param {T} handler 
+   * @param {unknown} context 
+   */
   once ( 
     handler: T, 
     context?: unknown,

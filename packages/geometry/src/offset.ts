@@ -6,7 +6,6 @@ export class Offset extends Point {
   static ZERO = new Offset(0, 0)
   static INFINITE = new Offset(Infinity, Infinity)
 
-
   static create (...rests: unknown[]): Offset
   /**
    * 
