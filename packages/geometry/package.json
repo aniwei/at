@@ -1,17 +1,17 @@
 {
-  "name": "geometry",
+  "name": "@at/geometry",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "files": [
     "dist",
-    "index.d.ts"
+    "types/**/*.d.ts"
   ],
-  "main": "./dist/index.umd.cjs",
-  "module": "./dist/index.js",
-  "types": "./index.d.ts",
+  "main": "dist/index.umd.cjs",
+  "module": "dist/index.js",
+  "types": "types/**/*.d.ts",
   "exports": {
-    "types": "./index.d.ts",
+    "types": "./types/**/*.d.ts",
     "import": "./dist/index.js",
     "require": "./dist/index.umd.cjs"
   },

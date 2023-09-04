@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "declaration": true,
+    "declaration": true, // 启用生成类型声明文件
+    "declarationDir": "./types",
     "emitDeclarationOnly": true,
     "target": "ES2020",
     "useDefineForClassFields": true,
@@ -10,7 +11,6 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
 
@@ -20,5 +20,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": [
+    "lib/**/*.ts"
+  ]
 }
