@@ -1,3 +1,8 @@
+import invariant from 'ts-invariant'
+import { Rect } from './rect'
+import { Radius } from './radius'
+import { Offset } from './offset'
+
 export class RRect extends Array<number> {
     /**
      * @description: 

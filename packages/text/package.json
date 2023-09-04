@@ -1,5 +1,5 @@
 {
-  "name": "geometry",
+  "name": "text",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,7 +9,7 @@
   ],
   "main": "./dist/index.umd.cjs",
   "module": "./dist/index.js",
-  "types": "./index.d.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
     "types": "./index.d.ts",
     "import": "./dist/index.js",
@@ -20,7 +20,6 @@
     "build": "tsc && vite build"
   },
   "devDependencies": {
-    "ts-invariant": "^0.10.3",
     "typescript": "^5.1.3",
     "vite": "^4.3.9"
   }

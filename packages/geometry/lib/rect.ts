@@ -1,8 +1,12 @@
+// @ts-nocheck
+import invariant from 'ts-invariant'
+import { Offset } from './offset'
+
 export class Rect extends Array<number> {
     static ZERO = new Rect(0, 0, 0, 0)
     
     static get LARGEST () {
-      return At.kGeometryLargestRect
+      return 1
     } 
   
     /**

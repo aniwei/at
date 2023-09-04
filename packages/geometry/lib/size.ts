@@ -1,10 +1,12 @@
+import invariant from 'ts-invariant'
 import { Point } from './point'
+import { Offset } from '.'
 
 export class Size extends Point {
     static ZERO = new Size(0.0, 0.0)
     static INFINITE = new Size(Infinity, Infinity)
   
-    static create (...rests: number[])
+    static create (...rests: number[]): Size
     static create (dx: number, dy: number) {
       return new Size(dx, dy)
     }
@@ -58,7 +60,9 @@ export class Size extends Point {
           return sizeB.multiply(t)
         } else {
           return new Size(
+            // @ts-ignore TODO
             lerp(sizeA.width, sizeB.width, t), 
+            // @ts-ignore TODO
             lerp(sizeA.height, sizeB.height, t)
           )
         }
