@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { invariant } from 'ts-invariant'
-// import { lerp } from ''
+import { lerp } from '@at/basic'
 import { Point } from './point'
 
 export class Offset extends Point {

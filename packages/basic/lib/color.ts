@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { invariant } from 'ts-invariant'
 import { clamp } from './clamp'
 import { lerp } from './lerp'

@@ -1,4 +1,3 @@
-import debug from 'debug'
 import { EventEmitter } from './events'
 import { 
   MessageContent, 
@@ -9,8 +8,6 @@ import {
   MessageTransportPort, 
   MessageTransportState 
 } from './transport'
-
-const transport_debug = debug('work')
 
 export type MessagePort = {
   onmessage: null | ((data: MessageEvent<unknown>) => void)
@@ -64,7 +61,7 @@ export class WorkTransport<T extends string = string> extends MessageTransport<W
    * 
    * @param port 
    */
-  connect (uri: unknown)
+  connect (uri: unknown): void
   connect (port: WorkPort) {
 
     (port as WorkPort).on('message', async (event: MessageEvent) => {
@@ -73,7 +70,6 @@ export class WorkTransport<T extends string = string> extends MessageTransport<W
       try {
         const data = this.decoder.decode(event.data ?? event)
         content = JSON.parse(data)
-        transport_debug('接收信息 %o', { command: content.command, id: content.id })
 
         const messager = new MessageOwner(this, { ...content })
         const handle = this.commands?.get(content.command)
@@ -81,7 +77,7 @@ export class WorkTransport<T extends string = string> extends MessageTransport<W
         if (handle) {
           await handle(messager)
         } else {
-          transport_debug(`无指令处理 %s`, content.command)
+          
         }
       } catch (error: any) {
         if (content?.id) {

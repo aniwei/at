@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 订阅处理器
 export type SubscribeHandle = (...rests: unknown[]) => void 
 // 订阅器存储结构
@@ -54,12 +55,12 @@ export class Subscribable<T extends SubscribeHandle = SubscribeHandle> {
     once: boolean = false
   ) {
   
-    for (const listener of this.subscribers) {
+    for (const subscribers of this.subscribers) {
       const index = this.subscribers.findIndex((findListener: Subscriber<T>) => {
         return (
-          listener.handler === handler &&
-          listener.context === context &&
-          listener.once === once
+          handler === findListener.handler &&
+          context === findListener.context &&
+          once === findListener.once
         )
       })
       

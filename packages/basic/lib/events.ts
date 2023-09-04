@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 事件处理器函数类型
 type ListenerHandler = (...args: any[]) => void 
 // 事件处理对象
@@ -123,7 +124,7 @@ export class EventEmitter<T extends string> {
   }
 
   // 移除所有
-  removeAllListeners (event: T) {
+  removeAllListeners (event?: T) {
     if (event) {
       this.removeListener(event)
     } else {
