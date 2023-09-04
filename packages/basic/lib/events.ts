@@ -18,19 +18,19 @@ export class EventEmitter<T extends string> {
 
   // 获取事件处理对象
   listeners (event: T) {
-    return this.get(event) ?? []
+    return this.events.get(event) ?? []
   }
 
   // 获取事件处理个数
   listenerCount (event: T) {
-    const listeners = this.get(event) ?? []
+    const listeners = this.events.get(event) ?? []
     return listeners.length
   }
 
   // 触发事件
   emit (event: T, ...args: unknown[]) {
-    if (this.has(event)) {
-      const listeners = this.get(event)
+    if (this.events.has(event)) {
+      const listeners = this.events.get(event)
 
       if (listeners) {
         for (const listener of listeners) {
@@ -93,7 +93,7 @@ export class EventEmitter<T extends string> {
   removeListener (event: T, handler?: ListenerHandler, context?: unknown, once?: boolean) {
     if (this.events.has(event)) {
       if (handler === undefined) {
-        this.delete(event)
+        this.events.delete(event)
       }
     } else {
       const listeners = this.events.get(event)

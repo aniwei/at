@@ -1,5 +1,5 @@
 {
-  "name": "@at/basic",
+  "name": "@at/api",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -20,7 +20,6 @@
     "build": "tsc && vite build"
   },
   "devDependencies": {
-    "ts-invariant": "^0.10.3",
     "typescript": "^5.1.3",
     "vite": "^4.3.9"
   }

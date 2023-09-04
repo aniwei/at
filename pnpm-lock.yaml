@@ -83,10 +83,31 @@ importers:
         version: 0.28.3(happy-dom@8.2.6)
 
   packages/basic:
+    devDependencies:
+      ts-invariant:
+        specifier: ^0.10.3
+        version: 0.10.3
+      typescript:
+        specifier: ^5.1.3
+        version: 5.1.3
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.18)
+
+  packages/basic - back:
     dependencies:
       ts-invariant:
         specifier: ^0.10.3
         version: 0.10.3
+
+  packages/blank:
+    devDependencies:
+      typescript:
+        specifier: ^5.1.3
+        version: 5.1.3
+      vite:
+        specifier: ^4.3.9
+        version: 4.3.9(@types/node@18.11.18)
 
   packages/framework:
     dependencies:
@@ -121,15 +142,6 @@ importers:
       vite:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.18)
-
-  packages/geometry - backup:
-    dependencies:
-      '@at/basic':
-        specifier: workspace:^
-        version: link:../basic
-      ts-invariant:
-        specifier: ^0.10.3
-        version: 0.10.3
 
   packages/gl:
     dependencies:
@@ -176,6 +188,10 @@ importers:
         version: 4.1.7
 
   packages/text:
+    dependencies:
+      '@at/geometry':
+        specifier: workspace:^
+        version: link:../geometry
     devDependencies:
       typescript:
         specifier: ^5.1.3

@@ -1,9 +1,6 @@
-import debug from 'debug'
-
-const try_debug = debug('try')
 export type TryCatchHandle<T> = () => T
 
-const onError = (error: any) => try_debug(`Catching a error while running, the error detail "%o"`, error)
+const onError = (error: any) => console.warn(`Catching a error while running, the error detail "%o"`, error)
 
 /**
  * 执行
@@ -12,7 +9,7 @@ const onError = (error: any) => try_debug(`Catching a error while running, the e
  */
 export const tryCatch = <T> (handle: TryCatchHandle<T>, context?: unknown): T | void => {
   try {
-    const result = Reflect.apply(handle, context)
+    const result = Reflect.apply(handle, context, [])
     if (result instanceof Promise) {
       return result.catch(onError) as T
     }
