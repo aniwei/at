@@ -32,14 +32,15 @@ export type GestureDragCallback = (details?: unknown) => void
 export type GestureVelocityTrackerBuilder = (event: AtPointerEvent) => AtVelocityTracker
 export type AllowedButtonsFilter = (buttons: number) => boolean
 
-// 拖拽
+// 拖拽类
 export abstract class Drag {
   update (details: DragDetails) { }
   end (details: DragDetails) { }
   cancel () { }
 }
 
-export abstract class AtDragGestureRecognizer extends AtOneSequenceGestureRecognizer {
+// 拖拽手势识别
+export abstract class DragGestureRecognizer extends AtOneSequenceGestureRecognizer {
 
   static defaultBuilder (event: AtPointerEvent): AtVelocityTracker {
     return AtVelocityTracker.withKind(event.kind)

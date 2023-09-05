@@ -1,1 +1,3 @@
-export class UnsupportedError extends Error { }
+export class UnsupportedError extends Error { 
+
+}

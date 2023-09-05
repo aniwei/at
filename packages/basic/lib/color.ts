@@ -17,7 +17,7 @@ export function scaleAlpha (a: Color, factor: number) {
 /**
  * 颜色类
  */
-export class Color extends Array<number> {
+export class Color extends Equalable<Color> {
   static BLACK = new Color(0x00000000)
 
   /**

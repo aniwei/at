@@ -1,7 +1,7 @@
 import { EventEmitter } from './events'
 
+// 指令集
 export type MessageTransportCommands = 'message::received' | 'message::callback' | 'message::except' | 'message::content' | 'endpoint::connect' | 'endpoint::authenticate' | string
-
 
 /**
  * 指令处理函数
@@ -14,16 +14,13 @@ export type MessageContent<T = {
   id?: string,
   sid?: string
   command?: C,
-  count?: number,
   payload?: T,
 }
 
-// 消息状态
 export enum MessageOwnerState {
   Active = 1,
   Replied = 2
 }
-
 
 export abstract class MessageTransportPort {
   abstract send (message: unknown): void
@@ -40,8 +37,8 @@ export class MessageError extends Error {
   public command: MessageTransportCommands
 
   /**
-   * 构造函数
-   * @param {MessageOwner} messager 
+   * 
+   * @param messager 
    */
   constructor (messager: MessageOwner) {
     const payload = messager.payload as ({
@@ -66,26 +63,18 @@ export class MessageOwner {
   public content: MessageContent
   public state: MessageOwnerState = MessageOwnerState.Active
 
-  // => id
-  // 消息id
   public get id () {
     return this.content.id
   }
 
-  // => sid
-  // 消息源id
   public get sid () {
     return this.content.sid
   }
 
-  // => payload
-  // 载荷
   public get payload () {
     return this.content.payload
   }
 
-  // =>
-  // 指令
   public get command () {
     return this.content.command
   }
@@ -192,6 +181,7 @@ export abstract class MessageTransport<
     ].forEach(command => this.command(command as Command, async messager => { this.emit(messager.sid as string, messager)}))
   }
   
+  // 连接
   connect (transport: unknown): void {
     this.transport = transport as T
     this.registerCommands()
@@ -199,8 +189,8 @@ export abstract class MessageTransport<
 
   /**
    * 指令异常
-   * @param sid 
-   * @param error 
+   * @param {string} sid 
+   * @param {any} error 
    */
   except (sid: string, error: any) {
     this.send({
@@ -214,7 +204,6 @@ export abstract class MessageTransport<
   }
 
   abstract send (content: MessageContent): Promise<MessageOwner>
-
 
   /**
    * 关闭终端
