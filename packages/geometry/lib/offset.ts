@@ -1,7 +1,8 @@
-// @ts-nocheck
 import { invariant } from 'ts-invariant'
 import { lerp } from '@at/basic'
 import { Point } from './point'
+import { Rect } from './rect'
+import { Size } from './size'
 
 export class Offset extends Point {
   static ZERO = new Offset(0, 0)

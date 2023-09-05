@@ -1,5 +1,5 @@
-// @ts-nocheck
 import invariant from 'ts-invariant'
+import { lerp } from '@at/basic'
 
 export class Radius {
     static zero = Radius.circular(0)

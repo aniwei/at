@@ -1,8 +1,5 @@
 {
   "compilerOptions": {
-    "declaration": true, // 启用生成类型声明文件
-    "declarationDir": "./types",
-    "emitDeclarationOnly": true,
     "target": "ES2020",
     "useDefineForClassFields": true,
     "module": "ESNext",
@@ -11,8 +8,12 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationDir": "dist",
 
     /* Linting */
     "strict": true,
@@ -20,7 +21,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": [
-    "lib/**/*.ts"
-  ]
+  "include": ["lib"]
 }

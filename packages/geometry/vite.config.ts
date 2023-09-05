@@ -6,6 +6,14 @@ export default defineConfig({
       entry: './lib/index.ts',
       name: 'index',
       fileName: 'index'
+    },
+    rollupOptions: {
+      external: ['@at/basic'],
+      output: {
+        globals: {
+          "@at/basic": "@at/basic",
+        },
+      },
     }
-  }
+  },
 })

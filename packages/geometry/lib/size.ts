@@ -1,6 +1,6 @@
 import invariant from 'ts-invariant'
 import { Point } from './point'
-import { Offset } from '.'
+import { Offset } from './offset'
 
 export class Size extends Point {
     static ZERO = new Size(0.0, 0.0)

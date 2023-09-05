@@ -1,6 +1,7 @@
-// @ts-nocheck
 import invariant from 'ts-invariant'
+import { lerp } from '@at/basic'
 import { Offset } from './offset'
+import { Size } from './size'
 
 export class Rect extends Array<number> {
     static ZERO = new Rect(0, 0, 0, 0)
