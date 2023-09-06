@@ -1,8 +1,0 @@
-/**
- * 插值
- * @param {number} a
- * @param {number} b
- * @param {number} t
- * @returns {number}
- */
-export declare function lerp(a: number, b: number, t: number): number;

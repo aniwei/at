@@ -1,9 +1,8 @@
-import invariant from 'ts-invariant'
+import { invariant } from 'ts-invariant'
 import { lerp } from '@at/basic'
 
-export class Radius {
-    static zero = Radius.circular(0)
-  
+export class Radius extends Computable<Radius> implements ArrayLike<number> {
+    static ZERO = Radius.circular(0)
     /**
      * 
      * @param dx 

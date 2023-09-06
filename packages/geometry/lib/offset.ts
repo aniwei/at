@@ -25,7 +25,7 @@ export class Offset extends Point {
    * @returns {Offset}
    */
   static fromDirection (direction: number, distance: number = 1.0) {
-    const offset = new Offset(
+    const offset = Offset.create(
       distance * Math.cos(direction),
       distance * Math.sin(direction)
     )

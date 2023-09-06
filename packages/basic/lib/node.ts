@@ -35,13 +35,12 @@ export abstract class AbstractNode<T extends AbstractNode<T>, U extends unknown 
    * @param {U} owner 
    */
   attach (owner: U) {
-    invariant(owner !== null, `The argument "owner" cannot be null.`)
+    invariant(owner !== null, 'The argument "owner" cannot be null.')
     this.owner = owner
   }
 
-  
   detach () {
-    invariant(this.owner !== null, `The this.owner cannot be null.`)
+    invariant(this.owner !== null, 'The "this.owner" cannot be null.')
     this.owner = null
     invariant(parent === null || this.attached == this.parent!.attached)
   }

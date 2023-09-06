@@ -22,9 +22,9 @@ import {
   AtTextRange, 
   AtTextSelection 
 } from '../engine/text'
-import { clamp, listEquals } from '../basic/helper'
+import { clamp, listEquals } from '@at/basic'
 import { AtCanvas } from '../engine/canvas'
-import { AtInlineSpan } from './inline-span'
+import { InlineSpan } from './inline-span'
 
 export enum TextOverflow {
   Clip,

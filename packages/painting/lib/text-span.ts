@@ -8,9 +8,9 @@ import { AtPlaceholderDimensions } from './text-painter'
 import { AtTextPaintingStyle } from './text-style'
 import { AtParagraphBuilder, AtTextPosition } from '../engine/text'
 import { PointerEnterEventListener, PointerExitEventListener } from '../gestures/events'
-import { AtAccumulator, AtInlineSpan, InlineSpanVisitor } from './inline-span'
+import { Accumulator, InlineSpan, InlineSpanVisitor } from './inline-span'
 
-export type AtTextSpanOptions = {
+export type TextSpanOptions = {
   text?: string | null,
   children?: AtInlineSpan[] | null,
   style?: AtTextPaintingStyle | null,
@@ -21,14 +21,14 @@ export type AtTextSpanOptions = {
   spellOut?: boolean
 }
 
-export class AtTextSpan extends AtInlineSpan {
+export class TextSpan extends InlineSpan {
   /**
    * 创建文本
-   * @param {AtTextSpanOptions} options 
-   * @returns {AtTextSpan}
+   * @param {TextSpanOptions} options 
+   * @returns {TextSpan}
    */
-  static create (options: AtTextSpanOptions) {
-    return new AtTextSpan(
+  static create (options: TextSpanOptions) {
+    return new TextSpan(
       options.text ?? null,
       options.children ?? null,
       options.style ?? null,
@@ -197,7 +197,7 @@ export class AtTextSpan extends AtInlineSpan {
 
     // if (other.runtimeType != runtimeType)
     //   return RenderComparison.layout;
-    const textSpan = other as AtTextSpan
+    const textSpan = other as TextSpan
     if (
       textSpan.text !== this.text ||
       this.children?.length !== textSpan.children?.length ||
@@ -243,12 +243,12 @@ export class AtTextSpan extends AtInlineSpan {
   
   /**
    * 
-   * @param {AtTextSpan | null} other 
+   * @param {TextSpan | null} other 
    * @returns {boolean}
    */
-  equal (other: AtTextSpan | null) {
+  equal (other: TextSpan | null) {
     return (
-      other instanceof AtTextSpan &&
+      other instanceof TextSpan &&
       other.text === this.text &&
       other.recognizer === this.recognizer &&
       other.onEnter === this.onEnter &&
@@ -260,10 +260,10 @@ export class AtTextSpan extends AtInlineSpan {
 
   /**
    * 
-   * @param {AtTextSpan | null} other 
+   * @param {TextSpan | null} other 
    * @returns {boolean}
    */
-  notEqual (other: AtTextSpan | null): boolean {
+  notEqual (other: TextSpan | null): boolean {
     return !this.equal(other)
   }
 }

@@ -1,1 +1,1 @@
-export class AtAssetBundle {}
+export class AssetBundle {}

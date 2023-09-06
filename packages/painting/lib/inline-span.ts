@@ -4,8 +4,9 @@ import { AtTextPaintingStyle } from './text-style'
 import { AtPlaceholderDimensions } from './text-painter'
 import { AtParagraphBuilder, AtTextPosition } from '../engine/text'
 
-
+// 累加器
 export class Accumulator {
+  // 累加值
   public value: number
 
   constructor (value: number = 0) {
@@ -20,11 +21,7 @@ export class Accumulator {
 
 export type InlineSpanVisitor = (span: InlineSpan) => boolean
 
-
-
-export abstract class InlineSpan extends Equalable<InlineSpan> {
-  
-  static create (...rests: unknown[]) 
+export abstract class InlineSpan extends Equalable<InlineSpan> {  
   static create (style: TextPaintingStyle) {
     return new InlineSpan(style)
   }

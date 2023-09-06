@@ -1,6 +1,7 @@
 export * from './argument-error'
 export * from './color'
 export * from './clamp'
+export * from './computable'
 export * from './equalable'
 export * from './events'
 export * from './lerp'

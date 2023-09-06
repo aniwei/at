@@ -1,3 +1,3 @@
-import { WorkTransport } from '@catalyze/basic'
+import { WorkTransport } from '@at/basic'
 
-export class WxApiTransport extends WorkTransport { }
+export class ApiTransport extends WorkTransport { }

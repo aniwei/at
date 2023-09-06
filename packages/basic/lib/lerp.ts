@@ -6,5 +6,5 @@
  * @returns {number} 
  */
 export function lerp (a: number, b: number, t: number) {
-return a * (1.0 - t) + b * t
+  return a * (1.0 - t) + b * t
 }
