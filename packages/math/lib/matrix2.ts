@@ -1,34 +1,33 @@
 import { invariant } from 'ts-invariant'
+import { Computable } from '@at/basic'
 import { Vector2 } from './vector2'
 
-export class Matrix2 extends Array<number> implements ArrayLike<number> {
-  static zero () {
-    return new Matrix2(4)
-  }
+export class Matrix2 extends Computable<Matrix2> implements ArrayLike<number> {
+  static ZERO = new Matrix2(4)
 
   static fromList (values: number[]) {
-    const mat = Matrix2.zero()
+    const mat = Matrix2.ZERO
     mat.setValues(values[0], values[1], values[2], values[3])
   }
 
   static identity () {
-    const mat = Matrix2.zero()
+    const mat = Matrix2.ZERO
     mat.setIdentity()
     return mat
   }
 
   static copy (other: Matrix2) {
-    const mat = Matrix2.zero()
+    const mat = Matrix2.ZERO
     mat.setFrom(other)
     return mat
   }
 
   static columns (
-    arg0: Vector2, 
-    arg1: Vector2
+    v1: Vector2, 
+    v2: Vector2
   ) {
-    const mat = Matrix2.zero()
-    mat.setColumns(arg0, arg1)
+    const mat = Matrix2.ZERO
+    mat.setColumns(v1, v2)
 
     return mat
   }
@@ -37,13 +36,13 @@ export class Matrix2 extends Array<number> implements ArrayLike<number> {
     u: Vector2, 
     v: Vector2
   ) {
-    const mat = Matrix2.zero()
+    const mat = Matrix2.ZERO
     mat.setOuter(u, v)
     return mat
   }
 
   static rotation (radians: number) {
-    const mat = Matrix2.zero()
+    const mat = Matrix2.ZERO
     mat.setRotation(radians)
     return mat
   }
@@ -69,29 +68,32 @@ export class Matrix2 extends Array<number> implements ArrayLike<number> {
     x[1] = det * (a11 * by - a21 * bx)
   }
 
+  // => storage
   get storage () {
     return this
   }
 
+  // => dimension
   get dimension () {
     return 2
   }
 
+  // => row0
   get row0 () {
     return this.getRow(0)
   }
-
-  get row1 () {
-    return this.getRow(1)
-  }
-
   set row0 (arg: Vector2) {
     this.setRow(0, arg)
   }
 
+  // => row1
+  get row1 () {
+    return this.getRow(1)
+  }
   set row1 (arg: Vector2) {
     this.setRow(1, arg)
   }
+
 
   index (
     row: number, 
@@ -119,15 +121,15 @@ export class Matrix2 extends Array<number> implements ArrayLike<number> {
   }
 
   setValues (
-    arg0: number, 
-    arg1: number, 
-    arg2: number, 
-    arg3: number
+    v0: number, 
+    v1: number, 
+    v2: number, 
+    v3: number
   ) {
-    this[3] = arg3
-    this[2] = arg2
-    this[1] = arg1
-    this[0] = arg0
+    this[3] = v3
+    this[2] = v2
+    this[1] = v1
+    this[0] = v0
   }
 
   setColumns (

@@ -1,8 +1,7 @@
 import { invariant } from 'ts-invariant'
-import { Offset, Rect } from './geometry'
+import { Offset, Rect } from '@at/geometry'
 import { Matrix4 } from './matrix4'
 import { Vector4 } from './vector4'
-import type { ArrayLike } from '../at'
 
 
 export class MatrixUtils {
