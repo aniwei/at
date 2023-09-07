@@ -1,5 +1,5 @@
 import { invariant } from 'ts-invariant'
-import { lerp } from '@at/basic'
+import { lerp, Computable } from '@at/basic'
 
 export class Radius extends Computable<Radius> implements ArrayLike<number> {
     static ZERO = Radius.circular(0)
@@ -20,7 +20,7 @@ export class Radius extends Computable<Radius> implements ArrayLike<number> {
      * @param {number} t
      * @return {*}
      */
-    static lerp(
+    static lerp (
       a: Radius | null = null, 
       b: Radius | null = null, 
       t: number
@@ -84,7 +84,7 @@ export class Radius extends Computable<Radius> implements ArrayLike<number> {
       this.y = y
     }
   
-    negate (): Radius {
+    inverse (): Radius {
       return Radius.elliptical(-this.x, -this.y)
     }
   

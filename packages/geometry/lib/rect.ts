@@ -3,13 +3,10 @@ import { lerp } from '@at/basic'
 import { Offset } from './offset'
 import { Size } from './size'
 
-export class Rect extends Array<number> {
+export class Rect extends Computable<number> implements ArrayLike<number> {
     static ZERO = new Rect(0, 0, 0, 0)
+    static LARGEST = new Rect()
     
-    static get LARGEST () {
-      return 1
-    } 
-  
     /**
      * 
      * @param left 
@@ -60,6 +57,13 @@ export class Rect extends Array<number> {
       )
     }
   
+    /**
+     * 从中心
+     * @param {Offset} center 
+     * @param {number} width 
+     * @param {number} height 
+     * @returns 
+     */
     static fromCenter (
       center: Offset,
       width: number,
@@ -82,6 +86,13 @@ export class Rect extends Array<number> {
       )
     }
   
+    /**
+     * 差值计算
+     * @param a 
+     * @param b 
+     * @param t 
+     * @returns 
+     */
     static lerp (a: Rect | null, b: Rect | null, t: number): Rect | null {
       invariant(t !== null)
       if (b === null) {
@@ -105,24 +116,31 @@ export class Rect extends Array<number> {
       }
     }
   
+    // => left
     public get left () {
       return this[0]
     }
     public set left (value: number) {
       this[0] = value
     }
+    
+    // => top
     public get top () {
       return this[1]
     }
     public set top (value: number) {
       this[1] = value
     }
+
+    // => right
     public get right () {
       return this[2]
     }
     public set right (value: number) {
       this[2] = value
     }
+
+    // => bottom
     public get bottom () {
       return this[3]
     }
@@ -130,14 +148,17 @@ export class Rect extends Array<number> {
       this[3] = value
     }
   
+    // => width
     public get width (): number {
       return this.right - this.left
     }
   
+    // => height
     public get height (): number {
       return this.bottom - this.top
     }
   
+    // => size
     public get size (): Size {
       return new Size(this.width, this.height)
     }
