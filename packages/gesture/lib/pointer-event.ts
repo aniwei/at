@@ -3,19 +3,18 @@
  * @date: 2022-10-30 20:10:43
  */
 import invariant from 'ts-invariant'
-import { At } from '../at'
-import { Matrix4 } from '../basic/matrix4'
-import { Offset } from '../basic/geometry'
-import { Vector4 } from '../basic/vector4'
-import { Vector3 } from '../basic/vector3'
+import { Matrix4, Vector4, Vector3 } from '@at/math'
+import { Offset } from '@at/geometry'
+
+
 import { toDeviceKind } from '../basic/helper'
-import { AtDeviceGestureSettings } from './gesture'
-import { Subscribable } from '../basic/subscribable'
+import { DeviceGestureSettings } from './gesture'
+import { Subscribable } from '@at/basic'
 import { PointerChange, AtPointerData, PointerDeviceKind, PointerSignalKind, AtPointerDataConverter, AtPointerPacket } from './pointer'
 
 export type PointerEventListener = (event: PointerEvent) => void
 
-export enum PointerEventButtonTypes {
+export enum PointerEventButtonKind {
   Primary = 1,
   Secondary = 2,
   Tertiary = 4
@@ -58,6 +57,11 @@ export type AtPointerEventOptions = {
 }
 
 export class PointerEvent {
+  /**
+   * 
+   * @param transform 
+   * @returns 
+   */
   static removePerspectiveTransform (transform: Matrix4) {
     const vector = new Vector4(0, 0, 1, 0)
     
@@ -68,13 +72,23 @@ export class PointerEvent {
     return cloned
   }
 
-  static transformPosition (transform: Matrix4 | null = null, position: Offset) {
-    if (transform == null) {
+  /**
+   * 
+   * @param transform 
+   * @param position 
+   * @returns 
+   */
+  static transformPosition (
+    transform: Matrix4 | null = null, 
+    position: Offset
+  ) {
+    if (transform === null) {
       return position
     }
-    const position3 = new Vector3(position.dx, position.dy, 0.0)
-    const transformed3 = transform.perspectiveTransform(position3)
-    return new Offset(transformed3.x, transformed3.y)
+
+    const position = Vector3.create(position.dx, position.dy, 0.0)
+    const transformed = transform.perspectiveTransform(position)
+    return new Offset(transformed.x, transformed.y)
   }
 
   static transformDeltaViaPositions(
@@ -93,7 +107,7 @@ export class PointerEvent {
   }
 
   static create (options: AtPointerEventOptions, transform?: Matrix4 | null) {
-    return new AtPointerEvent(
+    return new PointerEvent(
       options.change as PointerChange,
       transform ?? options.transform,
       options.original,
@@ -429,7 +443,7 @@ export class PointerEvent {
   }
 }
 
-export class AtPointerEventConverter {
+export class PointerEventConverter {
   static toLogicalPixels (physicalPixels: number, devicePixelRatio: number) {
     return physicalPixels / devicePixelRatio
   } 
@@ -438,10 +452,10 @@ export class AtPointerEventConverter {
     return data.filter((data) => data.signalKind !== PointerSignalKind.Unknown).map((data) => {
       const position = new Offset(data.physicalX, data.physicalY).divide(devicePixelRatio)
       const delta = new Offset(data.physicalDeltaX, data.physicalDeltaY).divide(devicePixelRatio)
-      const radiusMinor = AtPointerEventConverter.toLogicalPixels(data.radiusMinor, devicePixelRatio)
-      const radiusMajor = AtPointerEventConverter.toLogicalPixels(data.radiusMajor, devicePixelRatio)
-      const radiusMin = AtPointerEventConverter.toLogicalPixels(data.radiusMin, devicePixelRatio)
-      const radiusMax = AtPointerEventConverter.toLogicalPixels(data.radiusMax, devicePixelRatio)
+      const radiusMinor = PointerEventConverter.toLogicalPixels(data.radiusMinor, devicePixelRatio)
+      const radiusMajor = PointerEventConverter.toLogicalPixels(data.radiusMajor, devicePixelRatio)
+      const radiusMin = PointerEventConverter.toLogicalPixels(data.radiusMin, devicePixelRatio)
+      const radiusMax = PointerEventConverter.toLogicalPixels(data.radiusMax, devicePixelRatio)
 
       const timeStamp = data.timeStamp
       const kind = data.kind
@@ -558,8 +572,8 @@ export class AtPointerEventConverter {
   }
 }
 
-export abstract class AtPointerEventDecomposition extends Subscribable {
-  private sanitizers: AtPointerEventSanitizers = AtPointerEventSanitizers.create()
+export abstract class PointerEventDecomposition extends Subscribable {
+  private sanitizers: PointerEventSanitizers = PointerEventSanitizers.create()
   private converter: AtPointerDataConverter = AtPointerDataConverter.create()
 
   public devicePixelRatio: number
@@ -569,8 +583,12 @@ export abstract class AtPointerEventDecomposition extends Subscribable {
     this.devicePixelRatio = devicePixelRatio
   }
 
-  handleDownEvent (event: PointerEvent, kind: PointerDeviceKind, device: number) {
-    const sanitizer = this.sanitizers.ensure(device) as AtPointerEventSanitizer
+  handleDownEvent (
+    event: PointerEvent, 
+    kind: PointerDeviceKind, 
+    device: number
+  ) {
+    const sanitizer = this.sanitizers.ensure(device) as PointerEventSanitizer
 
     const up: SanitizedDetails | null = sanitizer.sanitizeMissingRightClickUp(event.buttons)
     let results: AtPointerData[] = []
@@ -585,8 +603,12 @@ export abstract class AtPointerEventDecomposition extends Subscribable {
     return results
   }
 
-  handleMoveEvent (event: PointerEvent, kind: PointerDeviceKind, device: number) {
-    const sanitizer = this.sanitizers.ensure(device) as AtPointerEventSanitizer
+  handleMoveEvent (
+    event: PointerEvent, 
+    kind: PointerDeviceKind, 
+    device: number
+  ) {
+    const sanitizer = this.sanitizers.ensure(device) as PointerEventSanitizer
 
     const up: SanitizedDetails | null = sanitizer.sanitizeMissingRightClickUp(event.buttons)
     let results: AtPointerData[] = []
@@ -601,8 +623,12 @@ export abstract class AtPointerEventDecomposition extends Subscribable {
     return results
   }
 
-  handleUpEvent (event: PointerEvent, kind: PointerDeviceKind, device: number) {
-    const sanitizer = this.sanitizers.ensure(device) as AtPointerEventSanitizer
+  handleUpEvent (
+    event: PointerEvent, 
+    kind: PointerDeviceKind, 
+    device: number
+  ) {
+    const sanitizer = this.sanitizers.ensure(device) as PointerEventSanitizer
     const details = sanitizer.sanitizeUpEvent(event.buttons)
     
     if (event.pointerType === 'touch') {
@@ -656,9 +682,9 @@ export abstract class AtPointerEventDecomposition extends Subscribable {
   }
 }
 
-export class AtPointerEventSanitizer {
+export class PointerEventSanitizer {
   static create () {
-    return new AtPointerEventSanitizer()
+    return new PointerEventSanitizer()
   }
   
   static convert (button: number) {
@@ -685,10 +711,10 @@ export class AtPointerEventSanitizer {
 
   private inferDownFlutterButtons (button: number, buttons: number) {
     if (buttons === 0 && button > -1) {
-      buttons = AtPointerEventSanitizer.convert(button) as number
+      buttons = PointerEventSanitizer.convert(button) as number
     }
 
-    return AtPointerEventSanitizer.toFlutterButtons(buttons)
+    return PointerEventSanitizer.toFlutterButtons(buttons)
   }
 
   sanitizeDownEvent (
@@ -708,7 +734,7 @@ export class AtPointerEventSanitizer {
   }
 
   sanitizeMoveEvent (buttons: number) {
-    const pressedButtons = AtPointerEventSanitizer.toFlutterButtons(buttons)
+    const pressedButtons = PointerEventSanitizer.toFlutterButtons(buttons)
     
     if (this.pressedButtons === 0 && pressedButtons !== 0) {
       return {
@@ -728,7 +754,7 @@ export class AtPointerEventSanitizer {
   }
 
   sanitizeMissingRightClickUp (buttons: number): SanitizedDetails | null {
-    const pressedButtons = AtPointerEventSanitizer.toFlutterButtons(buttons)
+    const pressedButtons = PointerEventSanitizer.toFlutterButtons(buttons)
     if (this.pressedButtons !== 0 && pressedButtons === 0) {
       this.pressedButtons = 0
       return {
@@ -745,7 +771,7 @@ export class AtPointerEventSanitizer {
       return null
     }
 
-    this.pressedButtons = AtPointerEventSanitizer.toFlutterButtons(buttons ?? 0)
+    this.pressedButtons = PointerEventSanitizer.toFlutterButtons(buttons ?? 0)
 
     if (this.pressedButtons === 0) {
       return {
@@ -769,19 +795,19 @@ export class AtPointerEventSanitizer {
   }
 }
 
-export class AtPointerEventSanitizers {
+export class PointerEventSanitizers {
   static create () {
-    return new AtPointerEventSanitizers()
+    return new PointerEventSanitizers()
   }
 
-  private sanitizers: Map<number, AtPointerEventSanitizer> = new Map()
+  private sanitizers: Map<number, PointerEventSanitizer> = new Map()
 
   ensure (device: number) {
     if (this.sanitizers.has(device)) {
-      return this.sanitizers.get(device) as AtPointerEventSanitizer
+      return this.sanitizers.get(device) as PointerEventSanitizer
     }
 
-    const sanitizer = AtPointerEventSanitizer.create()
+    const sanitizer = PointerEventSanitizer.create()
     this.sanitizers.set(device, sanitizer)
     
     return sanitizer
@@ -807,7 +833,7 @@ function synthesiseDownButtons (buttons: number, kind: PointerDeviceKind) {
 }
 
 
-export function computeHitSlop (kind: PointerDeviceKind, settings: AtDeviceGestureSettings | null) {
+export function computeHitSlop (kind: PointerDeviceKind, settings: DeviceGestureSettings | null) {
   switch (kind) {
     case PointerDeviceKind.Mouse:
       return At.kPrecisePointerHitSlop
@@ -819,7 +845,7 @@ export function computeHitSlop (kind: PointerDeviceKind, settings: AtDeviceGestu
   }
 }
 
-export function computePanSlop (kind: PointerDeviceKind, settings: AtDeviceGestureSettings | null) {
+export function computePanSlop (kind: PointerDeviceKind, settings: DeviceGestureSettings | null) {
   switch (kind) {
     case PointerDeviceKind.Mouse:
       return At.kPrecisePointerPanSlop

@@ -1,14 +1,44 @@
 import { Equalable } from './equalable'
 
-export abstract class Computable<T extends Computable<T>> extends Equalable<Computable<T>> {
+export abstract class Computable<T extends Computable<T>> extends Equalable<Computable<T>> implements ArrayLike<number> {
+  public length: number
+
   constructor (...rests: number[]) {
-    this.length = rests.length
+    let length = rests.length
+    if (length === 1) {
+      this.length = length
+      rests = Array(length).fill(0)
+    }
 
     for (let i = 0; i < rests.length; i++) {
       this[i] = rests[i]
     }
 
-    this.length = rests.length
+    this.length = length
+  }
+
+  isFinite () {
+    for (let i = 0; i < this.length; i++) {
+      if (Number.isFinite(this[i])) {
+        continue
+      }
+
+      return false
+    }
+  }
+
+  isInfinite () {
+    return !this.isFinite()
+  }
+
+  isNaN () {
+    for (let i = 0; i < this.length; i++) {
+      if (Number.isNaN(this[i])) {
+        return true
+      }
+    }
+
+    return false
   }
 
   // +

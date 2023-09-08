@@ -1,76 +1,76 @@
 import { invariant } from 'ts-invariant'
-import { Offset } from '../basic/geometry'
-import { AtGestureArenaManager } from './arena'
-import { AtPointerEvent, AtPointerEventConverter, AtPointerEventDecomposition } from './events'
-import { AtHitTestEntry, AtHitTestResult } from './hit-test'
+import { Offset, Equalable } from '@at/geometry'
+import { GestureArenaManager } from './arena'
+import { PointerEvent, PointerEventConverter, PointerEventDecomposition } from './events'
+import { HitTestEntry, HitTestResult } from './hit-test'
 import { AtPointerPacket } from './pointer'
 
 import { AtViewConfiguration } from '../layout/view'
-import { AtPointerRouter } from './pointer'
+import { PointerRouter } from './pointer'
 
-export class AtDeviceGestureSettings {
+export class DeviceGestureSettings extends Equalable<DeviceGestureSettings> {
   static fromConfirugation (configuration: AtViewConfiguration) {
     // const physicalTouchSlop = configuration.settings.physicalTouchSlop
-    // return new AtDeviceGestureSettings(
+    // return new DeviceGestureSettings(
     //   touchSlop: physicalTouchSlop == null ? null : physicalTouchSlop / window.devicePixelRatio
     // );
 
-    return AtDeviceGestureSettings.create(1.0)
+    return DeviceGestureSettings.create(1.0)
   }
 
   /**
    * 
-   * @param {number} touchSlop 
-   * @returns {AtDeviceGestureSettings}
+   * @param {number} slop 
+   * @returns {DeviceGestureSettings}
    */
-  static create (touchSlop: number) {
-    return new AtDeviceGestureSettings(touchSlop)
+  static create (slop: number) {
+    return new DeviceGestureSettings(slop)
   }
 
-   public touchSlop: number | null
-   public get panSlop () {
-    return this.touchSlop !== null ? (this.touchSlop * 2) : null
-   }
+  // => slop
+  public slop: number | null
+  public get panSlop () {
+    return this.slop !== null ? (this.slop * 2) : null
+  }
 
-  constructor (touchSlop: number) {
-    this.touchSlop = touchSlop
+  constructor (slop: number) {
+    this.slop = slop
   }
 
   /**
    * 
-   * @param {AtDeviceGestureSettings | null} other 
+   * @param {DeviceGestureSettings | null} other 
    * @returns {boolean}
    */
-  equal (other: AtDeviceGestureSettings | null) {
+  equal (other: DeviceGestureSettings | null) {
     return (
-      other instanceof AtDeviceGestureSettings &&
-      other.touchSlop === this.touchSlop
+      other instanceof DeviceGestureSettings &&
+      other.slop === this.slop
     )
   }
   
   /**
    * 
-   * @param {AtDeviceGestureSettings | null} other 
+   * @param {DeviceGestureSettings | null} other 
    * @returns {boolean}
    */
-  notEqual (other: AtDeviceGestureSettings | null) {
+  notEqual (other: DeviceGestureSettings | null) {
     return !this.equal(other)
   }
 
   toString () {
-    return `AtDeviceGestureSettings(touchSlop: ${this.touchSlop})`
+    return `DeviceGestureSettings(slop: ${this.slop})`
   }
 }
 
 
-export abstract class AtGesture extends AtPointerEventDecomposition {
-  private locked: boolean = false
-  private pendingPointerEvents: AtPointerEvent[] = []
-  private hitTests: Map<number, AtHitTestResult> = new Map()
+export abstract class Gesture extends PointerEventDecomposition {
+  protected locked: boolean = false
+  protected pendingPointerEvents: PointerEvent[] = []
+  protected hitTests: Map<number, HitTestResult> = new Map()
   
-  public router: AtPointerRouter = AtPointerRouter.create()
-  public  arena: AtGestureArenaManager = new AtGestureArenaManager()
-
+  public router: PointerRouter = PointerRouter.create()
+  public arena: GestureArenaManager = new GestureArenaManager()
 
   constructor (devicePixelRatio: number) {
     super(devicePixelRatio)
@@ -79,12 +79,13 @@ export abstract class AtGesture extends AtPointerEventDecomposition {
   private flushPointerEventQueue () {
     invariant(!this.locked)
     while (this.pendingPointerEvents.length > 0) {
-      this.handlePointerEvent(this.pendingPointerEvents.shift() as AtPointerEvent)
+      this.handlePointerEvent(this.pendingPointerEvents.shift() as PointerEvent)
     }
   }
 
-  private handlePointerEventImmediately (event: AtPointerEvent) {
-    let hitTestResult: AtHitTestResult | null = null
+  // 处理事件
+  private handlePointerEventImmediately (event: PointerEvent) {
+    let hitTestResult: HitTestResult | null = null
 
     if (
       event.isDown() || 
@@ -92,7 +93,7 @@ export abstract class AtGesture extends AtPointerEventDecomposition {
       event.isSignal() 
     ) {
       invariant(!this.hitTests.has(event.pointer), `Cannot exist event.pointer in hitTests`)
-      hitTestResult = AtHitTestResult.create()
+      hitTestResult = HitTestResult.create()
 
       this.hitTest(hitTestResult, event.position)
 
@@ -125,7 +126,7 @@ export abstract class AtGesture extends AtPointerEventDecomposition {
    * @param {AtPointerPacket} packet 
    */
   handlePointerDataPacket (packet: AtPointerPacket) {
-    AtPointerEventConverter.expand(packet.data, this.devicePixelRatio).map((event) => {
+    PointerEventConverter.expand(packet.data, this.devicePixelRatio).map((event) => {
       this.pendingPointerEvents.push(event)
     })
     if (!this.locked) {
@@ -133,25 +134,25 @@ export abstract class AtGesture extends AtPointerEventDecomposition {
     }
   }
 
-  hitTest (result: AtHitTestResult, position: Offset) {
-    result.add(new AtHitTestEntry(this))
+  hitTest (result: HitTestResult, position: Offset) {
+    result.add(new HitTestEntry(this))
   }
 
   /**
    * 
-   * @param {AtPointerEvent} event 
+   * @param {PointerEvent} event 
    */
-  handlePointerEvent (event: AtPointerEvent) {
+  handlePointerEvent (event: PointerEvent) {
     invariant(!this.locked)
     this.handlePointerEventImmediately(event)
   }
 
   /**
    * 
-   * @param {AtPointerEvent} event 
-   * @param {AtHitTestEntry} entry 
+   * @param {PointerEvent} event 
+   * @param {HitTestEntry} entry 
    */
-  handleEvent (event: AtPointerEvent, entry: AtHitTestEntry) {
+  handleEvent (event: PointerEvent, entry: HitTestEntry) {
     this.router.route(event)
     if (event.isDown()) {
       this.arena.close(event.pointer)
@@ -164,11 +165,11 @@ export abstract class AtGesture extends AtPointerEventDecomposition {
 
   /**
    * 
-   * @param {AtPointerEvent} event 
-   * @param {AtHitTestResult | null} hitTestResult 
+   * @param {PointerEvent} event 
+   * @param {HitTestResult | null} hitTestResult 
    * @returns 
    */
-  dispatchEvent (event: AtPointerEvent, hitTestResult: AtHitTestResult | null) {
+  dispatchEvent (event: PointerEvent, hitTestResult: HitTestResult | null) {
     invariant(!this.locked)
     
     if (hitTestResult === null) {

@@ -7,61 +7,127 @@ import { Vector4 } from './vector4'
 export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
   static ZERO = new Vector2()
 
-  static min (a: Vector2, b: Vector2, result: Vector2) {
+  /**
+   * 
+   * @param {Vector2} a 
+   * @param {Vector2} b 
+   * @param result 
+   */
+  static min (
+    a: Vector2, 
+    b: Vector2,
+  ) {
+    const result = Vector2.ZERO.clone()
     result[0] = Math.min(a[0], b[0])
     result[1] = Math.min(a[1], b[1])
   }
 
-  /// Set the values of [result] to the maximum of [a] and [b] for each line.
-  static max (a: Vector2, b: Vector2, result: Vector2) {
+  /**
+   * 
+   * @param {Vector2} a 
+   * @param {Vector2} b 
+   * @param result 
+   */
+  static max (
+    a: Vector2, 
+    b: Vector2,
+  ) {
+    const result = Vector2.ZERO.clone()
     result[0] = Math.max(a[0], b[0])
     result[1] = Math.max(a[1], b[1])
   }
 
-  // 
-  static mix (min: Vector2, max: Vector2, a: number, result: Vector2) {
+  /**
+   * 
+   * @param min 
+   * @param max 
+   * @param a 
+   * @param result 
+   */
+  static mix (
+    min: Vector2, 
+    max: Vector2, 
+    a: number
+  ) {
+    const result = Vector2.ZERO.clone()
     result[0] = min[0] + a * (max[0] - min[0])
     result[1] = min[1] + a * (max[1] - min[1])
   }
 
-  static array (array: number[],offset = 0) {
-    const vec = Vector2.zero()
+  /**
+   * 
+   * @param array 
+   * @param offset 
+   * @returns 
+   */
+  static copyFromArray (array: number[], offset = 0) {
+    const vec = Vector2.ZERO.clone()
     vec.copyFromArray(array, offset)
 
     return vec
   }
   
+  /**
+   * 
+   * @param value 
+   * @returns 
+   */
   static all (value: number) {
-    const vec = Vector2.zero()
+    const vec = Vector2.ZERO.clone()
     vec.splat(value)
     return vec
   }
 
+  /**
+   * 
+   * @param other 
+   * @returns 
+   */
   static copy (other: Vector2) {
-    const vec = Vector2.zero()
+    const vec = Vector2.ZERO.clone()
     vec.setFrom(other)
     return vec
   }
 
-  
-  static fromArrayLike (v: Iterable<number>) {
+  /**
+   * 
+   * @param v 
+   * @returns 
+   */
+  static fromArrayLike (v: ArrayLike<number>) {
     return new Vector2(...v)
   }
 
+  /**
+   * 
+   * @param buffer 
+   * @param offset 
+   * @returns 
+   */
   static fromBuffer (
     buffer: ArrayBuffer, 
     offset: number
   ) {
     return Vector2.fromArrayLike(
-      new Float64Array(buffer, offset, Math.floor(buffer.byteLength - 4 / Float64Array.BYTES_PER_ELEMENT))
+      new Float64Array(
+        buffer, 
+        offset, 
+        Math.floor(buffer.byteLength - 4 / Float64Array.BYTES_PER_ELEMENT)
+      )
     )
   }
 
+  /**
+   * 
+   * @param random 
+   * @returns 
+   */
   static random (random?: { (): number }) {
     random ??= () => Math.random()
     return new Vector2(random(), random())
   }
 
+  // => storage
   public get storage () {
     return this
   }
@@ -69,22 +135,21 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
   // => length
   set length (value: number) {
     if (value === 0.0) {
-      this.setZero()
+      this.zero()
     } else {
       let l = length
-      if (l === 0.0) {
-        return
+      if (l !== 0.0) {
+        l = value / l
+        this[0] *= l
+        this[1] *= l
       }
-      l = value / l
-      this[0] *= l
-      this[1] *= l
     }
   }
-
   get length () {
     return Math.sqrt(this.length2)
   }
 
+  // => length2
   get length2 () {
     let sum
     sum = this[0] * this[0]
@@ -106,9 +171,11 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
     return isNaN
   }
 
+  // => x
   get x () {
     return this[0]
   }
+  // => y
   get y () {
     return this[1]
   }
@@ -118,7 +185,7 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
     this[1] = y
   }
 
-  setZero () {
+  zero () {
     this[0] = 0.0
     this[1] = 0.0
   }
@@ -161,13 +228,13 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
     return out
   }
 
-  distanceTo (arg: Vector2) {
-    return Math.sqrt(this.distanceToSquared(arg))
+  distanceTo (v2: Vector2) {
+    return Math.sqrt(this.distanceToSquared(v2))
   }
 
-  distanceToSquared (arg: Vector2) {
-    const dx = this[0] - arg[0]
-    const dy = this[1] - arg[1]
+  distanceToSquared (v2: Vector2) {
+    const dx = this[0] - v2[0]
+    const dy = this[1] - v2[1]
 
     return dx * dx + dy * dy
   }
@@ -181,7 +248,6 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
     }
 
     const d = this.dot(other) / (length * other.length)
-
     return Math.acos(clamp(d, -1.0, 1.0))
   }
 
@@ -213,7 +279,6 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
     this[1] = v0 * arg[2] + v1 * arg[3]
   }
 
-  
   cross (other: Vector2) {
     return this[0] * other[1] - this[1] * other[0]
   }
@@ -251,46 +316,46 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
   }
 
 
-  add (arg: Vector2 ) {
-    this[0] = this[0] + arg[0]
-    this[1] = this[1] + arg[1]
+  add (v2: Vector2 ) {
+    this[0] = this[0] + v2[0]
+    this[1] = this[1] + v2[1]
   }
 
   addScaled (
-    arg: Vector2, 
+    v2: Vector2, 
     factor: number
   ) {
-    this[0] = this[0] + arg[0] * factor
-    this[1] = this[1] + arg[1] * factor
+    this[0] = this[0] + v2[0] * factor
+    this[1] = this[1] + v2[1] * factor
   }
 
-  substract (arg: Vector2) {
-    this[0] = this[0] - arg[0]
-    this[1] = this[1] - arg[1]
+  substract (v2: Vector2) {
+    this[0] = this[0] - v2[0]
+    this[1] = this[1] - v2[1]
   }
 
-  multiply (arg: Vector2) {
-    this[0] = this[0] * arg[0]
-    this[1] = this[1] * arg[1]
+  multiply (v2: Vector2) {
+    this[0] = this[0] * v2[0]
+    this[1] = this[1] * v2[1]
   }
 
-  divide (arg: Vector2) {
-    this[0] = this[0] / arg[0]
-    this[1] = this[1] / arg[1]
+  divide (v2: Vector2) {
+    this[0] = this[0] / v2[0]
+    this[1] = this[1] / v2[1]
   }
 
-  scale (arg: number) {
-    this[1] = this[1] * arg
-    this[0] = this[0] * arg
+  scale (factor: number) {
+    this[1] = this[1] * factor
+    this[0] = this[0] * factor
   }
 
-  scaled (arg: number) {
+  scaled (factor: number) {
     const vec = this.clone()
-    vec.scale(arg)
+    vec.scale(factor)
     return vec
   }
 
-  negate () {
+  inverse () {
     this[1] = -this[1]
     this[0] = -this[0]
   }
@@ -328,7 +393,7 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
     this[1] = Math.round(this[1])
   }
 
-  roundToZero() {
+  roundToZero () {
     this[0] = this[0] < 0.0
       ? Math.ceil(this[0])
       : Math.floor(this[0])
@@ -341,10 +406,10 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
     return Vector2.copy(this)
   }
 
-  copyInto(arg: Vector2 ) {
-    arg[1] = this[1]
-    arg[0] = this[0]
-    return arg
+  copyInto(v2: Vector2 ) {
+    v2[1] = this[1]
+    v2[0] = this[0]
+    return v2
   }
 
   copyIntoArray (
@@ -376,6 +441,6 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
   }
 
   toString () {
-    return `[${this[0]},${this[1]}]`
+    return `Vector2([0]${this[0]},[1]${this[1]})`
   }
 }

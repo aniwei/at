@@ -5,12 +5,12 @@ import { Offset } from '../basic/geometry'
 import { AtGestureArenaEntry, GestureDisposition } from './arena'
 import { AtPointerEvent, computeHitSlop, computePanSlop } from './events'
 import { PointerDeviceKind } from './pointer'
-import { AtGestureRecognizer, AtOffsetPair, AtOneSequenceGestureRecognizer, DragStartBehavior } from './recognizer'
+import { AtGestureRecognizer, AtOffsetPair, OneSequenceGestureRecognizer, DragStartBehavior } from './recognizer'
 import { AtVelocity, AtVelocityEstimate, AtVelocityTracker } from './velocity-tracker'
 import { AtDeviceGestureSettings } from './gesture'
 
-
-export enum DragState {
+// 拖拽状态枚举
+export enum DragStateKind {
   Ready,
   Possible,
   Accepted,
@@ -40,7 +40,7 @@ export abstract class Drag {
 }
 
 // 拖拽手势识别
-export abstract class DragGestureRecognizer extends AtOneSequenceGestureRecognizer {
+export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer {
 
   static defaultBuilder (event: AtPointerEvent): AtVelocityTracker {
     return AtVelocityTracker.withKind(event.kind)

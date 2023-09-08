@@ -6,18 +6,24 @@ export class Matrix2 extends Computable<Matrix2> implements ArrayLike<number> {
   static ZERO = new Matrix2(4)
 
   static fromList (values: number[]) {
-    const mat = Matrix2.ZERO
-    mat.setValues(values[0], values[1], values[2], values[3])
+    const mat = Matrix2.ZERO.clone()
+    mat.setValues(
+      values[0], 
+      values[1], 
+      values[2], 
+      values[3]
+    )
+    return mat
   }
 
   static identity () {
-    const mat = Matrix2.ZERO
+    const mat = Matrix2.ZERO.clone()
     mat.setIdentity()
     return mat
   }
 
   static copy (other: Matrix2) {
-    const mat = Matrix2.ZERO
+    const mat = Matrix2.ZERO.clone()
     mat.setFrom(other)
     return mat
   }
@@ -26,7 +32,7 @@ export class Matrix2 extends Computable<Matrix2> implements ArrayLike<number> {
     v1: Vector2, 
     v2: Vector2
   ) {
-    const mat = Matrix2.ZERO
+    const mat = Matrix2.ZERO.clone()
     mat.setColumns(v1, v2)
 
     return mat
@@ -36,13 +42,13 @@ export class Matrix2 extends Computable<Matrix2> implements ArrayLike<number> {
     u: Vector2, 
     v: Vector2
   ) {
-    const mat = Matrix2.ZERO
+    const mat = Matrix2.ZERO.clone()
     mat.setOuter(u, v)
     return mat
   }
 
   static rotation (radians: number) {
-    const mat = Matrix2.ZERO
+    const mat = Matrix2.ZERO.clone()
     mat.setRotation(radians)
     return mat
   }
@@ -94,7 +100,6 @@ export class Matrix2 extends Computable<Matrix2> implements ArrayLike<number> {
     this.setRow(1, arg)
   }
 
-
   index (
     row: number, 
     col: number
@@ -103,8 +108,8 @@ export class Matrix2 extends Computable<Matrix2> implements ArrayLike<number> {
   }
 
   entry (row: number, col: number) {
-    invariant((row >= 0) && (row < this.dimension))
-    invariant((col >= 0) && (col < this.dimension))
+    invariant((row >= 0) && (row < this.dimension), 'The "row" cannot out of matrix2 edge.')
+    invariant((col >= 0) && (col < this.dimension), 'The "col" cannot out of matrix2 edge.')
 
     return this[this.index(row, col)]
   }
@@ -114,8 +119,8 @@ export class Matrix2 extends Computable<Matrix2> implements ArrayLike<number> {
     col: number, 
     v: number
   ) {
-    invariant((row >= 0) && (row < this.dimension))
-    invariant((col >= 0) && (col < this.dimension))
+    invariant((row >= 0) && (row < this.dimension), 'The "row" cannot out of matrix2 edge.')
+    invariant((col >= 0) && (col < this.dimension), 'The "col" cannot out of matrix2 edge.')
 
     this[this.index(row, col)] = v
   }
@@ -168,65 +173,54 @@ export class Matrix2 extends Computable<Matrix2> implements ArrayLike<number> {
     this[0] = arg[0]
     this[3] = arg[1]
   }
-  
-  toString () {
-    return `[0] ${this.getRow(0)}\n[1] ${this.getRow(1)}\n`
+
+  row (row: number, v2?: Vector2 | null) {
+    v2 ??= null
+    if (ve === null) {
+      const r = Vector2.ZERO().clone()
+      r[0] = this[this.index(row, 0)]
+      r[1] = this[this.index(row, 1)]
+      return r
+    } else {
+      this[this.index(row, 0)] = v2[0]
+      this[this.index(row, 1)] = v2[1]
+    }
   }
 
-  
-  eq (other: Matrix2) {
-    return (
-      (other instanceof Matrix2) &&
-      (this[0] === other[0]) &&
-      (this[1] === other[1]) &&
-      (this[2] === other[2]) &&
-      (this[3] === other[3])
-    )
-  }
-
-  setRow (row: number, arg: Vector2) {
-    this[this.index(row, 0)] = arg[0]
-    this[this.index(row, 1)] = arg[1]
-  }
-
-  getRow (row: number) {
-    const r = Vector2.zero()
-    r[0] = this[this.index(row, 0)]
-    r[1] = this[this.index(row, 1)]
-    return r
-  }
-
-  setColumn (
+  column (
     column: number, 
-    arg: Vector2
+    v2?: Vector2 | null
   ) {
-    const entry = column * 2
-    this[entry + 1] = arg[1]
-    this[entry + 0] = arg[0]
-  }
+    v2 ??= v2
 
-  getColumn (column: number) {
-    const r = Vector2.zero()
-    const entry = column * 2
-    r[1] = this[entry + 1]
-    r[0] = this[entry + 0]
-    
-    return r
+    if (v2 === null) {
+      const entry = column * 2
+      this[entry + 1] = v2[1]
+      this[entry + 0] = v2[0]
+    } else {
+      const r = Vector2.ZERO().clone()
+      const entry = column * 2
+      r[1] = this[entry + 1]
+      r[0] = this[entry + 0]
+      
+      return r
+    }
+
   }
 
   clone () {
     return Matrix2.copy(this)
   }
 
-  copyInto (arg: Matrix2) {
-    arg[0] = this[0]
-    arg[1] = this[1]
-    arg[2] = this[2]
-    arg[3] = this[3]
-    return arg
+  copyInto (m2: Matrix2) {
+    m2[0] = this[0]
+    m2[1] = this[1]
+    m2[2] = this[2]
+    m2[3] = this[3]
+    return m2
   }
 
-  setZero () {
+  zero () {
     this[0] = 0.0
     this[1] = 0.0
     this[2] = 0.0
@@ -391,73 +385,73 @@ export class Matrix2 extends Computable<Matrix2> implements ArrayLike<number> {
     this[3] = this[3] - o[3]
   }
 
-  negate () {
+  inverse () {
     this[0] = -this[0]
     this[1] = -this[1]
     this[2] = -this[2]
     this[3] = -this[3]
   }
 
-  multiply (arg: Matrix2) {
+  multiply (m2: Matrix2) {
     const m00 = this[0]
     const m01 = this[2]
     const m10 = this[1]
     const m11 = this[3]
-    const n00 = arg[0]
-    const n01 = arg[2]
-    const n10 = arg[1]
-    const n11 = arg[3]
+    const n00 = m2[0]
+    const n01 = m2[2]
+    const n10 = m2[1]
+    const n11 = m2[3]
     this[0] = (m00 * n00) + (m01 * n10)
     this[2] = (m00 * n01) + (m01 * n11)
     this[1] = (m10 * n00) + (m11 * n10)
     this[3] = (m10 * n01) + (m11 * n11)
   }
 
-  multiplied (arg: Matrix2) {
+  multiplied (m2: Matrix2) {
     const mat = this.clone()
-    mat.multiply(arg)
+    mat.multiply(m2)
     return mat
   }
 
-  transposeMultiply (arg: Matrix2) {
+  transposeMultiply (m2: Matrix2) {
     const m00 = this[0]
     const m01 = this[1]
     const m10 = this[2]
     const m11 = this[3]
-    this[0] = (m00 * arg[0]) + (m01 * arg[1])
-    this[2] = (m00 * arg[2]) + (m01 * arg[3])
-    this[1] = (m10 * arg[0]) + (m11 * arg[1])
-    this[3] = (m10 * arg[2]) + (m11 * arg[3])
+    this[0] = (m00 * m2[0]) + (m01 * m2[1])
+    this[2] = (m00 * m2[2]) + (m01 * m2[3])
+    this[1] = (m10 * m2[0]) + (m11 * m2[1])
+    this[3] = (m10 * m2[2]) + (m11 * m2[3])
   }
 
-  multiplyTranspose (arg: Matrix2) {
+  multiplyTranspose (m2: Matrix2) {
     const m00 = this[0]
     const m01 = this[2]
     const m10 = this[1]
     const m11 = this[3]
     
-    this[0] = (m00 * arg[0]) + (m01 * arg[2])
-    this[2] = (m00 * arg[1]) + (m01 * arg[3])
-    this[1] = (m10 * arg[0]) + (m11 * arg[2])
-    this[3] = (m10 * arg[1]) + (m11 * arg[3])
+    this[0] = (m00 * m2[0]) + (m01 * m2[2])
+    this[2] = (m00 * m2[1]) + (m01 * m2[3])
+    this[1] = (m10 * m2[0]) + (m11 * m2[2])
+    this[3] = (m10 * m2[1]) + (m11 * m2[3])
   }
 
-  transform (arg: Vector2) {
-    const x = (this[0] * arg[0]) + (this[2] * arg[1])
-    const y = (this[1] * arg[0]) + (this[3] * arg[1])
-    arg[0] = x
-    arg[1] = y
-    return arg
+  transform (v2: Vector2) {
+    const x = (this[0] * v2[0]) + (this[2] * v2[1])
+    const y = (this[1] * v2[0]) + (this[3] * v2[1])
+    v2[0] = x
+    v2[1] = y
+    return v2
   }
 
   transformed (
-    arg: Vector2, 
+    v2: Vector2, 
     out: Vector2 | null
   ) {
     if (out === null) {
-      out = Vector2.copy(arg)
+      out = Vector2.copy(v2)
     } else {
-      out.setFrom(arg)
+      out.setFrom(v2)
     }
     return this.transform(out)
   }
@@ -482,5 +476,33 @@ export class Matrix2 extends Computable<Matrix2> implements ArrayLike<number> {
     this[2] = array[i + 2]
     this[1] = array[i + 1]
     this[0] = array[i + 0]
+  }
+
+  /**
+   * 
+   * @param other 
+   * @returns 
+   */
+  equal (other: Matrix2 | null) {
+    return (
+      (other instanceof Matrix2) &&
+      (this[0] === other[0]) &&
+      (this[1] === other[1]) &&
+      (this[2] === other[2]) &&
+      (this[3] === other[3])
+    )
+  }
+
+  /**
+   * 
+   * @param other 
+   * @returns 
+   */
+  notEqaul (other: Matrix2 | null) {
+    return !this.notEqaul(other)
+  }
+
+  toString () {
+    return `Matrix2([0]${this.getRow(0)}\n,[1]${this.getRow(1)})\n`
   }
 }

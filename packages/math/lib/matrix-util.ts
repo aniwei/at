@@ -5,9 +5,15 @@ import { Vector4 } from './vector4'
 
 
 export class MatrixUtils {
+  /**
+   * 
+   * @param transform 
+   * @returns 
+   */
   static getAsTranslation (transform: Matrix4): Offset | null {
-    invariant(transform !== null, `The argument transform cannot be null.`)
+    invariant(transform !== null, `The argument "transform" cannot be null.`)
     const values = transform.storage
+
     if (
       values[0] === 1.0 && // col 1
       values[1] === 0.0 &&
@@ -21,15 +27,20 @@ export class MatrixUtils {
       values[9] === 0.0 &&
       values[10] === 1.0 &&
       values[11] === 0.0 &&
-      values[14] === 0.0 && // bottom of col 4 (values 12 and 13 are the x and y offsets)
+      values[14] === 0.0 &&
       values[15] === 1.0
     ) {
       return new Offset(values[12], values[13])
     }
+
     return null
   }
 
- 
+ /**
+  * 
+  * @param transform 
+  * @returns 
+  */
   static getAsScale (transform: Matrix4): number | null {
     invariant(transform !== null)
     const values = transform.storage
@@ -55,7 +66,12 @@ export class MatrixUtils {
     return null
   }
 
-  
+  /**
+   * 
+   * @param a 
+   * @param b 
+   * @returns 
+   */
   static matrixEquals (
     a: Matrix4 | null, 
     b: Matrix4 | null
@@ -64,13 +80,17 @@ export class MatrixUtils {
       return true
     }
     invariant(a !== null || b !== null)
+
     if (a === null) {
       return MatrixUtils.isIdentity(b!)
     } 
+
     if (b === null) {
       return MatrixUtils.isIdentity(a)
     }
+
     invariant(a !== null && b !== null)
+
     return (
       a.storage[0] === b.storage[0] &&
       a.storage[1] === b.storage[1] &&
@@ -91,8 +111,13 @@ export class MatrixUtils {
     )
   }
 
-  static isIdentity(a: Matrix4): boolean {
-    invariant(a !== null)
+  /**
+   * 
+   * @param a 
+   * @returns 
+   */
+  static isIdentity (a: Matrix4): boolean {
+    invariant(a !== null, 'The argument "a" cannot be null.')
     return (
       a.storage[0] === 1.0 && // col 1
       a.storage[1] === 0.0 &&
@@ -113,7 +138,12 @@ export class MatrixUtils {
     )
   }
 
-  
+  /**
+   * 
+   * @param transform 
+   * @param point 
+   * @returns 
+   */
   static transformPoint (
     transform: Matrix4, 
     point: Offset
@@ -125,6 +155,7 @@ export class MatrixUtils {
     const rx = storage[0] * x + storage[4] * y + storage[12]
     const ry = storage[1] * x + storage[5] * y + storage[13]
     const rw = storage[3] * x + storage[7] * y + storage[15]
+
     if (rw === 1.0) {
       return new Offset(rx, ry)
     } else {
@@ -132,6 +163,12 @@ export class MatrixUtils {
     }
   }
 
+  /**
+   * 
+   * @param transform 
+   * @param rect 
+   * @returns 
+   */
   static safeTransformRect (
     transform: Matrix4, 
     rect: Rect
@@ -157,6 +194,15 @@ export class MatrixUtils {
   }
 
   static minMax = new Float64Array(4)
+
+  /**
+   * 
+   * @param m 
+   * @param x 
+   * @param y 
+   * @param first 
+   * @param isAffine 
+   */
   static accumulate (
     m: ArrayLike<number>, 
     x: number, 

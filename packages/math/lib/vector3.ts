@@ -5,10 +5,8 @@ import { Vector2 } from './vector2'
 import { Vector4 } from './vector4'
 import { Quaternion } from './quaternion'
 
-export class Vector3 extends Array<number> {
-  static zero () {
-    return new Vector3(3)
-  }
+export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
+  static ZERO = new Vector3()
 
   static min (a: Vector3, b: Vector3, result: Vector3) {
     result[0] = Math.min(a[0], b[0])
@@ -22,7 +20,7 @@ export class Vector3 extends Array<number> {
     result[2] = Math.max(a[2], b[2])
   }
 
-  static array (array: number[], offset = 0) {
+  static copyFromArray (array: number[], offset = 0) {
     const vec = Vector3.zero()
     vec.copyFromArray(array, offset)
     return vec
@@ -41,7 +39,7 @@ export class Vector3 extends Array<number> {
     return v
   }
 
-  static fromArrayLike (v3: Iterable<number>) {
+  static fromArrayLike (v3: ArrayLike<number>) {
     return new Vector3(...v3)
   }
 

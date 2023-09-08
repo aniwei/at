@@ -2,31 +2,33 @@ import { invariant } from 'ts-invariant'
 import { AllowedButtonsFilter, At } from '../at'
 import { Offset } from '../basic/geometry'
 import { Matrix4 } from '../basic/matrix4'
-import { AtPointerEvent } from './events'
+import { PointerEvent } from './events'
 import { PointerDeviceKind } from './pointer'
-import { AtGestureArenaEntry, AtGestureArenaMember, GestureDisposition } from './arena'
-import { AtDeviceGestureSettings } from './gesture'
+import { GestureArenaEntry, GestureArenaMember, GestureDisposition } from './arena'
+import { DeviceGestureSettings } from './gesture'
 
 type RecognizerCallback<T> = () => T
 
 
 export enum DragStartBehavior {
+  Start,
   Down,
-  Start
 }
 
+// 手势识别状态
 export enum GestureRecognizerState {
   Ready,
   Possible,
   Defunct,
 }
 
+// 手势识别
 export abstract class GestureRecognizer extends GestureArenaMember {
   static defaultButtonAcceptBehavior (buttons: number) {
     return true
   }
 
-  public settings: AtDeviceGestureSettings | null = null
+  public settings: DeviceGestureSettings | null = null
 
   protected supportedDevices: Set<PointerDeviceKind> | null
   protected pointerToKind: Map<number, PointerDeviceKind> = new Map()
@@ -49,9 +51,9 @@ export abstract class GestureRecognizer extends GestureArenaMember {
 
   /**
    * 
-   * @param {AtPointerEvent} event 
+   * @param {PointerEvent} event 
    */
-  addPointer (event: AtPointerEvent) {
+  addPointer (event: PointerEvent) {
     this.pointerToKind.set(event.pointer, event.kind)
     if (this.isPointerAllowed(event)) {
       this.addAllowedPointer(event)
@@ -60,8 +62,8 @@ export abstract class GestureRecognizer extends GestureArenaMember {
     }
   }
 
-  addAllowedPointer (event: AtPointerEvent) { }
-  handleNonAllowedPointer (event: AtPointerEvent) { }
+  addAllowedPointer (event: PointerEvent) { }
+  handleNonAllowedPointer (event: PointerEvent) { }
 
   /**
    * 
@@ -75,10 +77,10 @@ export abstract class GestureRecognizer extends GestureArenaMember {
 
   /**
    * 
-   * @param {AtPointerEvent} event 
+   * @param {PointerEvent} event 
    * @returns {boolean}
    */
-  isPointerAllowed (event: AtPointerEvent) {
+  isPointerAllowed (event: PointerEvent) {
     return this.supportedDevices === null || this.supportedDevices?.has(event.kind)
   }
 
@@ -107,9 +109,12 @@ export abstract class GestureRecognizer extends GestureArenaMember {
   dispose () { }
 }
 
+
+// 频率一次的手势识别器
 export abstract class OneSequenceGestureRecognizer extends GestureRecognizer {
-  private entries: Map<number, AtGestureArenaEntry> = new Map()
-  private trackedPointers: Set<number> = new Set<number>()
+  protected entries: Map<number, GestureArenaEntry> = new Map()
+  // 追踪 pointer id
+  protected trackedPointers: Set<number> = new Set<number>()
 
   /**
    * 构造函数
@@ -124,46 +129,48 @@ export abstract class OneSequenceGestureRecognizer extends GestureRecognizer {
   }
   
   /**
-   * 
-   * @param {AtPointerEvent} event 
+   * 事件处理入口
+   * @param {PointerEvent} event 
    * @returns {boolean}
    */
-  abstract handleEvent (event: AtPointerEvent): void
+  abstract handleEvent (event: PointerEvent): void
+
   /**
-   * 
+   * 停止追踪
    * @param {number} pointer 
    */
   abstract didStopTrackingLastPointer (pointer: number): void
 
   /**
-   * 
-   * @param {AtPointerEvent} event 
+   * 允许追踪
+   * @param {PointerEvent} event 
    */
-  addAllowedPointer (event: AtPointerEvent) {
+  addAllowedPointer (event: PointerEvent) {
     this.startTrackingPointer(event.pointer, event.transform)
   }
 
   /**
-   * 
-   * @param {AtPointerEvent} event 
+   * 处理没有允许的 pointer
+   * @param {PointerEvent} event 
    */
-  handleNonAllowedPointer (event: AtPointerEvent) {
+  handleNonAllowedPointer (event: PointerEvent) {
     this.resolve(GestureDisposition.Rejected)
   }
 
   /**
-   * 
+   * 接受
    * @param {number} pointer 
    */
   accept (pointer: number): void { }
+  
   /**
-   * 
+   * 拒绝
    * @param {number} pointer 
    */
   reject (pointer: number): void  { }
   
   resolve (disposition: GestureDisposition): void {
-    const localEntries: AtGestureArenaEntry[] = Array.from(this.entries.values())
+    const localEntries: GestureArenaEntry[] = Array.from(this.entries.values())
 
     for (const entry of localEntries) {
       entry.resolve(disposition)
@@ -201,9 +208,8 @@ export abstract class OneSequenceGestureRecognizer extends GestureRecognizer {
    * @param pointer 
    * @returns 
    */
-  private addPointerToArena (pointer: number): AtGestureArenaEntry {
+  private addPointerToArena (pointer: number): GestureArenaEntry {
     const entry = At.getApplication().arena.add(pointer, this)
-    // console.log(`addPointerToArena`, pointer, At.getApplication().arena)
     return entry
   }
 
@@ -233,7 +239,7 @@ export abstract class OneSequenceGestureRecognizer extends GestureRecognizer {
     }
   }
 
-  stopTrackingIfPointerNoLongerDown (event: AtPointerEvent) {
+  stopTrackingIfPointerNoLongerDown (event: PointerEvent) {
     if (event.isUp() || event.isCancel()) {
       this.stopTrackingPointer(event.pointer)
     }
@@ -296,7 +302,7 @@ export abstract class AtPrimaryPointerGestureRecognizer extends AtOneSequenceGes
     this.postAcceptSlopTolerance = postAcceptSlopTolerance
   }
 
-  abstract handlePrimaryPointer (event: AtPointerEvent): void
+  abstract handlePrimaryPointer (event: PointerEvent): void
 
   private stop () {
     if (this.timer !== null) {
@@ -305,13 +311,13 @@ export abstract class AtPrimaryPointerGestureRecognizer extends AtOneSequenceGes
     }
   }
 
-  private getGlobalDistance (event: AtPointerEvent): number {
+  private getGlobalDistance (event: PointerEvent): number {
     invariant(this.initialPosition)
     const offset = event.position.subtract(this.initialPosition.global)
     return offset.distance
   }
 
-  addAllowedPointer (event: AtPointerEvent) {
+  addAllowedPointer (event: PointerEvent) {
     super.addAllowedPointer(event)
     if (this.state == GestureRecognizerState.Ready) {
       this._state = GestureRecognizerState.Possible
@@ -327,13 +333,13 @@ export abstract class AtPrimaryPointerGestureRecognizer extends AtOneSequenceGes
   }
 
   
-  handleNonAllowedPointer (event: AtPointerEvent) {
+  handleNonAllowedPointer (event: PointerEvent) {
     if (!this.gestureAccepted) {
       super.handleNonAllowedPointer(event)
     }
   }
 
-  handleEvent = (event: AtPointerEvent) => {
+  handleEvent = (event: PointerEvent) => {
     invariant(this.state !== GestureRecognizerState.Ready)
     if (this.state == GestureRecognizerState.Possible && event.pointer === this.primary) {
       const isPreAcceptSlopPastTolerance = (
@@ -364,7 +370,7 @@ export abstract class AtPrimaryPointerGestureRecognizer extends AtOneSequenceGes
   }
 
   
-  didExceedDeadlineWithEvent (event: AtPointerEvent) {
+  didExceedDeadlineWithEvent (event: PointerEvent) {
     this.didExceedDeadline()
   }
 
@@ -409,11 +415,11 @@ export abstract class AtPrimaryPointerGestureRecognizer extends AtOneSequenceGes
 export class AtOffsetPair {
   static zero = new AtOffsetPair(Offset.zero, Offset.zero)
 
-  static fromEventPosition (event: AtPointerEvent) {
+  static fromEventPosition (event: PointerEvent) {
     return new AtOffsetPair(event.localPosition, event.position)
   }
 
-  static fromEventDelta (event: AtPointerEvent) {
+  static fromEventDelta (event: PointerEvent) {
     return new AtOffsetPair(event.localDelta, event.delta)
   }
 
