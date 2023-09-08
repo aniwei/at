@@ -1,4 +1,3 @@
-import debug from 'debug'
 import bytes from 'bytes'
 import invariant from 'ts-invariant'
 import { EventEmitter } from './events'
@@ -11,9 +10,7 @@ import {
   MessageTransportPort, 
   MessageTransportState 
 } from './transport'
-import { UnsupportError } from './unsupport'
-
-const transport_debug = debug('work')
+import { UnsupportedError } from './unsupported-error'
 
 
 export type MessagePort = {
@@ -79,7 +76,7 @@ export class MessageConv {
     if (data instanceof Blob) {
       return data.arrayBuffer().then(buffer => this.decoder.decode(buffer))
     } else {
-      return Promise.resolve().then(() => this.decoder.decode(data as Buffer))
+      return Promise.resolve().then(() => this.decoder.decode(data as ArrayBuffer))
     }
   }
   
@@ -151,8 +148,8 @@ export class WorkTransport<T extends string = string> extends MessageTransport<W
    * @param {string} uri 
    * @param {WorkPort} port 
    */
-  connect (uri: unknown)
-  connect (port: WorkPort) {
+  connect (uri: unknown): void
+  connect (port: WorkPort): void {
     ;(port as WorkPort).on('message', async (event: MessageEvent) => MessageReceivers.receive(event, async (data) => {
       const message = new MessageOwner(this, data as MessageContent<{ [key: string]: unknown} >)
       try {
@@ -161,7 +158,7 @@ export class WorkTransport<T extends string = string> extends MessageTransport<W
         if (handle) {
           await handle(message)
         } else {
-          transport_debug(`无指令处理 %s`, message.command)
+          console.warn(`无指令处理 %s`, message.command)
         }
       } catch (error: any) {
         if (message?.id) {
@@ -275,7 +272,7 @@ export class MessageReceivers {
     const [id, index, count, chunk] = await MessageData.decode(new Uint8Array(event.data ?? event))
     
     if (!id || !index || !count || !chunk) {
-      throw new UnsupportError(`Unsupport this message.`)
+      throw new UnsupportedError(`Unsupport this message.`)
     }
 
     let receiver = MessageReceivers.get(id) as MessageReceiver ?? null

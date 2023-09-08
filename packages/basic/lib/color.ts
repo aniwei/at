@@ -2,6 +2,7 @@
 import { invariant } from 'ts-invariant'
 import { clamp } from './clamp'
 import { lerp } from './lerp'
+import { Equalable } from './equalable'
 import { UnsupportedError } from './unsupported-error'
 
 /**
@@ -247,6 +248,8 @@ export class Color extends Equalable<Color> implements ArrayLike<number> {
       ) | ((this.alpha & 0xff) << 24)
     ) >>> 0
   }
+
+  [n: number]: number
 
   /**
    * 构造函数

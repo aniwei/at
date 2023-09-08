@@ -1,9 +1,9 @@
-import { clamp } from '@at/basic'
+import { clamp, Computable } from '@at/basic'
 import { Vector2 } from './vector2'
 import { Vector3 } from './vector3'
 import { Matrix4 } from './matrix4'
 
-export class Vector4 extends Computable<Vector4> implements ArrayLike<number> {
+export class Vector4 extends Computable<Vector4> {
   static ZERO = new Vector4(4)
   /**
    * 
@@ -130,7 +130,7 @@ export class Vector4 extends Computable<Vector4> implements ArrayLike<number> {
   // => length
   set length (value: number) {
     if (value === 0.0) {
-      this.setZero()
+      this.zero()
     } else {
       var l = length
       if (l === 0.0) {

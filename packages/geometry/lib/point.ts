@@ -1,4 +1,5 @@
 import { invariant } from 'ts-invariant'
+import { Computable } from '@at/basic'
 
 /**
  * 坐标类
@@ -7,12 +8,14 @@ export interface PointCreate<T> {
   new (...rests: unknown[]): T,
   create (...rests: unknown[]): T 
 }
-export abstract class Point extends Computable<Point> implements ArrayLike<number> {
-  static create <T> (...rests: unknown[])
-  static create <T> (dx: number, dy: number, ...rests: number[]) {
+export abstract class Point extends Computable<Point> {
+  static create <T> (...rests: unknown[]): T
+  static create <T> (dx: number, dy: number, ...rests: number[]): T {
     const PointCreate = this as unknown as PointCreate<T>
     return new PointCreate(dx, dy)
   }
+
+  [n: number]: number
 
   // => dx
   public get dx () {
@@ -37,6 +40,7 @@ export abstract class Point extends Computable<Point> implements ArrayLike<numbe
    * @param {number[]} rest 
    */
   constructor (...rests: unknown[])
+  
   constructor (dx: number, dy: number, ...rests: number[]) {
     super(dx, dy, ...rests)
     

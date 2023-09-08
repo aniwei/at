@@ -1,9 +1,11 @@
 import { Equalable } from './equalable'
 
 export abstract class Computable<T extends Computable<T>> extends Equalable<Computable<T>> implements ArrayLike<number> {
+  [n: number]: number
   public length: number
 
   constructor (...rests: number[]) {
+    super()
     let length = rests.length
     if (length === 1) {
       this.length = length
@@ -50,7 +52,7 @@ export abstract class Computable<T extends Computable<T>> extends Equalable<Comp
   // /
   abstract divide (operand: T | number): T
   // %
-  abstract modulo (operand: T | unknown): T
+  abstract modulo? (operand: T | unknown): T
   // -
   abstract inverse (): T
 }

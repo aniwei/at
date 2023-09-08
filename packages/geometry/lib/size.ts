@@ -6,9 +6,9 @@ export class Size extends Point {
     static ZERO = new Size(0.0, 0.0)
     static INFINITE = new Size(Infinity, Infinity)
   
-    static create (...rests: number[]): Size
-    static create (dx: number, dy: number) {
-      return new Size(dx, dy)
+    static create <T = Size> (...rests: number[]): Size
+    static create <T = Size> (dx: number, dy: number) {
+      return new Size(dx, dy) as T
     }
   
     static isFinite (size: Size) {

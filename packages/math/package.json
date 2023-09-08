@@ -5,15 +5,15 @@
   "type": "module",
   "files": [
     "dist",
-    "index.d.ts"
+    "types/**/*.d.ts"
   ],
-  "main": "./dist/counter.umd.cjs",
-  "module": "./dist/counter.js",
-  "types": "./index.d.ts",
+  "main": "dist/index.umd.cjs",
+  "module": "dist/index.js",
+  "types": "types/**/*.d.ts",
   "exports": {
-    "types": "./index.d.ts",
-    "import": "./dist/counter.js",
-    "require": "./dist/counter.umd.cjs"
+    "types": "./types/**/*.d.ts",
+    "import": "./dist/index.js",
+    "require": "./dist/index.umd.cjs"
   },
   "scripts": {
     "dev": "vite",
@@ -25,7 +25,6 @@
     "vite": "^4.3.9"
   },
   "dependencies": {
-    "@at/basic": "workspace:^",
-    "@at/geometry": "workspace:^"
+    "@at/basic": "workspace:^"
   }
 }

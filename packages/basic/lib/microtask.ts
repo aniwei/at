@@ -1,3 +1,4 @@
+import invariant from 'ts-invariant'
 import { isNative } from './is'
 import { VoidCallback } from './global.d'
 
@@ -19,18 +20,19 @@ export class MicroTaskQueue {
 
   static q = new MicroTaskQueue()
 
-  protected queue: MicroTask[]
-  protected pendding: boolean = false
+  protected queue: MicroTask[] = []
+  protected pending: boolean = false
 
-  enqueue <T = unknown> (tick: VoidCallback, resolve, context: T) {
+  enqueue <T = unknown> (tick: VoidCallback, resolve: (value: unknown) => void, context: T) {
     this.queue.push({
       handler: () => resolve(tick),
       context,
+      resolve
     })
 
-    if (!this.pendding) {
-      this.pendding = true
-      MicroTaskQueue.microTaskExec()
+    if (!this.pending) {
+      this.pending = true
+      MicroTaskQueue.exec()
     }
   }
 
@@ -39,7 +41,7 @@ export class MicroTaskQueue {
     let q = this.queue.shift() ?? null
 
     while (q !== null) {
-      Reflect.apply(q.handler, [], q.context)
+      Reflect.apply(q.handler, q.context, [])
       q = this.queue.shift() ?? null
     }
   }
@@ -47,7 +49,7 @@ export class MicroTaskQueue {
 
 // => nextTick
 export const nextTick = (tick: VoidCallback, context?: unknown) => {
-  return new Promise((resolve) => MicroTaskQueue.q.enqueue<T>(tick, resolve, context))
+  return new Promise((resolve) => MicroTaskQueue.q.enqueue(tick, resolve, context))
 }
 
 const flush = () => MicroTaskQueue.q.flush()
@@ -56,8 +58,6 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   const promise = Promise.resolve()
   MicroTaskQueue._exec = () => promise.then(flush)
   MicroTaskQueue.isUsingMicroTask = true
-} else if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
-  MicroTaskQueue._exec = () => setImmediate(flush)
 } else {
   MicroTaskQueue._exec = () => setTimeout(flush, 0)
 }
