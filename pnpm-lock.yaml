@@ -173,7 +173,13 @@ importers:
       '@at/basic':
         specifier: workspace:^
         version: link:../basic
+      bytes:
+        specifier: ^3.1.2
+        version: 3.1.2
     devDependencies:
+      '@types/bytes':
+        specifier: ^3.1.1
+        version: 3.1.1
       ts-invariant:
         specifier: ^0.10.3
         version: 0.10.3
@@ -183,6 +189,9 @@ importers:
       vite:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@18.11.18)
+      vitest:
+        specifier: ^0.28.3
+        version: 0.28.3(happy-dom@8.2.6)
 
   packages/gesture:
     devDependencies:

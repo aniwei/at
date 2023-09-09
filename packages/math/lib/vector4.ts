@@ -1,9 +1,9 @@
-import { clamp, Computable } from '@at/basic'
+import { clamp, Numberic } from '@at/basic'
 import { Vector2 } from './vector2'
 import { Vector3 } from './vector3'
 import { Matrix4 } from './matrix4'
 
-export class Vector4 extends Computable<Vector4> {
+export class Vector4 extends Numberic<Vector4> {
   static ZERO = new Vector4(4)
   /**
    * 

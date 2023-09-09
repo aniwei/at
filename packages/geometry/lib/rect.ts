@@ -1,52 +1,67 @@
 import invariant from 'ts-invariant'
-import { lerp } from '@at/basic'
+import { Numberic, lerp } from '@at/basic'
 import { Offset } from './offset'
 import { Size } from './size'
 
-export class Rect extends Computable<number> implements ArrayLike<number> {
+export class Rect extends Numberic<Rect> {
     static ZERO = new Rect(0, 0, 0, 0)
-    static LARGEST = new Rect()
+    static LARGEST = new Rect(0, 0, 0, 0)
     
     /**
      * 
-     * @param left 
-     * @param top 
-     * @param right 
-     * @param bottom 
-     * @returns 
+     * @param {number} left 
+     * @param {number} top 
+     * @param {number} right 
+     * @param {number} bottom 
+     * @returns {Rect}
      */
-    static create (left: number, top: number, right: number, bottom: number) {
+    static create (
+      left: number, 
+      top: number, 
+      right: number, 
+      bottom: number
+    ): Rect {
       return Rect.fromLTRB(left, top, right, bottom)
     }
   
     /**
-     * 
-     * @param left 
-     * @param top 
-     * @param right 
-     * @param bottom 
-     * @returns 
+     * 创建 Rect
+     * @param {number} left 
+     * @param {number} top 
+     * @param {number} right 
+     * @param {number} bottom 
+     * @returns {Rect}
      */
-    static fromLTRB (left: number, top: number, right: number, bottom: number) {
+    static fromLTRB (
+      left: number, 
+      top: number, 
+      right: number, 
+      bottom: number
+    ) {
       return new Rect(left, top, right, bottom)
     }
   
     /**
-     * 
-     * @param left 
-     * @param top 
-     * @param width 
-     * @param height 
+     * 创建 Rect
+     * @param {number} left 
+     * @param {number} top 
+     * @param {number} width 
+     * @param {number} height 
      * @returns 
      */
-    static fromLTWH (left: number, top: number, width: number, height: number) {
+    static fromLTWH (
+      left: number, 
+      top: number, 
+      width: number, 
+      height: number
+    ) {
       return new Rect(left, top, left + width, top + height)
     }
   
     /**
      * 
-     * @param center 
-     * @param radius 
+     * @param {Offset} center 
+     * @param {number} radius 
      * @returns 
      */
     static fromCircle (center: Offset, radius: number) {
@@ -62,7 +77,7 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
      * @param {Offset} center 
      * @param {number} width 
      * @param {number} height 
-     * @returns 
+     * @returns {Rect}
      */
     static fromCenter (
       center: Offset,
@@ -77,7 +92,13 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
-    static fromPonumbers (offsetA: Offset, offsetB: Offset) {
+    /**
+     * 
+     * @param {Offset} offsetA 
+     * @param {Offset} offsetB 
+     * @returns {Rect}
+     */
+    static fromPonumbers (offsetA: Offset, offsetB: Offset): Rect {
       return new Rect(
         Math.min(offsetA.dx, offsetB.dx),
         Math.min(offsetA.dy, offsetB.dy),
@@ -162,34 +183,8 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
     public get size (): Size {
       return new Size(this.width, this.height)
     }
-  
-    public get isInfinite () {
-      return (
-        this.left > Infinity ||
-        this.top > Infinity ||
-        this.right > Infinity ||
-        this.bottom > Infinity
-      )
-    }
-  
-    public get isFinite () {
-      return (
-        Number.isFinite(this.left) &&
-        Number.isFinite(this.top) &&
-        Number.isFinite(this.right) &&
-        Number.isFinite(this.bottom) 
-      )
-    }
-  
-    public get isNaN () {
-      return (
-        Number.isNaN(this.left) ||
-        Number.isNaN(this.top) ||
-        Number.isNaN(this.right) || 
-        Number.isNaN(this.bottom)
-      )
-    }
-  
+
+    // => isEmapy
     public get isEmpty () {
       return (
         this.left >= this.right ||
@@ -197,6 +192,7 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    // => shortestSide
     public get shortestSide () {
       return Math.min(
         Math.abs(this.width), 
@@ -204,6 +200,7 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    // => longestSide
     public get longestSide () {
       return Math.min(
         Math.abs(this.width), 
@@ -211,10 +208,12 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    // => topLeft
     public get topLeft (): Offset {
       return new Offset(this.left, this.top)
     }
   
+    // => topCenter
     public get topCenter (): Offset {
       return new Offset(
         this.left + this.width / 2, 
@@ -222,10 +221,12 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    // => topRight
     public get topRight (): Offset {
       return new Offset(this.right, this.top)
     }
   
+    // => centerLeft
     public get centerLeft (): Offset {
       return new Offset(
         this.left,
@@ -233,6 +234,7 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    // => center
     public get center (): Offset {
       return new Offset(
         this.left + this.width / 2,
@@ -240,6 +242,7 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    // => centerRight
     public get centerRight (): Offset {
       return new Offset(
         this.right,
@@ -247,6 +250,7 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    // => bottomLeft
     public get bottomLeft (): Offset {
       return new Offset(
         this.left,
@@ -254,6 +258,7 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    // => bottomCenter
     public get bottomCenter (): Offset {
       return new Offset(
         this.left + this.width / 2,
@@ -261,6 +266,7 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    // => bottomRight
     public get bottomRight (): Offset {
       return new Offset(
         this.left,
@@ -268,6 +274,14 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    constructor (...rests: unknown[])
+    /**
+     * 
+     * @param left 
+     * @param top 
+     * @param right 
+     * @param bottom 
+     */
     constructor (
       left: number, 
       top: number, 
@@ -277,6 +291,7 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       super(left, top, right, bottom)
     }
   
+
     shift (): number
     shift (offset: Offset): Rect
     shift (offset?: Offset): number | Rect | undefined {
@@ -290,7 +305,19 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       }
     }
   
-    translate (translateX: number, translateY: number) {
+    translate (offset: Offset, ...rests: unknown[]): Rect
+    /**
+     * 偏移
+     * @param {number} translateX 
+     * @param {number} translateY 
+     * @returns {Rect}
+     */
+    translate (translateX: number | Offset, translateY: number) {      
+      if (translateX instanceof Offset) {
+        translateY = translateX.dy
+        translateX = translateX.dx
+      }
+
       return Rect.fromLTRB(
         this.left + translateX, 
         this.top + translateY,
@@ -299,6 +326,11 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    /**
+     * 扩大范围
+     * @param {number} delta 
+     * @returns {Rect}
+     */
     inflate (delta: number) {
       return Rect.fromLTRB(
         this.left - delta, 
@@ -308,19 +340,34 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    /**
+     * 缩小范围
+     * @param {number} delta 
+     * @returns {Rect}
+     */
     deflate (delta: number) {
       return this.inflate(-delta)
     }
   
+    /**
+     * 求相交部分
+     * @param {Rect} rect 
+     * @returns {Rect}
+     */
     intersect (rect: Rect) {
       return Rect.fromLTRB(
         Math.max(this.left, rect.left),
         Math.max(this.top, rect.top),
         Math.min(this.right, rect.right),
         Math.min(this.bottom, rect.bottom),
-      );
+      )
     }
   
+    /**
+     * 求相交最大Rect
+     * @param {Rect} rect 
+     * @returns {Rect}
+     */
     expandToInclude (rect: Rect): Rect {
       return Rect.fromLTRB(
         Math.min(this.left, rect.left),
@@ -330,6 +377,11 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    /**
+     * 判断是否重叠
+     * @param {Rect} rect 
+     * @returns {Boolean}
+     */
     overlaps (rect: Rect): boolean {
       if (
         this.right <= rect.left ||
@@ -348,6 +400,11 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       return true
     }
   
+    /**
+     * 判断是否包含某个点
+     * @param {Offset} offset 
+     * @returns {boolean}
+     */
     contains (offset: Offset): boolean {
       return (
         offset.dx >= this.left &&
@@ -357,6 +414,11 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    /**
+     * 判断是否相等
+     * @param {Rect | null} rect 
+     * @returns {boolean}
+     */
     equal (rect: Rect | null): boolean {
       return (
         rect instanceof Rect &&
@@ -367,11 +429,16 @@ export class Rect extends Computable<number> implements ArrayLike<number> {
       )
     }
   
+    /**
+     * 判断是否相等
+     * @param {Rect | null} rect 
+     * @returns {boolean}
+     */
     notEqual (rect: Rect | null) {
       return this.equal(rect)
     }
   
     toString () {
-      return `Rect.fromLTRB(${this.left}, ${this.top}, ${this.right}, ${this.bottom})`
+      return `Rect([left]:${this.left},[top]:${this.top},[right]:${this.right},[bottom]:${this.bottom})`
     }  
   }

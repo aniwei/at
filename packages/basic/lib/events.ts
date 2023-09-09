@@ -1,4 +1,3 @@
-// @ts-nocheck
 // 事件处理器函数类型
 type ListenerHandler = (...args: any[]) => void 
 // 事件处理对象
@@ -60,6 +59,13 @@ export class EventEmitter<T extends string> {
   }
 
   // 移除事件
+  /**
+   * 
+   * @param event 
+   * @param handler 
+   * @param context 
+   * @returns 
+   */
   off (event: T, handler?: ListenerHandler, context?: unknown) {
     return this.removeListener(event, handler, context)
   }

@@ -1,12 +1,13 @@
 import { invariant } from 'ts-invariant'
-import { lerp, Computable } from '@at/basic'
+import { lerp } from '@at/basic'
+import { Point } from './point'
 
-export class Radius extends Computable<Radius> implements ArrayLike<number> {
+export class Radius extends Point<Radius> {
     static ZERO = Radius.circular(0)
     /**
      * 
-     * @param dx 
-     * @param dy 
+     * @param {number} dx 
+     * @param {number} dy 
      * @returns 
      */
     static create (dx: number, dy: number) {
@@ -14,7 +15,7 @@ export class Radius extends Computable<Radius> implements ArrayLike<number> {
     }
   
     /**
-     * @description: 插值计算
+     * 插值计算
      * @param {Radius} a
      * @param {Radius} b
      * @param {number} t
@@ -61,7 +62,6 @@ export class Radius extends Computable<Radius> implements ArrayLike<number> {
     }
   
     /**
-     * @description: 
      * @param {number} x
      * @param {number} y
      * @return {*}
@@ -70,24 +70,45 @@ export class Radius extends Computable<Radius> implements ArrayLike<number> {
       return new Radius(x, y)
     }
   
-    public x: number
-    public y: number
-  
+    // => x
+    public get x () {
+      return super.dx
+    }
+    public set x (x: number) {
+      super.dx = x
+    }
+
+    // => y
+    public get y (): number {
+      return super.dy
+    }
+    public set y (y: number) {
+      super.dy = y
+    }
+
     /**
-     * @description: 构造函数
+     *构造函数
      * @param {number} x
      * @param {number} y
      * @return {*}
      */  
     constructor (x: number, y: number) {
-      this.x = x
-      this.y = y
+      super(x, y)
     }
   
+    /**
+     * 取反
+     * @returns {Radius}
+     */
     inverse (): Radius {
       return Radius.elliptical(-this.x, -this.y)
     }
   
+    /**
+     * 相加
+     * @param {Radius} radius 
+     * @returns {Radius}
+     */
     add (radius: Radius): Radius {
       return Radius.elliptical(
         this.x + radius.x, 
@@ -95,6 +116,11 @@ export class Radius extends Computable<Radius> implements ArrayLike<number> {
       )
     }
   
+    /**
+     * 相减
+     * @param {Radius} radius 
+     * @returns {Radius}
+     */
     subtract (radius: Radius): Radius {
       return Radius.elliptical(
         this.x - radius.x, 
@@ -102,18 +128,46 @@ export class Radius extends Computable<Radius> implements ArrayLike<number> {
       )
     }
   
+    /**
+     * 相乘
+     * @param {Radius} radius 
+     * @returns {Radius}
+     */
     multiply (radius: number): Radius {
       return Radius.elliptical(this.x * radius, this.y * radius)
     }
   
+    /**
+     * 相除
+     * @param {Radius} radius 
+     * @returns {Radius}
+     */
     divide (radius: number): Radius {
       return Radius.elliptical(this.x / radius, this.y / radius)
     }
   
+    /**
+     * 求余
+     * @param {Radius} radius 
+     * @returns {Radius}
+     */
     modulo (radius: number): Radius {
-      return Radius.elliptical(this.x & radius, this.y % radius)
+      return Radius.elliptical(this.x % radius, this.y % radius)
+    }
+
+    /**
+     * 克隆
+     * @returns {Radius}
+     */
+    clone () {
+      return Radius.elliptical(this.x, this.y)
     }
   
+    /**
+     * 比较两个对象
+     * @param {Radius | null} radius 
+     * @returns {boolean}
+     */
     equal (radius: Radius | null) {
       return (
         radius instanceof Radius &&
@@ -122,13 +176,16 @@ export class Radius extends Computable<Radius> implements ArrayLike<number> {
       )
     }
   
+    /**
+     * 比较像个对象
+     * @param {Radius} radius 
+     * @returns {boolean}
+     */
     notEqual (radius: Radius | null) {
       return !this.equal(radius)
     }
   
     toString () {
-      return this.x === this.y ?
-        `Radius.circular(${this.x.toFixed(1)})` :
-        `Radius.elliptical(${this.x.toFixed(1)})`
+      return `Radius([x]:${this.x.toFixed(1)},[y]:${this.x.toFixed(1)})`
     }
   }

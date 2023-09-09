@@ -1,47 +1,74 @@
 import invariant from 'ts-invariant'
+import { lerp } from '@at/basic'
 import { Point } from './point'
 import { Offset } from './offset'
 
-export class Size extends Point {
+export class Size extends Point<Size> {
     static ZERO = new Size(0.0, 0.0)
     static INFINITE = new Size(Infinity, Infinity)
   
-    static create <T = Size> (...rests: number[]): Size
-    static create <T = Size> (dx: number, dy: number) {
-      return new Size(dx, dy) as T
+    /**
+     * 创建
+     * @param {number} dx 
+     * @param {number} dy 
+     * @returns {Size}
+     */
+    static create (dx: number, dy: number): Size {
+      return new Size(dx, dy) as Size
     }
   
-    static isFinite (size: Size) {
-      return (
-        Number.isFinite(size.width) && 
-        Number.isFinite(size.height)
-      )
-    }
-  
-    static isInfinite (size: Size) {
-      return !Size.isFinite(size)
-    }
-  
+    /**
+     * 复制
+     * @param {Size} source 
+     * @returns {Size}
+     */
     static copy (source: Size) {
-      return new Size(source.width, source.height)
+      return Size.create(source.width, source.height)
     }
-  
+
+    /**
+     * 创建 Size
+     * @param {number} dimension 
+     * @returns {Size}
+     */
     static square (dimension: number) {
-      return new Size(dimension, dimension)
+      return Size.create(dimension, dimension)
     }
   
+    /**
+     * 创建
+     * @param {number} width 
+     * @returns {Size}
+     */
     static fromWidth (width: number) {
       return new Size(width, Infinity)
     }
   
+    /**
+     * 创建
+     * @param {number} height 
+     * @returns {Size}
+     */
     static fromHeight (height: number) {
-      return new Size(height, Infinity)
+      return Size.create(height, Infinity)
     }
   
+    /**
+     * 创建
+     * @param {number} radius 
+     * @returns {Size}
+     */
     static fromRadius (radius: number) {
-      return new Size(radius * 2, radius * 2)
+      return Size.create(radius * 2, radius * 2)
     }
   
+    /**
+     * 插值
+     * @param {Size | null} sizeA 
+     * @param {Size | null} sizeB 
+     * @param {number} t 
+     * @returns {Size}
+     */
     static lerp (
       sizeA: Size | null = null,
       sizeB: Size | null = null,
@@ -60,9 +87,7 @@ export class Size extends Point {
           return sizeB.multiply(t)
         } else {
           return new Size(
-            // @ts-ignore TODO
             lerp(sizeA.width, sizeB.width, t), 
-            // @ts-ignore TODO
             lerp(sizeA.height, sizeB.height, t)
           )
         }
@@ -131,6 +156,11 @@ export class Size extends Point {
       return new Size(this.height, this.width)
     }
   
+    /**
+     * 构造函数
+     * @param {number} width 
+     * @param {number} height 
+     */
     constructor (
       width: number, 
       height: number
@@ -143,39 +173,58 @@ export class Size extends Point {
       )
     }
   
-    // 取反
-    negate (): Size {
+    /**
+     * 取反
+     * @returns {Size}
+     */
+    inverse (): Size {
       return new Size(-this.width, -this.width)
     }
   
-    // 加法
+    /**
+     * 相加
+     * @param {Size} size 
+     * @returns {Size}
+     */
     add (size: Size): Size {
       return new Size(this.width + size.width, this.height + size.height)
     }
   
-    // 减法
-    subtract (size: Size | Offset): Size | Offset {
-      if (size instanceof Size) {
-        return new Offset(
-          this.width - size.width, 
-          this.height - size.height
-        )
-      }
-  
-      return new Size(this.width - size.dx, this.height - size.dy)
+    /**
+     * 相减
+     * @param {Size | Offset | null} size 
+     * @returns 
+     */
+    subtract (size: Size): Size {
+      return new Size(
+        this.width - size.dx, 
+        this.height - size.dy
+      )
     }
   
-    // 乘法  
+    /**
+     * 乘法
+     * @param {number} operand 
+     * @returns {Size}
+     */
     multiply (operand: number): Size {
       return new Size(this.width * operand, this.height * operand)
     }
   
-    // 除法
+    /**
+     * 除法
+     * @param {number} operand 
+     * @returns {Size}
+     */
     divide (operand: number): Size {
       return new Size(this.width / operand, this.height / operand)
     }
   
-    // 向下取整
+    /**
+     * 向下取整
+     * @param {number} operand 
+     * @returns {Size}
+     */
     floor (operand: number): Size {
       return new Size(
         Math.floor(this.width / operand),
@@ -183,7 +232,11 @@ export class Size extends Point {
       )
     }
   
-    // 向上取整
+    /**
+     * 向上取整
+     * @param {number} operand 
+     * @returns 
+     */ 
     ceil (operand: number): Size {
       return new Size(
         Math.ceil(this.width / operand),
@@ -191,6 +244,11 @@ export class Size extends Point {
       )
     }
   
+    /**
+     * 
+     * @param origin 
+     * @returns 
+     */
     topLeft (origin: Offset): Offset {
       return origin
     }
@@ -260,10 +318,6 @@ export class Size extends Point {
       )
     }
   
-    isFinite () {
-      return Size.isFinite(this)
-    }
-  
     equal (size: Size | null) {
       return (
         size instanceof Size &&
@@ -274,5 +328,9 @@ export class Size extends Point {
   
     notEqual (size: Size | null) {
       return !this.equal(size)
+    }
+
+    toString () {
+      return `Size([dx]:${this.dx},[dy]:${this.dy})`
     }
   }

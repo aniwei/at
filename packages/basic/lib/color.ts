@@ -4,6 +4,7 @@ import { clamp } from './clamp'
 import { lerp } from './lerp'
 import { Equalable } from './equalable'
 import { UnsupportedError } from './unsupported-error'
+import { Numberic } from '.'
 
 /**
  * 放大颜色 Alpha
@@ -18,7 +19,7 @@ export function scaleAlpha (a: Color, factor: number) {
 /**
  * 颜色类
  */
-export class Color extends Equalable<Color> implements ArrayLike<number> {
+export class Color extends Numberic {
   static BLACK = new Color(0x00000000)
 
   /**

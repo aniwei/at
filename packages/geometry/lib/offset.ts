@@ -4,19 +4,19 @@ import { Point } from './point'
 import { Rect } from './rect'
 import { Size } from './size'
 
-export class Offset extends Point {
+export class Offset extends Point<Offset> {
   static ZERO = new Offset(0, 0)
   static INFINITE = new Offset(Infinity, Infinity)
 
-  static create (...rests: unknown[]): Offset
+  static create <T> (...rests: unknown[]): Offset
   /**
    * 
    * @param {number} dx 
    * @param {number} dy 
    * @returns  {Offset}
    */
-  static create (dx: number, dy: number) {
-    return new Offset(dx, dy)
+  static create (dx: number, dy: number): Offset {
+    return new Offset(dx, dy) as Offset
   }
  
   /**
@@ -31,27 +31,6 @@ export class Offset extends Point {
     )
 
     return offset
-  }
-
-  /**
-   * 
-   * @param offset 
-   * @returns 
-   */
-  static isFinite (offset: Offset) {
-    return (
-      Number.isFinite(offset.dx) && 
-      Number.isFinite(offset.dy)
-    )
-  }
-
-  /**
-   * 
-   * @param offset 
-   * @returns 
-   */
-  static isInfinite (offset: Offset) {
-    return !Offset.isFinite(offset)
   }
 
   /**
@@ -86,6 +65,7 @@ export class Offset extends Point {
     }
   }
 
+  // => distance
   public get distance () {
     return Math.sqrt(
       this.dx * this.dx + 
@@ -93,16 +73,18 @@ export class Offset extends Point {
     )
   }
 
+  // => distanceSquared
   public get distanceSquared () {
     return this.dx * this.dx + this.dy * this.dy
   }
 
+  // => direction
   public get direction () {
     return Math.atan2(this.dy, this.dx)
   }
 
   /**
-   * 
+   * 放大偏移
    * @param {number} scaleX
    * @param {number} scaleY
    * @returns {Offset}
@@ -131,8 +113,8 @@ export class Offset extends Point {
    * 取反
    * @return {Offset}
    */
-  negate () {
-    return new Offset(-this.dx, -this.dy)
+  inverse () {
+    return Offset.create(-this.dx, -this.dy)
   }
 
   /**
@@ -141,7 +123,7 @@ export class Offset extends Point {
    * @returns {Offset}
    */
   add (offset: Offset): Offset {
-    return new Offset(this.dx + offset.dx, this.dy + offset.dy)
+    return Offset.create(this.dx + offset.dx, this.dy + offset.dy)
   }
 
   /**
@@ -150,44 +132,44 @@ export class Offset extends Point {
    * @returns {Offset}
    */
   subtract (offset: Offset): Offset {
-    return new Offset(this.dx - offset.dx, this.dy - offset.dy)
+    return Offset.create(this.dx - offset.dx, this.dy - offset.dy)
   }
 
   /**
-   * @description: 相乘
+   * 相乘
    * @param {number} operand
    * @return {Offset}
    */  
   multiply (operand: number): Offset {
-    return new Offset(this.dx * operand, this.dy * operand)
+    return Offset.create(this.dx * operand, this.dy * operand)
   }
 
   /**
-   * @description: 相除
+   * 相除
    * @param {number} operand
-   * @return {*}
+   * @return {Offset}
    */  
   divide (operand: number): Offset {
-    return new Offset(
+    return Offset.create(
       this.dx / operand, 
       this.dy / operand
     )
   }
 
   /**
-   * 
-   * @param operand 
-   * @returns 
+   * 求模
+   * @param {number} operand 
+   * @returns {Offset}
    */
   modulo (operand: number): Offset {
-    return new Offset(
+    return Offset.create(
       Math.floor(this.dx / operand),
       Math.floor(this.dy / operand)
     )
   }
 
   /**
-   * 
+   * 求余
    * @param other 
    * @returns 
    */
@@ -201,7 +183,7 @@ export class Offset extends Point {
   }
 
   /**
-   * 
+   * 是否相等
    * @param {Offset} offset 
    * @returns 
    */
@@ -214,7 +196,7 @@ export class Offset extends Point {
   }
 
   /**
-   * 
+   * 是否相等
    * @param {Offset} offset 
    * @returns {boolean}
    */
@@ -223,6 +205,6 @@ export class Offset extends Point {
   }
 
   toString () {
-    return `Offset(dx: ${this.dx.toFixed(1)}, dy: ${this.dy.toFixed(1)})`
+    return `Offset([dx]:${this.dx.toFixed(1)},[dy]:${this.dy.toFixed(1)})`
   }
 }

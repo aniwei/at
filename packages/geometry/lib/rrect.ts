@@ -1,17 +1,18 @@
 import invariant from 'ts-invariant'
+import { Numberic } from '@at/basic'
 import { Rect } from './rect'
 import { Radius } from './radius'
 import { Offset } from './offset'
 
-export class RRect extends Array<number> {
+export class RRect extends Numberic<RRect> {
     /**
-     * @description: 
+     * 0
      * @return {RRect}
      */  
-    static zero = RRect.raw()
+    static ZERO = RRect.raw()
   
     /**
-     * @description: 
+     * 创建RRect
      * @return {RRect}
      */  
     static fromLTRBXY (
@@ -69,7 +70,7 @@ export class RRect extends Array<number> {
   
   
     /**
-     * @description: 
+     * 创建 RRect
      * @param {Rect} rect
      * @param {number} radiusX
      * @param {number} radiusY
@@ -98,7 +99,7 @@ export class RRect extends Array<number> {
     }
   
     /**
-     * @description: 
+     * 创建 RRect
      * @param {Rect} rect
      * @param {Radius} radius
      * @return {*}
@@ -125,7 +126,7 @@ export class RRect extends Array<number> {
     }
   
     /**
-     * @description: 
+     * 创建RRect
      * @param {Rect} rect
      * @param {Radius} topLeft
      * @param {Radius} topRight
@@ -135,10 +136,10 @@ export class RRect extends Array<number> {
      */
     static fromRectAndCorners (
       rect: Rect,
-      topLeft: Radius = Radius.zero,
-      topRight: Radius = Radius.zero,
-      bottomRight: Radius = Radius.zero,
-      bottomLeft: Radius = Radius.zero,
+      topLeft: Radius = Radius.ZERO.clone(),
+      topRight: Radius = Radius.ZERO.clone(),
+      bottomRight: Radius = Radius.ZERO.clone(),
+      bottomLeft: Radius = Radius.ZERO.clone(),
     ) {
       return RRect.raw(
         rect.left,
@@ -182,10 +183,10 @@ export class RRect extends Array<number> {
       top: number,
       right: number,
       bottom: number,
-      topLeft: Radius = Radius.zero,
-      topRight: Radius = Radius.zero,
-      bottomRight: Radius = Radius.zero,
-      bottomLeft: Radius = Radius.zero,
+      topLeft: Radius = Radius.ZERO.clone(),
+      topRight: Radius = Radius.ZERO.clone(),
+      bottomRight: Radius = Radius.ZERO.clone(),
+      bottomLeft: Radius = Radius.ZERO.clone(),
     ) {
       return RRect.raw(
         top,
@@ -213,7 +214,7 @@ export class RRect extends Array<number> {
     }
   
     /**
-     * @description: 
+     * 创建 RRect
      * @param {number} left
      * @param {number} top
      * @param {number} right
@@ -244,18 +245,18 @@ export class RRect extends Array<number> {
       brRadiusY: number = 0.0,
       uniformRadii: boolean = false,
     ) {
-      invariant(left !== null, `The left argument cannot be null.`)
-      invariant(top !== null, `The top argument cannot be null.`)
-      invariant(right !== null, `The right argument cannot be null.`)
-      invariant(bottom !== null, `The bottom argument cannot be null.`)
-      invariant(tlRadiusX !== null, `The tlRadiusX argument cannot be null.`)
-      invariant(tlRadiusY !== null, `The tlRadiusY argument cannot be null.`)
-      invariant(trRadiusX !== null, `The trRadiusX argument cannot be null.`)
-      invariant(trRadiusY !== null, `The trRadiusY argument cannot be null.`)
-      invariant(brRadiusX !== null, `The brRadiusX argument cannot be null.`)
-      invariant(brRadiusY !== null, `The brRadiusY argument cannot be null.`)
-      invariant(blRadiusX !== null, `The blRadiusX argument cannot be null.`)
-      invariant(blRadiusY !== null, `The blRadiusY argument cannot be null.`)
+      invariant(left !== null, 'The "left" argument cannot be null.')
+      invariant(top !== null, 'The "top" argument cannot be null.')
+      invariant(right !== null, 'The "right" argument cannot be null.')
+      invariant(bottom !== null, 'The "bottom" argument cannot be null.')
+      invariant(tlRadiusX !== null, 'The "tlRadiusX" argument cannot be null.')
+      invariant(tlRadiusY !== null, 'The "tlRadiusY" argument cannot be null.')
+      invariant(trRadiusX !== null, 'The "trRadiusX" argument cannot be null.')
+      invariant(trRadiusY !== null, 'The "trRadiusY" argument cannot be null.')
+      invariant(brRadiusX !== null, 'The "brRadiusX" argument cannot be null.')
+      invariant(brRadiusY !== null, 'The "brRadiusY" argument cannot be null.')
+      invariant(blRadiusX !== null, 'The "blRadiusX" argument cannot be null.')
+      invariant(blRadiusY !== null, 'The "blRadiusY" argument cannot be null.')
   
       return new RRect(
         left,
@@ -274,72 +275,95 @@ export class RRect extends Array<number> {
       )
     }
   
+    // => left
     public get left () {
       return this[0]
     }
     public set left (value: number) {
       this[0] = value
     }
+
+    // => top
     public get top () {
       return this[1]
     }
     public set top (value: number) {
       this[1] = value
     }
+
+    // => right
     public get right () {
       return this[2]
     }
     public set right (value: number) {
       this[2] = value
     }
+
+    // => bottom
     public get bottom () {
       return this[3]
     }
     public set bottom (value: number) {
       this[3] = value
     }
+
+    // => tlRadiusX
     public get tlRadiusX () {
       return this[4]
     }
     public set tlRadiusX (value: number) {
       this[4] = value
     }
+
+    // => tlRadiusY
     public get tlRadiusY () {
       return this[5]
     }
     public set tlRadiusY (value: number) {
       this[5] = value
     }
+
+    // => trRadiusX
     public get trRadiusX () {
       return this[6]
     }
     public set trRadiusX (value: number) {
       this[6] = value
     }
+
+    // => trRadiusY
     public get trRadiusY () {
       return this[7]
     }
     public set trRadiusY (value: number) {
       this[7] = value
     }
+
+    // => brRadiusX
     public get brRadiusX () {
       return this[8]
     }
     public set brRadiusX (value: number) {
       this[8] = value
     }
+
+    // => brRadiusY
     public get brRadiusY () {
       return this[9]
     }
     public set brRadiusY (value: number) {
       this[9] = value
     }
+
+    // => blRadiusX
     public get blRadiusX () {
       return this[10]
     }
     public set blRadiusX (value: number) {
       this[10] = value
     }
+
+    // => blRadiusY
     public get blRadiusY () {
       return this[11]
     }
@@ -347,34 +371,42 @@ export class RRect extends Array<number> {
       this[11] = value
     }
     
+    // => tlRadius
     public get tlRadius () {
       return Radius.elliptical(this.tlRadiusX, this.tlRadiusY)
     }
-  
+
+    // => trRadius
     public get trRadius () {
       return Radius.elliptical(this.trRadiusX, this.trRadiusY)
     }
-  
+
+    // => blRadius
     public get blRadius () {
       return Radius.elliptical(this.blRadiusX, this.blRadiusY)
     }
-  
+
+    // => brRadius
     public get brRadius () {
       return Radius.elliptical(this.brRadiusX, this.brRadiusY)
     }
   
+    // => width
     public get width () {
       return this.right - this.left
     }
   
+    // => height
     public get height () {
       return this.bottom - this.top
     }
   
+    // => outerRect
     public get outerRect () {
       return Rect.fromLTRB(this.left, this.top, this.right, this.bottom)
     }
   
+    // => safeInnerRect
     public get safeInnerRect () {
       const kInsetFactor = 0.29289321881 // 1-cos(pi/4)
   
@@ -395,7 +427,6 @@ export class RRect extends Array<number> {
     public webOnlyUniformRadii: boolean
   
     /**
-     * @description: 
      * @param {number} left
      * @param {number} top
      * @param {number} right
@@ -453,7 +484,7 @@ export class RRect extends Array<number> {
      * @param {number} limit
      * @return {*}
      */
-    getMin (min: number, radiusA: number, radiusB: number, limit: number) {
+    min (min: number, radiusA: number, radiusB: number, limit: number) {
       const sum = radiusA + radiusB
       if (sum > limit && sum !== 0) {
         return Math.min(min, limit / sum)
@@ -471,10 +502,10 @@ export class RRect extends Array<number> {
       const absWidth = Math.abs(this.width)
       const absHeight = Math.abs(this.height)
   
-      scale = this.getMin(scale, this.blRadiusY, this.tlRadiusY, absHeight)
-      scale = this.getMin(scale, this.tlRadiusX, this.trRadiusX, absWidth)
-      scale = this.getMin(scale, this.trRadiusY, this.brRadiusY, absHeight)
-      scale = this.getMin(scale, this.brRadiusX, this.blRadiusX, absWidth)
+      scale = this.min(scale, this.blRadiusY, this.tlRadiusY, absHeight)
+      scale = this.min(scale, this.tlRadiusX, this.trRadiusX, absWidth)
+      scale = this.min(scale, this.trRadiusY, this.brRadiusY, absHeight)
+      scale = this.min(scale, this.brRadiusX, this.blRadiusX, absWidth)
   
       if (scale < 1) {
         return RRect.raw(
@@ -583,9 +614,7 @@ export class RRect extends Array<number> {
      * @return {*}
      */  
     
-    shift (): number
-    shift (offset: Offset): RRect
-    shift (offset?: Offset): number | RRect | undefined  {
+    translate (offset: Offset): RRect {
       invariant(offset, `The argument "offset" cannot be null.`)
       return RRect.raw(
         this.left + offset.dx,
@@ -604,9 +633,9 @@ export class RRect extends Array<number> {
     }
   
     /**
-     * @description: 
+     * 扩大
      * @param {number} delta
-     * @return {*}
+     * @return {RRect}
      */  
     inflate (delta: number) {
       return RRect.raw(
@@ -626,18 +655,18 @@ export class RRect extends Array<number> {
     }
   
     /**
-     * @description: 
+     * 缩小
      * @param {number} delta
-     * @return {*}
+     * @return {RRect}
      */  
     deflate (delta: number) {
       return this.inflate(-delta)
     }
   
     /**
-     * @description: 
+     * 是否相等
      * @param {RRect} other
-     * @return {*}
+     * @return {boolean}
      */  
     equal (other: RRect | null) {
       return (
@@ -657,6 +686,11 @@ export class RRect extends Array<number> {
       )
     }
   
+    /**
+     * 是否相等
+     * @param {RRect | null} other 
+     * @returns {boolean}
+     */
     notEqual (other: RRect | null) {
       return !this.equal(other)
     }

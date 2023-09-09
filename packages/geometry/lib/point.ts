@@ -1,21 +1,19 @@
 import { invariant } from 'ts-invariant'
-import { Computable } from '@at/basic'
+import { Numberic } from '@at/basic'
 
 /**
  * 坐标类
  */
-export interface PointCreate<T> {
-  new (...rests: unknown[]): T,
-  create (...rests: unknown[]): T 
+export interface CreateFactory {
+  new (...rests: unknown[]): unknown,
+  create (...rests: unknown[]): unknown
 }
-export abstract class Point extends Computable<Point> {
-  static create <T> (...rests: unknown[]): T
-  static create <T> (dx: number, dy: number, ...rests: number[]): T {
-    const PointCreate = this as unknown as PointCreate<T>
-    return new PointCreate(dx, dy)
+export abstract class Point<T extends Point<T>> extends Numberic<T> {
+  static create (...rests: unknown[]): unknown
+  static create  (dx: number, dy: number) {
+    const CreateFactory = this as CreateFactory
+    return new CreateFactory(dx, dy)
   }
-
-  [n: number]: number
 
   // => dx
   public get dx () {
@@ -42,9 +40,8 @@ export abstract class Point extends Computable<Point> {
   constructor (...rests: unknown[])
   
   constructor (dx: number, dy: number, ...rests: number[]) {
+    invariant(dx !== null, 'The argument "dx" cannot be null.')
+    invariant(dy !== null, 'The argument "dy" cannot be null.')
     super(dx, dy, ...rests)
-    
-    invariant(dx !== null, `The argument dx cannot be null.`)
-    invariant(dy !== null, `The argument dy cannot be null.`)
   }
 }

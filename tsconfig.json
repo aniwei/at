@@ -13,13 +13,12 @@
     "isolatedModules": true,
     "declaration": true,
     "emitDeclarationOnly": true,
-    "declarationDir": "dist",
+    "declarationDir": "types",
 
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["lib"]
 }
