@@ -6,11 +6,6 @@ import { Vector4 } from './vector4'
 
 //// => Quaternion
 export class Quaternion extends Numberic<Quaternion> {
-  // => storage
-  get storage () {
-    return this
-  }
-
   // => x
   get x () {
     return this[0]
@@ -43,9 +38,9 @@ export class Quaternion extends Numberic<Quaternion> {
     this[3] = w
   }
 
-  static fromRotation (rotationMatrix: Matrix3) {
+  static rotation (rotationMatrix: Matrix3) {
     const q = new Quaternion()
-    q.setFromRotation(rotationMatrix)
+    q.rotation(rotationMatrix)
     return q
   }
 
@@ -63,19 +58,19 @@ export class Quaternion extends Numberic<Quaternion> {
     b: Vector3
   ) {
     const q = new Quaternion()
-    q.setFromTwoVectors(a, b)
+    q.fromTwoVectors(a, b)
     return q
   }
 
   static copy (original: Quaternion) {
     const q = new Quaternion()
-    q.setFrom(original)
+    q.from(original)
     return q
   }
 
   static random (random: { (): number }) {
     const q = new Quaternion()
-    q.setRandom(random)
+    q.random(random)
     return q
   }
 
@@ -104,7 +99,7 @@ export class Quaternion extends Numberic<Quaternion> {
     return q
   }
 
-  static fromArrayLike (q: Iterable<number>) {
+  static fromList (q: Iterable<number>) {
     return new Quaternion(...q)
   }
 
@@ -115,29 +110,55 @@ export class Quaternion extends Numberic<Quaternion> {
   ) {
     length ??= Math.floor((buffer.byteLength - offset) / Float64Array.BYTES_PER_ELEMENT) 
 
-    return Vector4.fromArrayLike(new Float64Array(
+    return Vector4.fromList(new Float64Array(
       buffer,
       offset,
       length
     ))
-
   }
 
-  // Quaternion.fromBuffer(ByteBuffer buffer, int offset)
-  //     : _qStorage = Float64List.view(buffer, offset, 4);
+  // => radians
+  get radians () {
+    return 2.0 * Math.acos(this[3])
+  } 
 
-  clone () {
-    return Quaternion.copy(this)
+  // => axis
+  get axis () {
+    const den = 1.0 - (this[3] * this[3])
+    if (den < 0.0005) {
+      return Vector3.ZERO.clone()
+    }
+
+    const scale = 1.0 / Math.sqrt(den)
+    return new Vector3(
+      this[0] * scale, 
+      this[1] * scale, 
+      this[2] * scale
+    )
   }
 
-  setFrom (source: Quaternion) {
+  // => distance2
+  get distance2 () {
+    const x = this[0]
+    const y = this[1]
+    const z = this[2]
+    const w = this[3]
+    return (x * x) + (y * y) + (z * z) + (w * w)
+  }
+
+  // => distance
+  get distance () {
+    return Math.sqrt(this.distance2)
+  }
+
+  from (source: Quaternion) {
     this[0] = source[0]
     this[1] = source[1]
     this[2] = source[2]
     this[3] = source[3]
   }
 
-  setValues (
+  values (
     x: number, 
     y: number, 
     z: number, 
@@ -164,7 +185,7 @@ export class Quaternion extends Numberic<Quaternion> {
     this[3] = Math.cos(radians * 0.5)
   }
 
-  setFromRotation (rotationMatrix: Matrix3) {
+  rotation (rotationMatrix: Matrix3) {
     const rotationMatrixStorage = rotationMatrix.storage
     const trace = rotationMatrix.trace()
     if (trace > 0.0) {
@@ -202,7 +223,7 @@ export class Quaternion extends Numberic<Quaternion> {
     }
   }
 
-  setFromTwoVectors (
+  fromTwoVectors (
     a: Vector3, 
     b: Vector3
   ) {
@@ -301,7 +322,6 @@ export class Quaternion extends Numberic<Quaternion> {
     return l
   }
 
-  
   conjugate () {
     this[2] = -this[2]
     this[1] = -this[1]
@@ -334,36 +354,6 @@ export class Quaternion extends Numberic<Quaternion> {
     return q
   }
 
-  get radians () {
-    return 2.0 * Math.acos(this[3])
-  } 
-
-  get axis () {
-    const den = 1.0 - (this[3] * this[3])
-    if (den < 0.0005) {
-      return Vector3.ZERO.clone()
-    }
-
-    const scale = 1.0 / Math.sqrt(den)
-    return new Vector3(
-      this[0] * scale, 
-      this[1] * scale, 
-      this[2] * scale
-    )
-  }
-
-  get distance2 () {
-    const x = this[0]
-    const y = this[1]
-    const z = this[2]
-    const w = this[3]
-    return (x * x) + (y * y) + (z * z) + (w * w)
-  }
-
-  get distance () {
-    return Math.sqrt(this.distance2)
-  }
-
   rotated (v: Vector3) {
     const out = v.clone()
     this.rotate(out)
@@ -392,19 +382,18 @@ export class Quaternion extends Numberic<Quaternion> {
     return v
   }
 
-  add (arg: Quaternion) {
-    this[0] = this[0] + arg[0]
-    this[1] = this[1] + arg[1]
-    this[2] = this[2] + arg[2]
-    this[3] = this[3] + arg[3]
+  add (q: Quaternion) {
+    this[0] = this[0] + q[0]
+    this[1] = this[1] + q[1]
+    this[2] = this[2] + q[2]
+    this[3] = this[3] + q[3]
   }
 
-  
-  substract (arg: Quaternion) {
-    this[0] = this[0] - arg[0]
-    this[1] = this[1] - arg[1]
-    this[2] = this[2] - arg[2]
-    this[3] = this[3] - arg[3]
+  substract (q: Quaternion) {
+    this[0] = this[0] - q[0]
+    this[1] = this[1] - q[1]
+    this[2] = this[2] - q[2]
+    this[3] = this[3] - q[3]
   }
 
   scale (scale: number) {
@@ -421,7 +410,7 @@ export class Quaternion extends Numberic<Quaternion> {
   }
 
   asRotationMatrix () {
-    return this.copyRotationInto(Matrix3.zero())
+    return this.copyRotationInto(Matrix3.ZERO.clone())
   }
 
   copyRotationInto (rotationMatrix: Matrix3) {
@@ -474,10 +463,19 @@ export class Quaternion extends Numberic<Quaternion> {
   absoluteError (correct: Quaternion) {
     const thisNorm = length
     const correctNorm = correct.length
-    const normDiff = Math.abs((thisNorm - correctNorm))
-    return normDiff
+    const diff = Math.abs((thisNorm - correctNorm))
+    return diff
   }
 
+  clone () {
+    return Quaternion.copy(this)
+  }
+
+  /**
+   * 是否相等
+   * @param {Quaternion | null} q 
+   * @returns {boolean}
+   */
   equal (q: Quaternion | null): boolean {
     return (
       q instanceof Quaternion &&
@@ -488,10 +486,19 @@ export class Quaternion extends Numberic<Quaternion> {
     )
   }
 
+  /**
+   * 是否相等
+   * @param {Quaternion | null} q 
+   * @returns {boolean}
+   */
   notEqual (q: Quaternion | null): boolean {
     return !this.equal(q)
   }
 
+  /**
+   * 输出字符串
+   * @returns {string}
+   */
   toString () {
     return `Quaternion([0]:${this[0]}, [1]:${this[1]}, [2]:${this[2]}, [3]:${this[3]})`
   }
