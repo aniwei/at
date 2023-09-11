@@ -2,19 +2,19 @@ import invariant from 'ts-invariant'
 import { nearZero } from '../basic/helper'
 import { At } from '../at'
 
-export type AtToleranceOptions = {
+export type ToleranceOptions = {
   distance?: number,
   time?: number,
   velocity?: number,
 }
 
-export class AtTolerance {
+export class Tolerance {
   static get defaultTolerance () {
     invariant(At.kDefaultTolerance)
     return At.kDefaultTolerance
   }
-  static create (options?: AtToleranceOptions) {
-    return new AtTolerance(
+  static create (options?: ToleranceOptions) {
+    return new Tolerance(
       options?.distance,
       options?.time,
       options?.velocity,
@@ -42,14 +42,15 @@ export class AtTolerance {
   }
 
   toString () {
-    return `AtTolerance(distance: ${this.distance}, time: ${this.time}, velocity: ${this.velocity})`
+    return `Tolerance([distance]: ${this.distance}, [time]: ${this.time}, velocity: ${this.velocity})`
   }
 }
 
-export abstract class AtSimulation {
-  public tolerance: AtTolerance
+//// => Simulation
+export abstract class Simulation {
+  public tolerance: Tolerance
 
-  constructor (tolerance: AtTolerance = AtTolerance.defaultTolerance) {
+  constructor (tolerance: Tolerance = Tolerance.defaultTolerance) {
     this.tolerance = tolerance
   }
 
@@ -58,19 +59,21 @@ export abstract class AtSimulation {
   abstract isDone (time: number): boolean
 
   toString () {
-    return `AtSimulation(tolerance: ${this.tolerance})`
+    return `Simulation([tolerance]: ${this.tolerance})`
   }
 }
 
-export type AtSpringDescriptionOptions = {
+
+//// => SpringDescription
+export type SpringDescriptionOptions = {
   mass: number,
   stiffness: number,
   damping?: number, 
 }
 
-export class AtSpringDescription {
-  static create (options: AtSpringDescriptionOptions) {
-    return new AtSpringDescription(
+export class SpringDescription {
+  static create (options: SpringDescriptionOptions) {
+    return new SpringDescription(
       options.mass,
       options.stiffness,
       options.damping,
@@ -82,7 +85,7 @@ export class AtSpringDescription {
     stiffness: number,
     ratio: number = 1.0,
   ) {
-    const spring = AtSpringDescription.create({
+    const spring = SpringDescription.create({
       mass,
       stiffness
     })
@@ -107,27 +110,28 @@ export class AtSpringDescription {
   }
   
   toString () {
-    return `AtSpringDescription(mass: ${this.mass}, stiffness: ${this.stiffness}, damping: ${this.damping})`
+    return `SpringDescription(mass: ${this.mass}, stiffness: ${this.stiffness}, damping: ${this.damping})`
   }
 }
 
-export enum SpringType {
+//// => SpringSimulation
+export enum SpringTypeKind {
   CriticallyDamped,
   UnderDamped,
   OverDamped,
 }
 
-export type AtSpringSimulationOptions = {
-  spring: AtSpringDescription,
+export type SpringSimulationOptions = {
+  spring: SpringDescription,
   start: number,
   end: number,
   velocity: number,
-  tolerance: AtTolerance 
+  tolerance: Tolerance 
 }
 
-export class AtSpringSimulation extends AtSimulation {
-  static create (options: AtSpringSimulationOptions) {
-    return new AtSpringSimulation(
+export class SpringSimulation extends Simulation {
+  static create (options: SpringSimulationOptions) {
+    return new SpringSimulation(
       options.spring,
       options.start,
       options.end,
@@ -142,18 +146,18 @@ export class AtSpringSimulation extends AtSimulation {
   }
 
   protected endPosition: number
-  protected solution: AtSpringSolution
+  protected solution: SpringSolution
 
   constructor (
-    spring: AtSpringDescription,
+    spring: SpringDescription,
     start: number,
     end: number,
     velocity: number,
-    tolerance: AtTolerance 
+    tolerance: Tolerance 
   ) {
     super(tolerance)
     this.endPosition = end
-    this.solution = AtSpringSolution.create(spring, start - end, velocity)
+    this.solution = SpringSolution.create(spring, start - end, velocity)
   } 
 
   x (time: number) {
@@ -172,20 +176,22 @@ export class AtSpringSimulation extends AtSimulation {
   }
 
   toString () {
-    return `AtSpringSimulation()`
+    return `SpringSimulation()`
   }
 }
 
-export class AtScrollSpringSimulation extends AtSpringSimulation {
+//// => ScrollSpringSimulation
+export class ScrollSpringSimulation extends SpringSimulation {
 
   x (time: number) {
     return this.isDone(time) ? this.endPosition : super.x(time)
   }
 }
 
-export abstract class AtSpringSolution {
+//// => SpringSolution
+export abstract class SpringSolution {
   static create (
-    spring: AtSpringDescription,
+    spring: SpringDescription,
     initialPosition: number,
     initialVelocity: number,
   ) {
@@ -193,23 +199,24 @@ export abstract class AtSpringSolution {
 
     const cmk = spring.damping * spring.damping - 4 * spring.mass * spring.stiffness
     if (cmk === 0.0) {
-      return AtCriticalSolution.create(spring, initialPosition, initialVelocity)
+      return CriticalSolution.create(spring, initialPosition, initialVelocity)
     }
     if (cmk > 0.0) {
-      return AtOverdampedSolution.create(spring, initialPosition, initialVelocity)
+      return OverdampedSolution.create(spring, initialPosition, initialVelocity)
     }
 
-    return AtUnderdampedSolution.create(spring, initialPosition, initialVelocity)
+    return UnderdampedSolution.create(spring, initialPosition, initialVelocity)
   }
 
   abstract x(time: number): number
   abstract dx(time: number): number
-  abstract type: SpringType
+  abstract type: SpringTypeKind
 }
 
-export class AtCriticalSolution implements AtSpringSolution {
+//// => CriticalSolution
+export class CriticalSolution implements SpringSolution {
   static create (
-    spring: AtSpringDescription,
+    spring: SpringDescription,
     distance: number,
     velocity: number,
   ) {
@@ -217,14 +224,14 @@ export class AtCriticalSolution implements AtSpringSolution {
     const r = -spring.damping / (2.0 * spring.mass)
     const c1 = distance
     const c2 = velocity - (r * distance)
-    return AtCriticalSolution.withArgs(r, c1, c2)
+    return CriticalSolution.withArgs(r, c1, c2)
   }
 
   static withArgs (r: number, c1: number, c2: number) {
-    return new AtCriticalSolution(r, c1, c2)
+    return new CriticalSolution(r, c1, c2)
   }
 
-  readonly type = SpringType.CriticallyDamped
+  readonly type = SpringTypeKind.CriticallyDamped
     
   public r: number 
   public c1: number 
@@ -247,9 +254,10 @@ export class AtCriticalSolution implements AtSpringSolution {
   }  
 }
 
-export class AtOverdampedSolution implements AtSpringSolution {
+//// => AtOverdampedSolution
+export class OverdampedSolution implements SpringSolution {
   static create (
-    spring: AtSpringDescription,
+    spring: SpringDescription,
     distance: number,
     velocity: number,
   ) {
@@ -260,14 +268,14 @@ export class AtOverdampedSolution implements AtSpringSolution {
     const c2 = (velocity - r1 * distance) / (r2 - r1)
     const c1 = distance - c2
 
-    return AtOverdampedSolution.withArgs(r1, r2, c1, c2)
+    return OverdampedSolution.withArgs(r1, r2, c1, c2)
   }
 
   static withArgs (r1: number, r2: number, c1: number, c2: number) {
-    return new AtOverdampedSolution(r1, r2, c1, c2)
+    return new OverdampedSolution(r1, r2, c1, c2)
   }
 
-  readonly type = SpringType.OverDamped
+  readonly type = SpringTypeKind.OverDamped
 
   public r1: number
   public r2: number
@@ -294,14 +302,13 @@ export class AtOverdampedSolution implements AtSpringSolution {
       this.c2 * this.r2 * Math.pow(Math.E, this.r2 * time)
     )
   }
-
-  
-  
 }
 
-export class AtUnderdampedSolution implements AtSpringSolution {
+
+//// => UnderdampedSolution
+export class UnderdampedSolution implements SpringSolution {
   static create (
-    spring: AtSpringDescription,
+    spring: SpringDescription,
     distance: number,
     velocity: number,
   ) {
@@ -311,14 +318,14 @@ export class AtUnderdampedSolution implements AtSpringSolution {
     const r = -(spring.damping / 2.0 * spring.mass)
     const c1 = distance
     const c2 = (velocity - r * distance) / w
-    return AtUnderdampedSolution.withArgs(w, r, c1, c2)
+    return UnderdampedSolution.withArgs(w, r, c1, c2)
   }
 
   static withArgs (w: number, r: number, c1: number, c2: number) {
-    return new AtUnderdampedSolution(w, r, c1, c2)
+    return new UnderdampedSolution(w, r, c1, c2)
   }
 
-  public readonly type = SpringType.UnderDamped
+  public readonly type = SpringTypeKind.UnderDamped
 
   public w: number
   public r: number

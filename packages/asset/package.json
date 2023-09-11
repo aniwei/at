@@ -5,13 +5,13 @@
   "type": "module",
   "files": [
     "dist",
-    "types/*/**.d.ts"
+    "index.d.ts"
   ],
   "main": "dist/index.umd.cjs",
   "module": "dist/index.js",
-  "types": "types/*/**.d.ts",
+  "types": "index.d.ts",
   "exports": {
-    "types": "./types/*/**.d.ts",
+    "types": "./index.d.ts",
     "import": "./dist/index.js",
     "require": "./dist/index.umd.cjs"
   },

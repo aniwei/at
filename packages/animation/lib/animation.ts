@@ -1,55 +1,51 @@
-/*
- * @author: aniwei aniwei.studio@gmail.com
- * @date: 2022-12-12 23:47:56
- */
-import { Subscribable } from '../basic/subscribable'
-import { AtAnimatable } from './tween'
+import { Subscribable } from '@at/basic'
+import { Animatable } from './tween'
 
 
-export enum AnimationStatus {
+//// => AnimationStatusSubscribable
+export enum AnimationStatusKind {
   Dismissed,
   Forward,
   Reverse,
   Completed
 }
 
-export type AnimationStatusSubscriber = (status: AnimationStatus) => void
-
-export class AtAnimationStatusSubscribable extends Subscribable<AnimationStatusSubscriber> {
-  private statusSubscribers: Subscribable<AnimationStatusSubscriber> = new Subscribable<AnimationStatusSubscriber>()
-
-
-  subscribeStatusChange (subscriber: AnimationStatusSubscriber, context?: unknown) {
-    this.statusSubscribers.subscribe(subscriber, context)
-  }
-
-  
-  unsubscribeStatusChange (subscriber?: AnimationStatusSubscriber, context?: unknown) {
-    this.statusSubscribers.unsubscribe(subscriber, context)
-  }
-
-  clearStatusSubscribers () {
-    this.statusSubscribers.clear()
-  }
-
-  publishStatusChange (status: AnimationStatus) {
-    this.statusSubscribers.publish(status)
-  }
+export type AnimationStatusSubscriber = (status: AnimationStatusKind) => void
+export class AnimationStatusSubscribable extends Subscribable<AnimationStatusSubscriber> {
 }
 
-export abstract class AtAnimation<T> extends AtAnimationStatusSubscribable {
-  abstract value: T | null
-  abstract status: AnimationStatus
+//// => Animation
+export interface AnimationFactory {
+  create (...rests: unknown[])
+  new (...rests: unknown[])
+}
+export abstract class Animation<T> extends AnimationStatusSubscribable {
+  static create (...rests: unknown[]) {
+    const AnimationFactory = this as unknown as AnimationFactory
+    return new AnimationFactory(...rests)
+  }
 
-  public get isDismissed () {
-    return this.status === AnimationStatus.Dismissed
+  public get dismissed () {
+    return this.status === AnimationStatusKind.Dismissed
   }
   
-  public get isCompleted (): boolean {
-    return this.status == AnimationStatus.Completed
+  public get completed (): boolean {
+    return this.status === AnimationStatusKind.Completed
   }
 
-  drive (child: AtAnimatable<T>): AtAnimation<T> {
-    return child.animate(this as AtAnimation<T>)
+  abstract value: T | null
+  abstract status: AnimationStatusKind
+
+  constructor (...rests: unknown[]) {
+    super()
+  }
+
+  /**
+   * 
+   * @param {Animatable<T>} child 
+   * @returns {Animatable<T>}
+   */
+  drive (child: Animatable<T>): Animation<T> {
+    return child.animate(this as Animation<T>)
   }
 }

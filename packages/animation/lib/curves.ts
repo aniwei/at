@@ -4,24 +4,77 @@ import { clamp, lerp, sign } from '@at/basic'
 import { Offset } from '@at/geometry'
 import { At } from '../at'
 
+/**
+ * 
+ * @param {number} t 
+ * @returns {number}
+ */
+const bounce = (t: number) => {
+  if (t < 1.0 / 2.75) {
+    return 7.5625 * t * t
+  } else if (t < 2 / 2.75) {
+    t -= 1.5 / 2.75
+    return 7.5625 * t * t + 0.75
+  } else if (t < 2.5 / 2.75) {
+    t -= 2.25 / 2.75
+    return 7.5625 * t * t + 0.9375
+  }
+  t -= 2.625 / 2.75
+  return 7.5625 * t * t + 0.984375
+}
+
+// => ParametricCurve
 export abstract class ParametricCurve<T> {
-  
+  /**
+   * 
+   * @param {number} t 
+   * @returns {number}
+   */
   transform (t: number): T  {
-    invariant(t >= 0.0 && t <= 1.0, 'parametric value $t is outside of [0, 1] range.')
+    invariant(t >= 0.0 && t <= 1.0, 'Parametric value $t is outside of [0, 1] range.')
     return this.transformInternal(t)
   }
 
+  /**
+   * 
+   * @param {number} t 
+   * @returns {T}
+   */
   transformInternal (t: number): T {
-    throw new UnimplementedError()
+    throw new UnimplementedError('transformInternal')
   }
   
   toString () {
-    return `ParametricCurve()`
+    return 'ParametricCurve()'
   }
 }
 
-
+// 
+export interface CurveFactory<T> {
+  create <T> (...rests: unknown[]): T
+  new (...rests: unknown[]): T
+}
 export abstract class Curve extends ParametricCurve<number> {
+  static create (...rests) {
+    const CurveFactory = this as unknown as CurveFactory
+    return new CurveFactory(...rests)
+  }
+
+  // => flipped
+  public get flipped (): Curve {
+    return FlippedCurve.create(this)
+  }
+
+  // 
+  constructor (...rests: unknown[]) {
+    super()
+  }
+
+  /**
+   * 
+   * @param t 
+   * @returns 
+   */
   transform (t: number): number {
     if (t === 0.0 || t === 1.0) {
       return t
@@ -29,47 +82,54 @@ export abstract class Curve extends ParametricCurve<number> {
 
     return super.transform(t)
   }
-
-  public get flipped (): Curve {
-    return AtFlippedCurve.create(this)
-  }
 }
 
-
-export class AtLinear extends Curve {
-  static create () {
-    return new AtLinear()
-  }
-
+//// => Linear
+export class Linear extends Curve {
   transformInternal (t: number) {
     return t
   }
 }
 
-export class AtSawTooth extends Curve {
+//// => SawTooth
+export class SawTooth extends Curve {
   public count: number
 
+  /**
+   * 
+   * @param count 
+   */
   constructor (count: number) {
     super()
     this.count = count
   }
 
+  /**
+   * 
+   * @param t 
+   * @returns 
+   */
   transformInternal (t: number): number {
     t *= this.count
     return t - Math.floor(t)
   }
 
   toString () {
-    return `AtSawTooth()`
+    return `SawTooth([count]:${this.count})`
   }
 }
 
-export class AtInterval extends Curve {
+//// => Interval
+export class Interval extends Curve {
   public begin: number
   public end: number
   public curve: Curve 
 
-  constructor (begin: number, end: number, curve: Curve) {
+  constructor (
+    begin: number, 
+    end: number, 
+    curve: Curve
+  ) {
     super()
     this.begin = begin
     this.end = end
@@ -92,13 +152,12 @@ export class AtInterval extends Curve {
   }
 
   toString () {
-    return `AtInterval()`
+    return `Interval([begin]: ${this.begin},[end]: ${this.end}, [curve]: ${this.curve})`
   }
 }
 
-
-export class AtThreshold extends Curve {
-  
+//// => Threshold
+export class Threshold extends Curve {
   public threshold: number
 
   constructor (threshold: number) {
@@ -106,7 +165,11 @@ export class AtThreshold extends Curve {
     this.threshold = threshold
   }
 
-
+  /**
+   * 
+   * @param {number} t 
+   * @returns {number}
+   */
   transformInternal (t: number) {
     invariant(this.threshold >= 0.0)
     invariant(this.threshold <= 1.0)
@@ -114,12 +177,28 @@ export class AtThreshold extends Curve {
   }
 }
 
-export class AtCubic extends Curve {
-  static create (a: number, b: number, c: number, d: number) {
-    return new AtCubic(a, b, c, d)
+//// => Cubic
+export class Cubic extends Curve {
+  static create (
+    a: number, 
+    b: number, 
+    c: number, 
+    d: number
+  ) {
+    return new Cubic(a, b, c, d)
   }
 
-  constructor (a: number, b: number, c: number, d: number) {
+  public a: number
+  public b: number
+  public c: number
+  public d: number
+
+  constructor (
+    a: number, 
+    b: number, 
+    c: number, 
+    d: number
+  ) {
     super()
 
     this.a = a
@@ -127,11 +206,7 @@ export class AtCubic extends Curve {
     this.c = c
     this.d = d
   }
-  public a: number
-  public b: number
-  public c: number
-  public d: number
-
+  
   private evaluateCubic (a: number, b: number, m: number) {
     return (
       3 * this.a * (1 - m) * (1 - m) * m +
@@ -157,11 +232,13 @@ export class AtCubic extends Curve {
   }
 
   toString(): string {
-    return ``
+    return `Cubic([a]: ${this.a},[b]: ${this.b},[c] :${this.c}, [d]: ${this.d})`
   }
 }
 
-class AtThreePointCubic extends Curve {
+
+//// => ThreePointCubic
+class ThreePointCubic extends Curve {
   static create (
     a1: Offset,
     b1: Offset,
@@ -169,7 +246,7 @@ class AtThreePointCubic extends Curve {
     a2: Offset,
     b2: Offset
   ) {
-    return new AtThreePointCubic(a1, b1, midpoint, a2, b2)
+    return new ThreePointCubic(a1, b1, midpoint, a2, b2)
   }
 
   public a1: Offset
@@ -200,14 +277,14 @@ class AtThreePointCubic extends Curve {
     const scaleY = firstCurve ? this.midpoint.dy : 1.0 - this.midpoint.dy
     const scaledT = (t - (firstCurve ? 0.0 : this.midpoint.dx)) / scaleX;
     if (firstCurve) {
-      return AtCubic.create(
+      return Cubic.create(
         this.a1.dx / scaleX,
         this.a1.dy / scaleY,
         this.b1.dx / scaleX,
         this.b1.dy / scaleY,
       ).transform(scaledT) * scaleY
     } else {
-      return AtCubic.create(
+      return Cubic.create(
         (this.a2.dx - this.midpoint.dx) / scaleX,
         (this.a2.dy - this.midpoint.dy) / scaleY,
         (this.b2.dx - this.midpoint.dx) / scaleX,
@@ -217,11 +294,12 @@ class AtThreePointCubic extends Curve {
   }
 
   toString () {
-    return ``
+    return `ThreePointCubic([a1]: ${this.a1} [b1]: ${this.b1} [midpoint]: ${this.midpoint} [a2]: ${this.a2} [b2]: ${this.b2})`
   }
 }
 
-abstract class Curve2D extends ParametricCurve<Offset> {
+//// => Curve2D
+export abstract class Curve2D extends ParametricCurve<Offset> {
   generateSamples(
     start: number = 0.0,
     end: number = 1.0,
@@ -290,32 +368,35 @@ abstract class Curve2D extends ParametricCurve<Offset> {
   }
 }
 
+//// => Curve2DSample
 class Curve2DSample {
   static create (t: number, value: Offset) {
     return new Curve2DSample(t, value)
   }
+
+  public t: number 
+  public value: Offset 
 
   constructor (t: number, value: Offset) {
     this.t = t
     this.value = value
   }
 
-  public t: number 
-  public value: Offset 
 
   toString () {
-    return ``
+    return `Curve2DSample([t]: ${this.t}, [value]: ${this.value})`
   }
 }
 
-class AtCatmullRomSpline extends Curve2D {
+//// => CatmullRomSpline
+class CatmullRomSpline extends Curve2D {
   static create (
     controlPoints: Offset[], 
     tension: number = 0.0,
     startHandle: Offset | null = null,
     endHandle: Offset | null = null,
   ) {
-    return new AtCatmullRomSpline(
+    return new CatmullRomSpline(
       controlPoints,
       tension,
       startHandle,
@@ -330,12 +411,13 @@ class AtCatmullRomSpline extends Curve2D {
     endHandle: Offset | null = null,
   ) {
     super()
-    invariant(tension >= 0.0, 'tension $tension must not be negative.'),
-    invariant(controlPoints.length > 3, 'There must be at least four control points to create a CatmullRomSpline.'),
-    this.controlPoints = controlPoints,
-    this.startHandle = startHandle,
-    this.endHandle = endHandle,
-    this.tension = tension,
+    invariant(tension >= 0.0, 'The argument "tension" must not be negative.')
+    invariant(controlPoints.length > 3, 'There must be at least four control points to create a CatmullRomSpline.')
+
+    this.controlPoints = controlPoints
+    this.startHandle = startHandle
+    this.endHandle = endHandle
+    this.tension = tension
     this.cubicSegments = []
   }
 
@@ -345,10 +427,11 @@ class AtCatmullRomSpline extends Curve2D {
     startHandle: Offset | null = null,
     endHandle: Offset | null = null,
   ) {
-    invariant(tension <= 1.0, 'tension $tension must not be greater than 1.0.')
-    invariant(tension >= 0.0, 'tension $tension must not be negative.')
+    invariant(tension <= 1.0, 'The argument "tension" must not be greater than 1.0.')
+    invariant(tension >= 0.0, 'The argument "tension" must not be negative.')
     invariant(controlPoints.length > 3, 'There must be at least four control points to create a CatmullRomSpline.')
-    const cr = AtCatmullRomSpline.create(
+
+    const cr = CatmullRomSpline.create(
       controlPoints,
       tension,
       startHandle,
@@ -360,7 +443,7 @@ class AtCatmullRomSpline extends Curve2D {
     cr.endHandle = null
     cr.tension = null
 
-    cr.cubicSegments = AtCatmullRomSpline.computeSegments(
+    cr.cubicSegments = CatmullRomSpline.computeSegments(
       controlPoints, 
       tension, 
       startHandle, 
@@ -386,7 +469,6 @@ class AtCatmullRomSpline extends Curve2D {
       endHandle,
     ]
 
-    
     const alpha = 0.5
     const reverseTension = 1.0 - tension
     const result: Offset[][] = []
@@ -424,12 +506,12 @@ class AtCatmullRomSpline extends Curve2D {
   }
 
   private cubicSegments: Offset[][]
-
   public controlPoints: Offset[] | null
   public startHandle: Offset | null
   public endHandle: Offset | null
   public tension: number | null
 
+  // => samplingSeed
   public get samplingSeed () {
     this.initializeIfNeeded()
     const seedPoint = this.cubicSegments[0][1]
@@ -444,7 +526,7 @@ class AtCatmullRomSpline extends Curve2D {
     invariant(this.controlPoints)
     invariant(this.tension)
 
-    const segments = AtCatmullRomSpline.computeSegments(this.controlPoints, this.tension, this.startHandle, this.endHandle)
+    const segments = CatmullRomSpline.computeSegments(this.controlPoints, this.tension, this.startHandle, this.endHandle)
 
     for (const segment of segments) {
       this.cubicSegments.push(segment)
@@ -480,10 +562,10 @@ class AtCatmullRomSpline extends Curve2D {
   }
 }
 
-
-export class AtCatmullRomCurve extends Curve {
+//// => CatmullRomCurve
+export class CatmullRomCurve extends Curve {
   static create (controlPoints: Offset[], tension?: number) {
-    return new AtCatmullRomCurve(controlPoints, tension)
+    return new CatmullRomCurve(controlPoints, tension)
   }
 
   public precomputedSamples: Curve2DSample[] = []
@@ -498,12 +580,12 @@ export class AtCatmullRomCurve extends Curve {
   }
 
   static precompute (controlPoints: Offset[], tension: number = 0.0) {
-    const cr = AtCatmullRomCurve.create(controlPoints, tension)
-    cr.precomputedSamples = AtCatmullRomCurve.computeSamples(controlPoints, tension)
+    const cr = CatmullRomCurve.create(controlPoints, tension)
+    cr.precomputedSamples = CatmullRomCurve.computeSamples(controlPoints, tension)
   }
 
   static computeSamples (controlPoints: Offset[], tension: number): Curve2DSample[] {
-    return AtCatmullRomSpline.precompute(
+    return CatmullRomSpline.precompute(
       [
         Offset.zero, 
         ...controlPoints, 
@@ -556,7 +638,7 @@ export class AtCatmullRomCurve extends Curve {
 
     lastX = -Infinity
     const tolerance = 1e-3
-    const testSpline = AtCatmullRomSpline.create(controlPoints, tension)
+    const testSpline = CatmullRomSpline.create(controlPoints, tension)
     const start = testSpline.findInverse(0.0)
     const end = testSpline.findInverse(1.0)
     const samplePoints = testSpline.generateSamples(start, end)
@@ -598,10 +680,14 @@ export class AtCatmullRomCurve extends Curve {
     return success
   }
 
+  /**
+   * 
+   * @param {number} t 
+   * @returns {number}
+   */
   transformInternal (t: number): number {
-  
     if (this.precomputedSamples.length === 0) {
-      const samples = AtCatmullRomCurve.computeSamples(this.controlPoints, this.tension)
+      const samples = CatmullRomCurve.computeSamples(this.controlPoints, this.tension)
       this.precomputedSamples.push(...samples)
     }
     let start = 0
@@ -626,12 +712,16 @@ export class AtCatmullRomCurve extends Curve {
     const t2 = (t - startValue.dx) / (endValue.dx - startValue.dx);
     return lerp(startValue.dy, endValue.dy, t2)
   }
+
+  toString () {
+    return ``
+  }
 }
 
-
-export class AtFlippedCurve extends Curve {
+//// => FlippedCurve
+export class FlippedCurve extends Curve {
   static create (curve: Curve) {
-    return new AtFlippedCurve(curve)
+    return new FlippedCurve(curve)
   }
 
   public curve: Curve
@@ -646,13 +736,14 @@ export class AtFlippedCurve extends Curve {
   }
 
   toString () {
-    return `AtFlippedCurve()`
+    return `FlippedCurve([curve]: ${this.curve})`
   }
 }
 
-export class AtDecelerateCurve extends Curve {
+//// => DecelerateCurve
+export class DecelerateCurve extends Curve {
   static create () {
-    return new AtDecelerateCurve()
+    return new DecelerateCurve()
   }
 
   transformInternal (t: number) {
@@ -661,9 +752,10 @@ export class AtDecelerateCurve extends Curve {
   }
 }
 
-export class AtBounceInCurve extends Curve {
+//// => BounceInCurve
+export class BounceInCurve extends Curve {
   static create () {
-    return new AtBounceInCurve()
+    return new BounceInCurve()
   }
 
   transformInternal (t: number) {
@@ -671,9 +763,10 @@ export class AtBounceInCurve extends Curve {
   }
 }
 
-export class AtBounceOutCurve extends Curve {
+//// => BounceOutCurve
+export class BounceOutCurve extends Curve {
   static create () {
-    return new AtBounceInCurve()
+    return new BounceInCurve()
   }
 
   transformInternal (t: number) {
@@ -681,9 +774,10 @@ export class AtBounceOutCurve extends Curve {
   }
 }
 
-export class AtBounceInOutCurve extends Curve {
+//// => BounceInOutCurve
+export class BounceInOutCurve extends Curve {
   static create () {
-    return new AtBounceInCurve()
+    return new BounceInCurve()
   }
 
   transformInternal (t: number) {
@@ -695,9 +789,10 @@ export class AtBounceInOutCurve extends Curve {
   }
 }
 
-export class AtElasticInCurve extends Curve {
+//// => ElasticInCurve
+export class ElasticInCurve extends Curve {
   static create (period?: number) {
-    return new AtElasticInCurve(period)
+    return new ElasticInCurve(period)
   }
   
   public period: number
@@ -714,21 +809,24 @@ export class AtElasticInCurve extends Curve {
   }
 
   toString () {
-    return `AtElasticInCurve(${this.period})`
+    return `ElasticInCurve(${this.period})`
   }
 }
 
-export class AtElasticOutCurve extends Curve {
+
+//// => ElasticOutCurve
+export class ElasticOutCurve extends Curve {
   static create (period?: number) {
-    return new AtElasticOutCurve(period)
+    return new ElasticOutCurve(period)
   }
+
+  public period: number
 
   constructor (period: number = 0.4) {
     super()
     this.period = period
   }
 
-  public period: number
 
   
   transformInternal (t: number) {
@@ -737,22 +835,23 @@ export class AtElasticOutCurve extends Curve {
   }
 
   toString () {
-    return ``
+    return `ElasticOutCurve([period]: ${this.period})`
   }
 }
 
-export class AtElasticInOutCurve extends Curve {
+//// => ElasticInOutCurve
+export class ElasticInOutCurve extends Curve {
   static create (period?: number) {
-    return new AtElasticInOutCurve(period)
+    return new ElasticInOutCurve(period)
   }
+
+  public period: number
 
   constructor (period: number = 0.4) {
     super()
     this.period = period
   }
 
-  
-  public period: number
   transformInternal (t: number): number {
     const s = this.period / 4.0
     t = 2.0 * t - 1.0
@@ -764,74 +863,60 @@ export class AtElasticInOutCurve extends Curve {
   }
 
   toString () {
-    return ``
+    return `ElasticInOutCurve([period]: ${this.period})`
   }
 }
 
-
+//// => Curves
 export class Curves {
-  static linear = AtLinear.create()
-  static decelerate = AtDecelerateCurve.create()
-  static fastLinearToSlowEaseIn = AtCubic.create(0.18, 1.0, 0.04, 1.0)
-  static ease = AtCubic.create(0.25, 0.1, 0.25, 1.0)
-  static easeIn = AtCubic.create(0.42, 0.0, 1.0, 1.0)
-  static easeInToLinear = AtCubic.create(0.67, 0.03, 0.65, 0.09)
-  static easeInSine = AtCubic.create(0.47, 0.0, 0.745, 0.715)
-  static easeInQuad = AtCubic.create(0.55, 0.085, 0.68, 0.53)
-  static easeInCubic = AtCubic.create(0.55, 0.055, 0.675, 0.19)
-  static easeInQuart = AtCubic.create(0.895, 0.03, 0.685, 0.22)
-  static easeInQuint = AtCubic.create(0.755, 0.05, 0.855, 0.06)
-  static easeInExpo = AtCubic.create(0.95, 0.05, 0.795, 0.035)
-  static easeInCirc = AtCubic.create(0.6, 0.04, 0.98, 0.335)
-  static easeInBack = AtCubic.create(0.6, -0.28, 0.735, 0.045)
-  static easeOut = AtCubic.create(0.0, 0.0, 0.58, 1.0)
-  static linearToEaseOut = AtCubic.create(0.35, 0.91, 0.33, 0.97)
-  static easeOutSine = AtCubic.create(0.39, 0.575, 0.565, 1.0)
-  static easeOutQuad = AtCubic.create(0.25, 0.46, 0.45, 0.94)
-  static easeOutCubic = AtCubic.create(0.215, 0.61, 0.355, 1.0)
-  static easeOutQuart = AtCubic.create(0.165, 0.84, 0.44, 1.0)
-  static easeOutQuint = AtCubic.create(0.23, 1.0, 0.32, 1.0)
-  static easeOutExpo = AtCubic.create(0.19, 1.0, 0.22, 1.0)
-  static easeOutCirc = AtCubic.create(0.075, 0.82, 0.165, 1.0)
-  static easeOutBack = AtCubic.create(0.175, 0.885, 0.32, 1.275)
-  static easeInOut = AtCubic.create(0.42, 0.0, 0.58, 1.0)
-  static easeInOutSine = AtCubic.create(0.445, 0.05, 0.55, 0.95)
-  static easeInOutQuad = AtCubic.create(0.455, 0.03, 0.515, 0.955)
-  static easeInOutCubic = AtCubic.create(0.645, 0.045, 0.355, 1.0)
-  static easeInOutCubicEmphasized = AtThreePointCubic.create(
+  static linear = Linear.create()
+  static decelerate = DecelerateCurve.create()
+  static fastLinearToSlowEaseIn = Cubic.create(0.18, 1.0, 0.04, 1.0)
+  static ease = Cubic.create(0.25, 0.1, 0.25, 1.0)
+  static easeIn = Cubic.create(0.42, 0.0, 1.0, 1.0)
+  static easeInToLinear = Cubic.create(0.67, 0.03, 0.65, 0.09)
+  static easeInSine = Cubic.create(0.47, 0.0, 0.745, 0.715)
+  static easeInQuad = Cubic.create(0.55, 0.085, 0.68, 0.53)
+  static easeInCubic = Cubic.create(0.55, 0.055, 0.675, 0.19)
+  static easeInQuart = Cubic.create(0.895, 0.03, 0.685, 0.22)
+  static easeInQuint = Cubic.create(0.755, 0.05, 0.855, 0.06)
+  static easeInExpo = Cubic.create(0.95, 0.05, 0.795, 0.035)
+  static easeInCirc = Cubic.create(0.6, 0.04, 0.98, 0.335)
+  static easeInBack = Cubic.create(0.6, -0.28, 0.735, 0.045)
+  static easeOut = Cubic.create(0.0, 0.0, 0.58, 1.0)
+  static linearToEaseOut = Cubic.create(0.35, 0.91, 0.33, 0.97)
+  static easeOutSine = Cubic.create(0.39, 0.575, 0.565, 1.0)
+  static easeOutQuad = Cubic.create(0.25, 0.46, 0.45, 0.94)
+  static easeOutCubic = Cubic.create(0.215, 0.61, 0.355, 1.0)
+  static easeOutQuart = Cubic.create(0.165, 0.84, 0.44, 1.0)
+  static easeOutQuint = Cubic.create(0.23, 1.0, 0.32, 1.0)
+  static easeOutExpo = Cubic.create(0.19, 1.0, 0.22, 1.0)
+  static easeOutCirc = Cubic.create(0.075, 0.82, 0.165, 1.0)
+  static easeOutBack = Cubic.create(0.175, 0.885, 0.32, 1.275)
+  static easeInOut = Cubic.create(0.42, 0.0, 0.58, 1.0)
+  static easeInOutSine = Cubic.create(0.445, 0.05, 0.55, 0.95)
+  static easeInOutQuad = Cubic.create(0.455, 0.03, 0.515, 0.955)
+  static easeInOutCubic = Cubic.create(0.645, 0.045, 0.355, 1.0)
+  static easeInOutCubicEmphasized = ThreePointCubic.create(
     new Offset(0.05, 0), 
     new Offset(0.133333, 0.06),
     new Offset(0.166666, 0.4),
     new Offset(0.208333, 0.82), 
     new Offset(0.25, 1),
   )
-  static easeInOutQuart = AtCubic.create(0.77, 0.0, 0.175, 1.0)
-  static easeInOutQuint = AtCubic.create(0.86, 0.0, 0.07, 1.0)
-  static easeInOutExpo = AtCubic.create(1.0, 0.0, 0.0, 1.0)
-  static easeInOutCirc = AtCubic.create(0.785, 0.135, 0.15, 0.86)
-  static easeInOutBack = AtCubic.create(0.68, -0.55, 0.265, 1.55)
-  static fastOutSlowIn = AtCubic.create(0.4, 0.0, 0.2, 1.0)
-  static slowMiddle = AtCubic.create(0.15, 0.85, 0.85, 0.15)
-  static bounceIn = AtBounceInCurve.create()
-  static bounceOut = AtBounceOutCurve.create()
-  static bounceInOut = AtBounceInOutCurve.create()
-  static elasticIn = AtElasticInCurve.create()
-  static elasticOut = AtElasticOutCurve.create()
-  static elasticInOut = AtElasticInOutCurve.create()
+  static easeInOutQuart = Cubic.create(0.77, 0.0, 0.175, 1.0)
+  static easeInOutQuint = Cubic.create(0.86, 0.0, 0.07, 1.0)
+  static easeInOutExpo = Cubic.create(1.0, 0.0, 0.0, 1.0)
+  static easeInOutCirc = Cubic.create(0.785, 0.135, 0.15, 0.86)
+  static easeInOutBack = Cubic.create(0.68, -0.55, 0.265, 1.55)
+  static fastOutSlowIn = Cubic.create(0.4, 0.0, 0.2, 1.0)
+  static slowMiddle = Cubic.create(0.15, 0.85, 0.85, 0.15)
+  static bounceIn = BounceInCurve.create()
+  static bounceOut = BounceOutCurve.create()
+  static bounceInOut = BounceInOutCurve.create()
+  static elasticIn = ElasticInCurve.create()
+  static elasticOut = ElasticOutCurve.create()
+  static elasticInOut = ElasticInOutCurve.create()
 }
 
-
-function bounce (t: number) {
-  if (t < 1.0 / 2.75) {
-    return 7.5625 * t * t
-  } else if (t < 2 / 2.75) {
-    t -= 1.5 / 2.75
-    return 7.5625 * t * t + 0.75
-  } else if (t < 2.5 / 2.75) {
-    t -= 2.25 / 2.75
-    return 7.5625 * t * t + 0.9375
-  }
-  t -= 2.625 / 2.75
-  return 7.5625 * t * t + 0.984375
-}
 

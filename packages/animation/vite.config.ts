@@ -4,8 +4,16 @@ export default defineConfig({
   build: {
     lib: {
       entry: './lib/main.ts',
-      name: 'Counter',
-      fileName: 'counter'
+      name: 'index',
+      fileName: 'index'
     }
+  },
+  rollupOptions: {
+    external: ['@at/basic'],
+    output: {
+      globals: {
+        "@at/basic": "@at/basic",
+      },
+    },
   }
 })

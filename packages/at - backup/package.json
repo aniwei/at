@@ -1,0 +1,36 @@
+{
+  "name": "@at/app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:serve": "vitepress serve docs",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@at/framework": "workspace:^1.0.0",
+    "canvaskit-wasm": "^0.38.0",
+    "debug": "^4.3.4",
+    "jszip": "^3.10.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "ts-invariant": "^0.10.3"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "@types/react": "^18.0.27",
+    "@types/react-dom": "^18.0.10",
+    "@vitejs/plugin-react-swc": "^3.0.0",
+    "ava": "^5.1.1",
+    "happy-dom": "^8.2.6",
+    "typescript": "^4.9.3",
+    "vite": "^4.1.0",
+    "vitepress": "1.0.0-alpha.45",
+    "vitest": "^0.28.3"
+  }
+}

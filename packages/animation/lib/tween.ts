@@ -1,35 +1,38 @@
 import { invariant } from 'ts-invariant'
-import { Color, Rect, Size } from '../at'
-import { AnimationStatus, AtAnimation } from './animation'
-import { SubscribeHandle } from '../basic/subscribable'
-import { AtCurve } from './curves'
+import { Color, subscribable } from '@at/basic'
+import { Rect, Size } from '@at/geometry'
+import { AnimationStatus, Animation } from './animation'
+import { Curve } from './curves'
 
-type AnimatableCallback<T> = (t: T) => T
 
-export abstract class AtAnimatable<T> {
+//// => Animatable
+export type AnimatableCallback<T> = (t: T) => T
+
+export abstract class Animatable<T> {
   static fromCallback <T> (callback: AnimatableCallback<T>) {
-    return AtCallbackAnimatable.create(callback)
+    return CallbackAnimatable.create(callback)
   }
   
   abstract transform (t: T | null): T | null
   
-  evaluate (animation: AtAnimation<T>): T | null {
+  evaluate (animation: Animation<T>): T | null {
     invariant(animation.value !== null)
     return this.transform(animation.value)
   }
 
-  animate (parent: AtAnimation<T>): AtAnimation<T> {
-    return AtAnimatedEvaluation.create<T>(parent, this)
+  animate (parent: Animation<T>): Animation<T> {
+    return AnimatedEvaluation.create<T>(parent, this)
   }
 
-  chain (parent: AtAnimatable<T>): AtAnimatable<T> {
-    return AtChainedEvaluation.create<T>(parent, this)
+  chain (parent: Animatable<T>): Animatable<T> {
+    return ChainedEvaluation.create<T>(parent, this)
   }
 }
 
-export class AtCallbackAnimatable<T> extends AtAnimatable<T> {
+//// => CallbackAnimatable
+export class CallbackAnimatable<T> extends Animatable<T> {
   static create<T>(callback: AnimatableCallback<T>) {
-    return new AtCallbackAnimatable<T>(callback)
+    return new CallbackAnimatable<T>(callback)
   }
 
   constructor (callback: AnimatableCallback<T>) {
@@ -44,25 +47,28 @@ export class AtCallbackAnimatable<T> extends AtAnimatable<T> {
   }
 }
 
-export class AtAnimatedEvaluation<T> extends AtAnimation<T> {
-  static create<T>(parent: AtAnimation<T>, evaluatable: AtAnimatable<T>) {
-    return new AtAnimatedEvaluation(parent, evaluatable)
+//// => AnimatedEvaluation
+export class AnimatedEvaluation<T> extends Animation<T> {
+  static create<T>(parent: Animation<T>, evaluatable: Animatable<T>) {
+    return new AnimatedEvaluation(parent, evaluatable)
   }
 
+  // => status
   public get status () {
     return this.parent.status
   }
   
-  public parent: AtAnimation<T>
-  private evaluatable: AtAnimatable<T>
-
-
+  public parent: Animation<T>
+  private evaluatable: Animatable<T>
   
   public get value (): T | null {
     return this.evaluatable.evaluate(this.parent)
   } 
 
-  constructor (parent: AtAnimation<T>, evaluatable: AtAnimatable<T>) {
+  constructor (
+    parent: Animation<T>, 
+    evaluatable: Animatable<T>
+  ) {
     super()
 
     this.parent = parent
@@ -85,37 +91,38 @@ export class AtAnimatedEvaluation<T> extends AtAnimation<T> {
   }
   
   toString () {
-    return `AtAnimatedEvaluation()`
+    return 'AnimatedEvaluation()'
   }
 
 }
 
-export class AtChainedEvaluation<T> extends AtAnimatable<T> {
-  static create<T>(parent: AtAnimatable<T>, evaluatable: AtAnimatable<T>) {
-    return new AtChainedEvaluation(parent, evaluatable)
+//// => ChainedEvaluation
+export class ChainedEvaluation<T> extends Animatable<T> {
+  static create<T>(parent: Animatable<T>, evaluatable: Animatable<T>) {
+    return new ChainedEvaluation(parent, evaluatable)
   }
 
-  constructor (parent: AtAnimatable<T>, evaluatable: AtAnimatable<T>) {
+  private parent: Animatable<T>
+  private evaluatable: Animatable<T>
+
+  constructor (parent: Animatable<T>, evaluatable: Animatable<T>) {
     super()
     this.parent = parent
     this.evaluatable = evaluatable
   }
 
-  private parent: AtAnimatable<T>
-  private evaluatable: AtAnimatable<T>
-
-  
   transform (t: T): T | null {
     return this.evaluatable.transform(this.parent.transform(t))
   }
 
-
   toString () {
-    return `AtChainedEvaluation()`
+    return 'ChainedEvaluation()'
   }
 }
 
-export abstract class AtTween<T> extends AtAnimatable<T> {
+
+//// => Tween
+export abstract class Tween<T> extends Animatable<T> {
   public begin: T
   public end: T
 
@@ -140,23 +147,24 @@ export abstract class AtTween<T> extends AtAnimatable<T> {
   }
 
   toString () {
-    return `AtTween()`
+    return `Tween([begin]: ${this.begin}, [end]: ${this.end})`
   }
 }
 
-
-export abstract class AtReverseTween<T> extends AtTween<T> {
-  constructor (parent: AtTween<T>) {
+//// => ReverseTween
+export abstract class ReverseTween<T> extends Tween<T> {
+  constructor (parent: Tween<T>) {
     super(parent.end, parent.begin)
     this.parent = parent
   }
 
-  public parent: AtTween<T> 
+  public parent: Tween<T> 
 }
 
-export class AtColorTween extends AtTween<Color> {
+//// => ColorTween
+export class ColorTween extends Tween<Color> {
   static create<T>(begin: Color, end: Color) {
-    return new AtColorTween(begin, end)
+    return new ColorTween(begin, end)
   }
 
   constructor (begin: Color, end: Color) {
@@ -168,35 +176,39 @@ export class AtColorTween extends AtTween<Color> {
   }
 }
 
-export class AtSizeTween extends AtTween<Size> {  
+//// => SizeTween
+export class SizeTween extends Tween<Size> {  
   lerp (t: number) {
     return Size.lerp(this.begin, this.end, t)
   }
 }
 
-export class AtRectTween extends AtTween<Rect> {
+//// => RectTween
+export class RectTween extends Tween<Rect> {
   lerp (t: number) {
     return Rect.lerp(this.begin, this.end, t)
   }
 }
 
-export class AtIntTween extends AtTween<number> {  
+//// => IntTween
+export class IntTween extends Tween<number> {  
   lerp (t: number) {
     return Math.round(this.begin + (this.end - this.begin) * t)
   }
 }
 
-
-export class AtStepTween extends AtTween<number> {  
+//// => StepTween
+export class StepTween extends Tween<number> {  
   lerp (t: number) {
     return Math.floor(this.begin + (this.end - this.begin) * t)
   } 
 }
 
-export class AtCurveTween extends AtAnimatable<number> {
-  public curve: AtCurve
+//// => CurveTween
+export class CurveTween extends Animatable<number> {
+  public curve: Curve
 
-  constructor (curve: AtCurve) {
+  constructor (curve: Curve) {
     super()
     this.curve = curve
   }
@@ -210,6 +222,6 @@ export class AtCurveTween extends AtAnimatable<number> {
 
   
   toString () {
-    return `AtCurveTween()`
+    return `CurveTween([curve]: ${this.curve})`
   }
 }

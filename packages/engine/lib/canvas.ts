@@ -1,9 +1,11 @@
 import { Rect, RRect } from '@at/geometry'
 import { Path } from './Path'
+import * as Sk from './skia'
 
-export class Canvas extends skia.Object<Canvas> {
+export class Canvas extends Sk.Object<Canvas> {
+  // => count
   public get count () {
-    return this.skia.getSaveCount
+    return this.skia.getSaveCount()
   }
 
   /**
@@ -47,7 +49,7 @@ export class Canvas extends skia.Object<Canvas> {
    * @param {boolean} doAntiAlias
    * @return {void}
    */
-  clipRect (rect: Rect, clipOp: ClipOp = At.ClipOp.Intersect, doAntiAlias = true) {
+  clipRect (rect: Rect, clipOp: ClipOp, doAntiAlias = true) {
     invariant(clipOp !== null, `The argument clipOp cannot be null.`)
     invariant(doAntiAlias !== null, `The argument doAntiAlias cannot be null.`)
 

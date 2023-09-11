@@ -7,5 +7,13 @@ export default defineConfig({
       name: 'index',
       fileName: 'index'
     }
+  },
+  rollupOptions: {
+    external: ['@at/basic'],
+    output: {
+      globals: {
+        "@at/basic": "@at/basic",
+      },
+    },
   }
 })

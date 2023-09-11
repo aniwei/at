@@ -1,35 +1,34 @@
-import invariant from 'ts-invariant'
-import { At } from '../at'
-import { clamp, lerp } from '../basic/helper'
-import { AtCurve, AtCurves } from './curves'
-import { AnimationStatus, AtAnimation } from './animation'
+import { invariant } from 'ts-invariant'
+import { clamp, lerp } from '@at/basic'
+import { Curve, Curves } from './curves'
+import { AnimationStatus, Animation } from './animation'
 import { AtTicker, AtTickerFuture, AtTickerProvider } from '../basic/ticker'
-import { AtSpringDescription, AtSpringSimulation, AtTolerance } from './simulation'
+import { AtSpringDescription, AtSpringSimulation, Tolerance } from './simulation'
 
-export enum AnimationDirection {
+export enum AnimationDirectionKind {
   Forward,
   Reverse,
 }
 
-export enum AnimationBehavior {
+export enum AnimationBehaviorKind {
   Normal,
   Preserve,
 }
 
-
-export type AtAnimationControllerOptions = {
+//// => AnimationController
+export type AnimationControllerOptions = {
   value?: number | null,
   duration?: number | null,
   reverseDuration?: number,
   lowerBound?: number,
   upperBound?: number,
-  behavior?: AnimationBehavior,
+  behavior?: AnimationBehaviorKind,
   vsync: AtTickerProvider,
 }
 
-export class AtAnimationController extends AtAnimation<number> {
-  static create (options: AtAnimationControllerOptions) {
-    return new AtAnimationController(
+export class AnimationController extends Animation<number> {
+  static create (options: AnimationControllerOptions) {
+    return new AnimationController(
       options?.value,
       options?.duration,
       options?.reverseDuration,
@@ -45,9 +44,9 @@ export class AtAnimationController extends AtAnimation<number> {
     duration: number,
     reverseDuration: number,
     vsync: AtTickerProvider,
-    behavior = AnimationBehavior.Preserve,
+    behavior = AnimationBehaviorKind.Preserve,
   ) {
-    const controller = AtAnimationController.create({
+    const controller = AnimationController.create({
       value,
       duration,
       reverseDuration,
@@ -56,13 +55,13 @@ export class AtAnimationController extends AtAnimation<number> {
     })
     controller.lowerBound = Number.NEGATIVE_INFINITY
     controller.upperBound = Infinity
-    controller.direction = AnimationDirection.Forward 
+    controller.direction = AnimationDirectionKind.Forward 
 
     controller.ticker = vsync.createTicker(controller.tick)
     controller.internalSetValue(value)
   }
 
-  public get view (): AtAnimation<number> {
+  public get view (): Animation<number> {
     return this
   } 
 
@@ -100,15 +99,15 @@ export class AtAnimationController extends AtAnimation<number> {
     return this.ticker !== null && this.ticker.isActive
   }
 
-  public direction: AnimationDirection
+  public direction: AnimationDirectionKind
   public lastElapsedDuration: number | null = null
   public duration: number | null
   public reverseDuration: number | null
   public ticker: AtTicker | null
-  public simulation: AtSimulation | null = null
+  public simulation: Simulation | null = null
   public lowerBound: number
   public upperBound: number
-  public behavior: AnimationBehavior
+  public behavior: AnimationBehaviorKind
 
   constructor (
     value: number | null = null,
@@ -116,7 +115,7 @@ export class AtAnimationController extends AtAnimation<number> {
     reverseDuration: number | null = null,
     lowerBound: number = 0.0,
     upperBound: number = 1.0,
-    behavior = AnimationBehavior.Normal,
+    behavior = AnimationBehaviorKind.Normal,
     vsync: AtTickerProvider,
   ) {
     super()
@@ -127,7 +126,7 @@ export class AtAnimationController extends AtAnimation<number> {
     this.duration = duration
     this.reverseDuration = reverseDuration
 
-    this.direction = AnimationDirection.Forward 
+    this.direction = AnimationDirectionKind.Forward 
     this.ticker = vsync.createTicker(this.tick)
     this.internalSetValue(value ?? lowerBound)
   }
@@ -155,7 +154,7 @@ export class AtAnimationController extends AtAnimation<number> {
     } else if (this._value === this.upperBound) {
       this._status = AnimationStatus.Completed
     } else {
-      this._status = this.direction === AnimationDirection.Forward 
+      this._status = this.direction === AnimationDirectionKind.Forward 
         ? AnimationStatus.Forward 
         : AnimationStatus.Reverse
     }
@@ -163,7 +162,7 @@ export class AtAnimationController extends AtAnimation<number> {
 
   forward (from: number | null = null) {
     
-    this.direction = AnimationDirection.Forward;
+    this.direction = AnimationDirectionKind.Forward;
     if (from !== null) {
       this.value = from
     }
@@ -172,7 +171,7 @@ export class AtAnimationController extends AtAnimation<number> {
   }
 
   reverse (from: number | null = null) {
-    this.direction = AnimationDirection.Reverse
+    this.direction = AnimationDirectionKind.Reverse
     if (from !== null) {
       this.value = from
     }
@@ -180,42 +179,42 @@ export class AtAnimationController extends AtAnimation<number> {
     return this.animateToInternal(this.lowerBound)
   }
 
-  animateTo (target: number, duration: number | null, curve: AtCurve = AtCurves.linear) {
+  animateTo (target: number, duration: number | null, curve: Curve = Curves.linear) {
     invariant(
       this.ticker !== null,
       'AnimationController.animateTo() called after AnimationController.dispose()\n'
     )
-    this.direction = AnimationDirection.Forward
+    this.direction = AnimationDirectionKind.Forward
     return this.animateToInternal(target, duration, curve)
   }
 
 
-  animateBack (target: number, duration: number | null, curve: AtCurve = AtCurves.linear) {
+  animateBack (target: number, duration: number | null, curve: Curve = Curves.linear) {
     invariant(
       this.ticker !== null,
       'AnimationController.animateBack() called after AnimationController.dispose()\n'
     )
-    this.direction = AnimationDirection.Reverse
+    this.direction = AnimationDirectionKind.Reverse
     return this.animateToInternal(target, duration, curve)
   }
 
   animateToInternal (
     target: number, 
     duration: number | null = null, 
-    curve: AtCurve = AtCurves.linear
+    curve: Curve = Curves.linear
   ) {
     const scale = 1.0
     let simulationDuration = duration
     if (simulationDuration == null) {
-      invariant(!(this.duration === null && this.direction == AnimationDirection.Forward))
-      invariant(!(this.duration === null && this.direction == AnimationDirection.Reverse && this.reverseDuration == null))
+      invariant(!(this.duration === null && this.direction == AnimationDirectionKind.Forward))
+      invariant(!(this.duration === null && this.direction == AnimationDirectionKind.Reverse && this.reverseDuration == null))
       const range = this.upperBound - this.lowerBound
       const remainingFraction = Number.isFinite(range) 
         ? Math.abs((target - this.value)) / range 
         : 1.0
 
       const directionDuration =
-        (this.direction === AnimationDirection.Reverse && this.reverseDuration !== null)
+        (this.direction === AnimationDirectionKind.Reverse && this.reverseDuration !== null)
         ? this.reverseDuration
         : this.duration
       invariant(directionDuration !== null)
@@ -232,7 +231,7 @@ export class AtAnimationController extends AtAnimation<number> {
         this.publish()
       }
 
-      this._status = (this.direction === AnimationDirection.Forward) 
+      this._status = (this.direction === AnimationDirectionKind.Forward) 
         ? AnimationStatus.Completed 
         : AnimationStatus.Dismissed
       
@@ -243,7 +242,7 @@ export class AtAnimationController extends AtAnimation<number> {
     invariant(simulationDuration > 0)
     invariant(!this.isAnimating)
 
-    return this.startSimulation(AtInterpolationSimulation.create({
+    return this.startSimulation(InterpolationSimulation.create({
       begin: this.value, 
       end: target, 
       duration: simulationDuration, 
@@ -267,7 +266,7 @@ export class AtAnimationController extends AtAnimation<number> {
     this.stop()
 
     invariant(period)
-    return this.startSimulation(AtRepeatingSimulation.create({ 
+    return this.startSimulation(RepeatingSimulation.create({ 
       initialValue: this.value, 
       min, 
       max, 
@@ -277,9 +276,9 @@ export class AtAnimationController extends AtAnimation<number> {
     }))
   }
 
-  private directionSetter (direction: AnimationDirection) {
+  private directionSetter (direction: AnimationDirectionKind) {
     this.direction = direction
-    this._status = (this.direction == AnimationDirection.Forward) 
+    this._status = (this.direction == AnimationDirectionKind.Forward) 
       ? AnimationStatus.Forward 
       : AnimationStatus.Reverse
     this.checkStatusChanged()
@@ -289,12 +288,12 @@ export class AtAnimationController extends AtAnimation<number> {
   fling (
     velocity: number = 1.0, 
     springDescription: AtSpringDescription = At.kFlingSpringDescription as AtSpringDescription, 
-    behavior: AnimationBehavior | null = null
+    behavior: AnimationBehaviorKind | null = null
   ) {
     invariant(At.kFlingTolerance)
     this.direction = velocity < 0.0 
-      ? AnimationDirection.Reverse 
-      : AnimationDirection.Forward
+      ? AnimationDirectionKind.Reverse 
+      : AnimationDirectionKind.Forward
     const target = velocity < 0.0 
       ? this.lowerBound - At.kFlingTolerance.distance
       : this.upperBound + At.kFlingTolerance.distance
@@ -315,13 +314,13 @@ export class AtAnimationController extends AtAnimation<number> {
     return this.startSimulation(simulation)
   }
 
-  animateWith (simulation: AtSimulation) {
+  animateWith (simulation: Simulation) {
     this.stop()
-    this.direction = AnimationDirection.Forward
+    this.direction = AnimationDirectionKind.Forward
     return this.startSimulation(simulation)
   }
 
-  startSimulation (simulation: AtSimulation) {
+  startSimulation (simulation: Simulation) {
     invariant(!this.isAnimating)
     this.simulation = simulation
     this.lastElapsedDuration = 0
@@ -329,7 +328,7 @@ export class AtAnimationController extends AtAnimation<number> {
     this._value = clamp(simulation.x(0.0), this.lowerBound, this.upperBound)
     invariant(this.ticker)
     const result = this.ticker.start()
-    this._status = (this.direction === AnimationDirection.Forward) 
+    this._status = (this.direction === AnimationDirectionKind.Forward) 
       ? AnimationStatus.Forward 
       : AnimationStatus.Reverse
     this.checkStatusChanged()
@@ -371,7 +370,7 @@ export class AtAnimationController extends AtAnimation<number> {
     this._value = clamp(this.simulation.x(elapsedInSeconds), this.lowerBound, this.upperBound)
     
     if (this.simulation.isDone(elapsedInSeconds)) {
-      this._status = (this.direction == AnimationDirection.Forward) 
+      this._status = (this.direction == AnimationDirectionKind.Forward) 
         ? AnimationStatus.Completed 
         : AnimationStatus.Dismissed
       
@@ -383,12 +382,15 @@ export class AtAnimationController extends AtAnimation<number> {
   }
 }
 
-type DirectionSetter = (direction: AnimationDirection) => void
+//// 
+type DirectionSetter = (direction: AnimationDirectionKind) => void
 
-export abstract class AtSimulation {
-  public tolerance: AtTolerance
 
-  constructor (tolerance: AtTolerance = AtTolerance.defaultTolerance) {
+//// => Simulation
+export abstract class Simulation {
+  public tolerance: Tolerance
+
+  constructor (tolerance: Tolerance = Tolerance.defaultTolerance) {
     this.tolerance = tolerance
   }
 
@@ -397,11 +399,11 @@ export abstract class AtSimulation {
   abstract isDone (time: number): boolean
 
   toString () {
-    return `AtSimulation()`
+    return `Simulation()`
   }
 }
 
-export type AtRepeatingSimulationOptions = {
+export type RepeatingSimulationOptions = {
   initialValue: number, 
   min: number, 
   max: number, 
@@ -410,9 +412,9 @@ export type AtRepeatingSimulationOptions = {
   directionSetter: DirectionSetter
 }
 
-export class AtRepeatingSimulation extends AtSimulation {
-  static create (options: AtRepeatingSimulationOptions) {
-    return new AtRepeatingSimulation(
+export class RepeatingSimulation extends Simulation {
+  static create (options: RepeatingSimulationOptions) {
+    return new RepeatingSimulation(
       options.initialValue,
       options.min,
       options.max,
@@ -463,10 +465,10 @@ export class AtRepeatingSimulation extends AtSimulation {
     //.isOdd;
 
     if (this.reverse && isPlayingReverse) {
-      this.directionSetter(AnimationDirection.Reverse)
+      this.directionSetter(AnimationDirectionKind.Reverse)
       return lerp(this.max, this.min, t)
     } else {
-      this.directionSetter(AnimationDirection.Forward)
+      this.directionSetter(AnimationDirectionKind.Forward)
       return lerp(this.min, this.max, t)
     }
   }
@@ -480,17 +482,17 @@ export class AtRepeatingSimulation extends AtSimulation {
   }
 }
 
-export type AtInterpolationSimulationOptions = {
+export type InterpolationSimulationOptions = {
   begin: number,
   end: number, 
   duration: number, 
-  curve: AtCurve, 
+  curve: Curve, 
   scale: number
 }
 
-export class AtInterpolationSimulation extends AtSimulation {
-  static create (options: AtInterpolationSimulationOptions) {
-    return new AtInterpolationSimulation(
+export class InterpolationSimulation extends Simulation {
+  static create (options: InterpolationSimulationOptions) {
+    return new InterpolationSimulation(
       options.begin,
       options.end,
       options.duration,
@@ -503,7 +505,7 @@ export class AtInterpolationSimulation extends AtSimulation {
     begin: number,
     end: number, 
     duration: number, 
-    curve: AtCurve, 
+    curve: Curve, 
     scale: number
   ) {
     super()
@@ -516,7 +518,7 @@ export class AtInterpolationSimulation extends AtSimulation {
   private durationInSeconds: number
   private begin: number
   private end: number
-  private curve: AtCurve
+  private curve: Curve
 
   x (timeInSeconds: number) {
     const t = clamp(timeInSeconds / this.durationInSeconds, 0.0, 1.0)
