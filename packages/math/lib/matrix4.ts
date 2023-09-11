@@ -1,28 +1,19 @@
 import { invariant } from 'ts-invariant'
+import { UnimplementedError, ArgumentError } from '@at/basic'
 import { Matrix2 } from './matrix2'
 import { Matrix3 } from './matrix3'
 import { Vector2 } from './vector2'
 import { Vector4 } from './vector4'
 import { Vector3 } from './vector3'
 import { Quaternion } from './quaternion'
-import { UnimplementedError, ArgumentError } from './error'
 
-import type { ArrayLike } from '../at'
 
 export class Matrix4 extends Array<number> {
   static decomposeV: Vector3 | null = null
   static decomposeM: Matrix4 | null = null
   static decomposeR: Matrix3 | null =null
 
-  static zero () {
-    const mat =  new Matrix4(16) // 16
-    
-    for (let i = 0; i < 16; i++) {
-      mat[i] = 0
-    }
-
-    return mat
-  }
+  static ZERO = new Matrix4(16)
 
   /**
    * @description: 

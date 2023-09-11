@@ -3,7 +3,7 @@ import { Offset, Rect } from '@at/geometry'
 import { Matrix4 } from './matrix4'
 import { Vector4 } from './vector4'
 
-
+//// => MatrixUtils
 export class MatrixUtils {
   /**
    * 
@@ -82,11 +82,11 @@ export class MatrixUtils {
     invariant(a !== null || b !== null)
 
     if (a === null) {
-      return MatrixUtils.isIdentity(b!)
+      return MatrixUtils.identity(b!)
     } 
 
     if (b === null) {
-      return MatrixUtils.isIdentity(a)
+      return MatrixUtils.identity(a)
     }
 
     invariant(a !== null && b !== null)
@@ -116,25 +116,25 @@ export class MatrixUtils {
    * @param a 
    * @returns 
    */
-  static isIdentity (a: Matrix4): boolean {
+  static identity (a: Matrix4): boolean {
     invariant(a !== null, 'The argument "a" cannot be null.')
     return (
-      a.storage[0] === 1.0 && // col 1
-      a.storage[1] === 0.0 &&
-      a.storage[2] === 0.0 &&
-      a.storage[3] === 0.0 &&
-      a.storage[4] === 0.0 && // col 2
-      a.storage[5] === 1.0 &&
-      a.storage[6] === 0.0 &&
-      a.storage[7] === 0.0 &&
-      a.storage[8] === 0.0 && // col 3
-      a.storage[9] === 0.0 &&
-      a.storage[10] === 1.0 &&
-      a.storage[11] === 0.0 &&
-      a.storage[12] === 0.0 && // col 4
-      a.storage[13] === 0.0 &&
-      a.storage[14] === 0.0 &&
-      a.storage[15] === 1.0
+      a[0] === 1.0 && // col 1
+      a[1] === 0.0 &&
+      a[2] === 0.0 &&
+      a[3] === 0.0 &&
+      a[4] === 0.0 && // col 2
+      a[5] === 1.0 &&
+      a[6] === 0.0 &&
+      a[7] === 0.0 &&
+      a[8] === 0.0 && // col 3
+      a[9] === 0.0 &&
+      a[10] === 1.0 &&
+      a[11] === 0.0 &&
+      a[12] === 0.0 && // col 4
+      a[13] === 0.0 &&
+      a[14] === 0.0 &&
+      a[15] === 1.0
     )
   }
 
@@ -307,7 +307,7 @@ export class MatrixUtils {
         this.min4(uly, ury, lly, lry),
         this.max4(ulx, urx, llx, lrx),
         this.max4(uly, ury, lly, lry),
-      );
+      )
     }
   }
 
@@ -336,8 +336,8 @@ export class MatrixUtils {
     transform: Matrix4 , 
     rect: Rect
   ) {
-    invariant(rect !== null)
-    if (this.isIdentity(transform)) {
+    invariant(rect !== null, `The argument "rect" cannot be null.`)
+    if (this.identity(transform)) {
       return rect
     }
     

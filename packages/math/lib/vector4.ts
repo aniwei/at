@@ -1,12 +1,10 @@
 import { clamp, Numberic } from '@at/basic'
-import { Vector2 } from './vector2'
-import { Vector3 } from './vector3'
 import { Matrix4 } from './matrix4'
 
 export class Vector4 extends Numberic<Vector4> {
   static ZERO = new Vector4(4)
   /**
-   * 
+   * 求最小
    * @param a 
    * @param b 
    * @param result 
@@ -24,7 +22,7 @@ export class Vector4 extends Numberic<Vector4> {
   }
 
   /**
-   * 
+   * 求最大
    * @param {Vector4} a 
    * @param {Vector4} b 
    * @returns {Vector4}
@@ -42,7 +40,7 @@ export class Vector4 extends Numberic<Vector4> {
   }
 
   /**
-   * 
+   * 混合
    * @param {Vector4} min 
    * @param {Vector4} max 
    * @param {number} a 
@@ -67,37 +65,36 @@ export class Vector4 extends Numberic<Vector4> {
    * @param offset 
    * @returns 
    */
-  static copyFromArray (
+  static copyFromList (
     array: number[], 
     offset = 0
   ) {
     const vec = Vector4.ZERO.clone()
-    vec.copyFromArray(array, offset)
+    vec.copyFromList(array, offset)
     return vec
   }
 
   static identity () {
-    const vec = Vector4.zero()
-    vec.setIdentity()
+    const vec = Vector4.ZERO.clone()
+    vec.identity()
     return vec
   } 
 
   static all (value: number) {
-    const vec = Vector4.zero()
+    const vec = Vector4.ZERO.clone()
     vec.splat(value)
     return vec
   } 
 
-  static copy (other: Vector4) {
-    const vec = Vector4.zero()
-    vec.setFrom(other)
+  static copy (other: Vector4): Vector4 {
+    const vec = Vector4.ZERO.clone()
+    vec.from(other)
     return vec
   }
 
-  static fromArrayLike (v4: Iterable<number>) {
+  static fromList (v4: Iterable<number>) {
     return new Vector4(...v4)
   }
-
   
   static fromBuffer (
     buffer: ArrayBuffer, 
@@ -109,7 +106,7 @@ export class Vector4 extends Numberic<Vector4> {
       Float64Array.BYTES_PER_ELEMENT
     )
 
-    return Vector4.fromArrayLike(new Float64Array(
+    return Vector4.fromList(new Float64Array(
       buffer, 
       offset, 
       length
@@ -128,7 +125,7 @@ export class Vector4 extends Numberic<Vector4> {
   }
 
   // => length
-  set length (value: number) {
+  set distance (value: number) {
     if (value === 0.0) {
       this.zero()
     } else {
@@ -143,36 +140,18 @@ export class Vector4 extends Numberic<Vector4> {
       this[3] *= l
     }
   }
-  get length () { 
-    return Math.sqrt(this.length2)
+  get distance () { 
+    return Math.sqrt(this.distance2)
   } 
 
   // => length2
-  get length2 () {
+  get distance2 () {
     let sum: number
     sum = this[0] * this[0]
     sum += this[1] * this[1]
     sum += this[2] * this[2]
     sum += this[3] * this[3]
     return sum
-  }
-
-  get isInfinite () {
-    let isInfinite = false
-    isInfinite = isInfinite || (!Number.isFinite(this[0]))
-    isInfinite = isInfinite || (!Number.isFinite(this[1]))
-    isInfinite = isInfinite || (!Number.isFinite(this[2]))
-    isInfinite = isInfinite || (!Number.isFinite(this[3]))
-    return isInfinite
-  }
-
-  get isNaN () {
-    let isNaN = false
-    isNaN = isNaN || Number.isNaN(this[0])
-    isNaN = isNaN || Number.isNaN(this[1])
-    isNaN = isNaN || Number.isNaN(this[2])
-    isNaN = isNaN || Number.isNaN(this[3])
-    return isNaN
   }
 
   // => x
@@ -255,7 +234,7 @@ export class Vector4 extends Numberic<Vector4> {
   } 
 
   normalizeInto (out: Vector4): Vector4 {
-    out.setFrom(this)
+    out.from(this)
     out.normalize()
     return out
   }
@@ -461,7 +440,7 @@ export class Vector4 extends Numberic<Vector4> {
     return v4
   }
 
-  copyIntoArray (
+  copyIntoList (
     array: number[], 
     offset = 0
   ) {
@@ -471,7 +450,7 @@ export class Vector4 extends Numberic<Vector4> {
     array[offset + 3] = this[3]
   }
 
-  copyFromArray (
+  copyFromList (
     array: number[], 
     offset = 0
   ) {
@@ -481,11 +460,19 @@ export class Vector4 extends Numberic<Vector4> {
     this[3] = array[offset + 3]
   }
 
-  clone () {
+  /**
+   * 复制
+   * @returns 
+   */
+  clone (): Vector4 {
     return Vector4.copy(this)
   }
 
-  
+  /**
+   * 是否相等
+   * @param other 
+   * @returns 
+   */
   equal (other: Vector4 | null)  {
     return (
       (other instanceof Vector4) &&
@@ -496,6 +483,11 @@ export class Vector4 extends Numberic<Vector4> {
     )
   }
 
+  /**
+   * 是否相等
+   * @param other 
+   * @returns 
+   */
   notEqual (other: Vector4 | null) {
     return !this.equal(other)
   }

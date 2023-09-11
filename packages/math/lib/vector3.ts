@@ -1,45 +1,59 @@
-import { clamp } from './helper'
+import { Numberic, clamp } from '@at/basic'
 import { Matrix3 } from './matrix3'
 import { Matrix4 } from './matrix4'
-import { Vector2 } from './vector2'
-import { Vector4 } from './vector4'
 import { Quaternion } from './quaternion'
 
-export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
+export class Vector3 extends Numberic<Vector3> {
   static ZERO = new Vector3()
 
-  static min (a: Vector3, b: Vector3, result: Vector3) {
+  /**
+   * 求最小
+   * @param {Vector3} a 
+   * @param {Vector3} b 
+   * @param {Vector3} result 
+   */
+  static min (a: Vector3, b: Vector3) {
+    const result: Vector3 = Vector3.ZERO.clone()
     result[0] = Math.min(a[0], b[0])
     result[1] = Math.min(a[1], b[1])
     result[2] = Math.min(a[2], b[2])
+    return result
   }
 
-  static max (a: Vector3, b: Vector3, result: Vector3) {
+  /**
+   * 求最大
+   * @param {Vector3} a 
+   * @param {Vector3} b 
+   * @param {Vector3} result 
+   */
+  static max (a: Vector3, b: Vector3) {
+    const result: Vector3 = Vector3.ZERO.clone()
     result[0] = Math.max(a[0], b[0])
     result[1] = Math.max(a[1], b[1])
     result[2] = Math.max(a[2], b[2])
+    return result
   }
 
-  static copyFromArray (array: number[], offset = 0) {
-    const vec = Vector3.zero()
-    vec.copyFromArray(array, offset)
+  static copyFromList (array: number[], offset = 0) {
+    const vec = Vector3.ZERO.clone()
+    vec.copyFromList(array, offset)
     return vec
   }
 
   static all (value: number) {
-    const v = Vector3.zero()
+    const v = Vector3.ZERO.clone()
     v.splat(value)
     return v
   }
 
-  static copy (other: Vector3) {
-    const v = Vector3.zero()
-    v.setFrom(other)
+  static copy (other: Vector3): Vector3 {
+    const v = Vector3.ZERO.clone()
+    v.from(other)
 
     return v
   }
 
-  static fromArrayLike (v3: ArrayLike<number>) {
+  static fromList (v3: Iterable<number>) {
     return new Vector3(...v3)
   }
 
@@ -59,9 +73,10 @@ export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
     return this
   }
 
-  set length (value: number) {
+  // => distance
+  set distance (value: number) {
     if (value === 0) {
-      this.setZero()
+      this.zero()
     } else {
       let l = length
       if (l === 0.0) {
@@ -74,12 +89,12 @@ export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
       this[2] *= l
     }
   }
-
-  get length () {
-    return Math.sqrt(this.length2)
+  get distance () {
+    return Math.sqrt(this.distance2)
   }
 
-  get length2 () {
+  // => distance2
+  get distance2 () {
     let sum
     sum = this[0] * this[0]
     sum += this[1] * this[1]
@@ -87,56 +102,67 @@ export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
     return sum
   }
 
-  get isInfinite () {
-    let isInfinite = false
-    isInfinite = isInfinite || Number.isFinite(this[0])
-    isInfinite = isInfinite || Number.isFinite(this[1])
-    isInfinite = isInfinite || Number.isFinite(this[2])
-    return isInfinite
-  }
-
-  get isNaN () {
-    let isNaN = false
-    isNaN = isNaN || Number.isNaN(this[0])
-    isNaN = isNaN || Number.isNaN(this[1])
-    isNaN = isNaN || Number.isNaN(this[2])
-    return isNaN
-  }
-
+  // => x
   get x () {
     return this[0]
   }
+
+  // => y
   get y () {
     return this[1]
   }
+
+  // => z
   get z () {
     return this[2]
   }
 
-  setValues (x: number, y: number, z: number) {
+  /**
+   * 设置向量值
+   * @param {number} x 
+   * @param {number} y 
+   * @param {number} z 
+   */
+  values (x: number, y: number, z: number) {
     this[0] = x
     this[1] = y
     this[2] = z
   }
 
-  setZero () {
+  /**
+   * 设置为0向量
+   */
+  zero () {
     this[0] = 0
     this[1] = 0
     this[2] = 0
   }
 
-  setFrom (other: Vector3) {
+  /**
+   * 从向量设置值
+   * @param {Vector3} other 
+   */
+  from (other: Vector3) {
     this[0] = other[0]
     this[1] = other[1]
     this[2] = other[2]
   }
 
-  splat (arg: number) {
-    this[0] = arg
-    this[1] = arg
-    this[2] = arg
+
+  /**
+   * 抹平向量
+   * @param {number} factor 
+   */
+  splat (factor: number) {
+    this[0] = factor
+    this[1] = factor
+    this[2] = factor
   }
 
+  /**
+   * 
+   * @returns 
+   */
   normalize () {
     const l = this.length
     if (l === 0) {
@@ -149,26 +175,49 @@ export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
     return l
   }
 
+  /**
+   * 
+   * @returns 
+   */
   normalizeLength () {
     return this.normalize()
   }
 
+  /**
+   * 
+   * @returns 
+   */
   normalized () {
     const v = Vector3.copy(this)
     v.normalize()
     return v
   }
 
+  /**
+   * 
+   * @param out 
+   * @returns 
+   */
   normalizeInto (out: Vector3) {
-    out.setFrom(this)
+    out.from(this)
     out.normalize()
     return out
   }
 
+  /**
+   * 
+   * @param v 
+   * @returns 
+   */
   distanceTo (v: Vector3) {
     return Math.sqrt(this.distanceToSquared(v))
   }
 
+  /**
+   * 
+   * @param v 
+   * @returns 
+   */
   distanceToSquared (v: Vector3) {
     const dx = this[0] - v[0]
     const dy = this[1] - v[1]
@@ -177,20 +226,30 @@ export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
     return dx * dx + dy * dy + dz * dz
   }
 
+  /**
+   * 
+   * @param other 
+   * @returns 
+   */
   angleTo (other: Vector3) {
     if (
       this[0] === other[0] &&
       this[1] === other[1] &&
       this[2] === other[2]
     ) {
-      return 0
+      return 0.0
     }
 
     const d = this.dot(other) / (length * other.length)
-
     return Math.acos(clamp(d, -1.0, 1.0))
   }
 
+  /**
+   * 
+   * @param other 
+   * @param normal 
+   * @returns 
+   */
   angleToSigned (other: Vector3, normal: Vector3) {
     const angle = this.angleTo(other)
     const c = this.cross(other)
@@ -232,6 +291,12 @@ export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
     )
   }
 
+  /**
+   * 
+   * @param {Vector3} other 
+   * @param {Vector3} out 
+   * @returns {Vector3}
+   */
   crossInto (other: Vector3, out: Vector3) {
     const x = this[0]
     const y = this[1]
@@ -245,60 +310,27 @@ export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
     return out
   }
 
-  reflect (normal: Vector3) {
-    this.substract(normal.scaled(2.0 * normal.dot(this)))
-  }
-
-  reflected (normal: Vector3) {
-    const vec = this.clone()
-    vec.reflect(normal)
-    return vec
-  }
-
-  applyProjection (m: Matrix4) {
-    const x = this[0]
-    const y = this[1]
-    const z = this[2]
-    const d = (
-      1 / (
-        m[3] * x +
-        m[7] * y +
-        m[11] * z +
-        m[15]
-      )
-    )
-    this[0] = (
-      m[0] * x +
-      m[4] * y +
-      m[8] * z +
-      m[12]
-    ) * d
-    this[1] = (
-      m[1] * x +
-      m[5] * y +
-      m[9] * z +
-      m[13]
-    ) * d
-    this[2] = (
-      m[2] * x +
-      m[6] * y +
-      m[10] * z +
-      m[14]
-    ) * d
-  }
-
+  /**
+   * 
+   * @param {Vector3} axis 
+   * @param {number} angle 
+   */
   applyAxisAngle (axis: Vector3, angle: number) {
     this.applyQuaternion(Quaternion.axisAngle(axis, angle))
   }
 
-  applyQuaternion (arg: Quaternion) {
+  /**
+   * 应用四元素
+   * @param {Quaternion} q 
+   */
+  applyQuaternion (q: Quaternion) {
     const v0 = this[0]
     const v1 = this[1]
     const v2 = this[2]
-    const qx = arg[0]
-    const qy = arg[1]
-    const qz = arg[2]
-    const qw = arg[3]
+    const qx = q[0]
+    const qy = q[1]
+    const qz = q[2]
+    const qw = q[3]
     const ix = qw * v0 + qy * v2 - qz * v1
     const iy = qw * v1 + qz * v0 - qx * v2
     const iz = qw * v2 + qx * v1 - qy * v0
@@ -308,22 +340,30 @@ export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
     this[2] = iz * qw + iw * -qz + ix * -qy - iy * -qx
   }
 
-  applyMatrix3 (arg: Matrix3) {
+  /**
+   * 应用 Matrix3
+   * @param {Matrix3} m3 
+   */
+  applyMatrix3 (m3: Matrix3) {
     const v0 = this[0]
     const v1 = this[1]
     const v2 = this[2]
-    this[0] = arg[0] * v0 + arg[3] * v1 + arg[6] * v2
-    this[1] = arg[1] * v0 + arg[4] * v1 + arg[7] * v2
-    this[2] = arg[2] * v0 + arg[5] * v1 + arg[8] * v2
+    this[0] = m3[0] * v0 + m3[3] * v1 + m3[6] * v2
+    this[1] = m3[1] * v0 + m3[4] * v1 + m3[7] * v2
+    this[2] = m3[2] * v0 + m3[5] * v1 + m3[8] * v2
   }
 
-  applyMatrix4 (arg: Matrix4) {
+  /**
+   * 应用 Matrix4
+   * @param {Matrix4} m4 
+   */
+  applyMatrix4 (m4: Matrix4) {
     const v0 = this[0]
     const v1 = this[1]
     const v2 = this[2]
-    this[0] = arg[0] * v0 + arg[4] * v1 + arg[8] * v2 + arg[12]
-    this[1] = arg[1] * v0 + arg[5] * v1 + arg[9] * v2 + arg[13]
-    this[2] = arg[2] * v0 + arg[6] * v1 + arg[10] * v2 + arg[14]
+    this[0] = m4[0] * v0 + m4[4] * v1 + m4[8] * v2 + m4[12]
+    this[1] = m4[1] * v0 + m4[5] * v1 + m4[9] * v2 + m4[13]
+    this[2] = m4[2] * v0 + m4[6] * v1 + m4[10] * v2 + m4[14]
   }
 
   relativeError (correct: Vector3) {
@@ -340,24 +380,31 @@ export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
     return diff.length
   }
 
+  /**
+   * 向量加法
+   * @param v 
+   */
   add (v: Vector3) {
     this[0] = this[0] + v[0]
     this[1] = this[1] + v[1]
     this[2] = this[2] + v[2]
   }
 
-  addScaled (v: Vector3, factor: number) {
-    this[0] = this[0] + v[0] * factor
-    this[1] = this[1] + v[1] * factor
-    this[2] = this[2] + v[2] * factor
-  }
-
+  /**
+   * 向量剑法
+   * @param {Vector3} v 
+   */
   substract (v: Vector3) {
     this[0] = this[0] - v[0]
     this[1] = this[1] - v[1]
     this[2] = this[2] - v[2]
   }
 
+  /**
+   * 向量乘法
+   * @param {Vector3 | number} v 
+   * @returns {Vector3}
+   */
   multiply (v: Vector3 | number) {
     if (v instanceof Vector3) {
       this[0] = this[0] * v[0]
@@ -369,37 +416,61 @@ export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
     return this.scaled(v)
   }
 
+  /**
+   * 向量除法
+   * @param {Vector3} v 
+   */
   divide (v: Vector3) {
     this[0] = this[0] / v[0]
     this[1] = this[1] / v[1]
     this[2] = this[2] / v[2]
   }
 
-  scale (arg: number) {
-    this[2] = this[2] * arg
-    this[1] = this[1] * arg
-    this[0] = this[0] * arg
+  /**
+   * 放大向量
+   * @param {factor} factor 
+   */
+  scale (factor: number) {
+    this[2] = this[2] * factor
+    this[1] = this[1] * factor
+    this[0] = this[0] * factor
   }
 
-  scaled (arg: number) {
+  /**
+   * 新增放大向量
+   * @param {number} factor 
+   * @returns {Vector3}
+   */
+  scaled (factor: number) {
     const v = this.clone()
-    v.scale(arg)
+    v.scale(factor)
 
     return v
   }
 
-  negate () {
+  /**
+   * 取反
+   */
+  inverse () {
     this[2] = -this[2]
     this[1] = -this[1]
     this[0] = -this[0]
   }
 
+  /**
+   * 向量绝对值
+   */
   absolute () {
     this[0] = Math.abs(this[0])
     this[1] = Math.abs(this[1])
     this[2] = Math.abs(this[2])
   }
 
+  /**
+   * 限制向量值范围
+   * @param {Vector3} min 
+   * @param {Vector3} max 
+   */
   clamp (
     min: Vector3, 
     max: Vector3
@@ -409,6 +480,11 @@ export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
     this[2] = clamp(this[2], min[2], max[2])
   }
 
+  /**
+   * 限制向量值范围
+   * @param {number} min 
+   * @param {number} max 
+   */
   clampScalar (
     min: number, 
     max: number
@@ -418,40 +494,63 @@ export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
     this[2] = clamp(this[2], min, max)
   }
 
+  /**
+   * 向上取整
+   */
   floor () {
     this[0] = Math.floor(this[0])
     this[1] = Math.floor(this[1])
     this[2] = Math.floor(this[2])
   }
 
+  /**
+   * 向下取整
+   */
   ceil () {
     this[0] = Math.ceil(this[0])
     this[1] = Math.ceil(this[1])
     this[2] = Math.ceil(this[2])
   }
 
+  /**
+   * 四舍五入
+   */
   round () {
     this[0] = Math.round(this[0])
     this[1] = Math.round(this[1])
     this[2] = Math.round(this[2])
   }
 
+  /**
+   * 取整
+   */
   roundToZero () {
     this[0] = this[0] < 0.0
         ? Math.ceil(this[0])
         : Math.floor(this[0])
+
     this[1] = this[1] < 0.0
         ? Math.ceil(this[1])
         : Math.floor(this[1])
+
     this[2] = this[2] < 0.0
         ? Math.ceil(this[2])
         : Math.floor(this[2])
   }
 
+  /**
+   * 克隆向量
+   * @returns {Vector3}
+   */
   clone () {
     return Vector3.copy(this)
   }
 
+  /**
+   * 复制到 Vector3
+   * @param {Vector3} v 
+   * @returns {Vector3}
+   */
   copyInto (v: Vector3) {
     v[0] = this[0]
     v[1] = this[1]
@@ -459,24 +558,39 @@ export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
     return v
   }
 
-  copyIntoArray (
+  /**
+   * 复制到 Array
+   * @param {number[]} array 
+   * @param {number} offset 
+   */
+  copyIntoList (
     array: number[], 
-    offset = 0
+    offset: number = 0
   ) {
     array[offset + 2] = this[2]
     array[offset + 1] = this[1]
     array[offset + 0] = this[0]
   }
 
-  copyFromArray (
+  /**
+   * 从数组复制
+   * @param {number[]} array 
+   * @param {number} offset 
+   */
+  copyFromList (
     array: number[], 
-    offset = 0
+    offset: number = 0
   ) {
     this[2] = array[offset + 2]
     this[1] = array[offset + 1]
     this[0] = array[offset + 0]
   }
 
+  /**
+   * 是否相等
+   * @param {Vector3 | null} other 
+   * @returns {boolean}
+   */
   equal (other: Vector3 | null) {
     return (
       (other instanceof Vector3) &&
@@ -486,11 +600,20 @@ export class Vector3 extends Computable<Vector3> implements ArrayLike<number> {
     )
   }
 
+  /**
+   * 是否相等
+   * @param {Vector3 | null} other 
+   * @returns {boolean}
+   */
   notEqual (other: Vector3 | null) {
     return !this.equal(other)
   }
 
+  /**
+   * 返回字符串
+   * @returns {string}
+   */
   toString () {
-    return `[${this.storage[0]},${this.storage[1]},${this.storage[2]}]`
+    return `Vector3([0]:${this[0]}, [1]:${this[1]}, [2]:${this[2]})`
   }
 }

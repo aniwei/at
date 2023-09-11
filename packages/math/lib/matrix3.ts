@@ -5,9 +5,7 @@ import { Vector2 } from './vector2'
 import { Vector3 } from './vector3'
 
 export class Matrix3 extends Array<number> {
-  static zero () {
-    return new Matrix3(9)
-  }
+  static ZERO = new Matrix3(9)
 
   static solve2 (
     A: Matrix3, 
@@ -79,9 +77,9 @@ export class Matrix3 extends Array<number> {
     return new Matrix3(...m3)
   }
 
-  static fromArray (values: number[]) {
-    const mat = Matrix3.zero()
-    mat.setValues(
+  static fromList (values: number[]) {
+    const mat = Matrix3.ZERO.clone()
+    mat.values(
       values[0], 
       values[1],
       values[2], 
@@ -97,15 +95,15 @@ export class Matrix3 extends Array<number> {
   }
 
   static identity () {
-    const mat = Matrix3.zero()
+    const mat = Matrix3.ZERO.clone()
     mat.setIdentity()
     return mat
   }
   
 
-  static copy (other: Matrix3) {
-    const mat = Matrix3.zero()
-    mat.setFrom(other)
+  static copy (other: Matrix3): Matrix3 {
+    const mat = Matrix3.ZERO.clone()
+    mat.from(other)
     return mat
   }
 
@@ -114,151 +112,39 @@ export class Matrix3 extends Array<number> {
     arg1: Vector3, 
     arg2: Vector3
   ) {
-    const mat = Matrix3.zero()
-    mat.setColumns(arg0, arg1, arg2)
+    const mat = Matrix3.ZERO.clone()
+    mat.columns(arg0, arg1, arg2)
   }
 
   static outer (
     u: Vector3, 
     v: Vector3
   ) {
-    const mat = Matrix3.zero()
-    mat.setOuter(u, v)
+    const mat = Matrix3.ZERO.clone()
+    mat.outer(u, v)
     return mat
   }
 
   static rotationX (radians: number) {
-    const mat = Matrix3.zero()
+    const mat = Matrix3.ZERO.clone()
     mat.setRotationX(radians)
     return mat
   }
 
   static rotationY (radians: number) {
-    const mat = Matrix3.zero()
+    const mat = Matrix3.ZERO.clone()
     mat.setRotationY(radians)
     return mat
   }
 
   static rotationZ (radians: number) {
-    const mat = Matrix3.zero()
+    const mat = Matrix3.ZERO.clone()
     mat.setRotationZ(radians)
     return mat
   }
 
   get storage () {
     return this
-  }
-
-  index (
-    row: number, 
-    col: number
-  ) {
-    return (col * 3) + row
-  }
-
-  entry (
-    row: number, 
-    col: number
-  ) {
-    invariant((row >= 0) && (row < this.dimension))
-    invariant((col >= 0) && (col < this.dimension))
-
-    return this[this.index(row, col)]
-  }
-
-  setEntry (
-    row: number, 
-    col: number,
-    v: number
-  ) {
-    invariant((row >= 0) && (row < this.dimension))
-    invariant((col >= 0) && (col < this.dimension))
-
-    this[this.index(row, col)] = v
-  }
-
-  setValues (
-    arg0: number, 
-    arg1: number, 
-    arg2: number, 
-    arg3: number,
-    arg4: number, 
-    arg5: number, 
-    arg6: number, 
-    arg7: number, 
-    arg8: number
-  ) {
-    this[8] = arg8
-    this[7] = arg7
-    this[6] = arg6
-    this[5] = arg5
-    this[4] = arg4
-    this[3] = arg3
-    this[2] = arg2
-    this[1] = arg1
-    this[0] = arg0
-  }
-
-  setColumns (
-    arg0: Vector3, 
-    arg1: Vector3, 
-    arg2: Vector3
-  ) {
-    this[0] = arg0[0]
-    this[1] = arg0[1]
-    this[2] = arg0[2]
-    this[3] = arg1[0]
-    this[4] = arg1[1]
-    this[5] = arg1[2]
-    this[6] = arg2[0]
-    this[7] = arg2[1]
-    this[8] = arg2[2]
-  }
-
-  setFrom (arg: Matrix3) {
-    this[8] = arg[8]
-    this[7] = arg[7]
-    this[6] = arg[6]
-    this[5] = arg[5]
-    this[4] = arg[4]
-    this[3] = arg[3]
-    this[2] = arg[2]
-    this[1] = arg[1]
-    this[0] = arg[0]
-  }
-
-  setOuter (
-    u: Vector3, 
-    v: Vector3
-  ) {
-    this[0] = u[0] * v[0]
-    this[1] = u[0] * v[1]
-    this[2] = u[0] * v[2]
-    this[3] = u[1] * v[0]
-    this[4] = u[1] * v[1]
-    this[5] = u[1] * v[2]
-    this[6] = u[2] * v[0]
-    this[7] = u[2] * v[1]
-    this[8] = u[2] * v[2]
-  }
-
-  splatDiagonal (arg: number) {
-    this[0] = arg
-    this[4] = arg
-    this[8] = arg
-  }
-
-  setDiagonal (arg: Vector3) {
-    this[0] = arg.storage[0]
-    this[4] = arg.storage[1]
-    this[8] = arg.storage[2]
-  }
-
-  setUpper2x2 (arg: Matrix2) {
-    this[0] = arg[0]
-    this[1] = arg[1]
-    this[3] = arg[2]
-    this[4] = arg[3]
   }
 
   get dimension () {
@@ -310,6 +196,119 @@ export class Matrix3 extends Array<number> {
     this.setRow(2, arg)
   }
 
+
+  index (
+    row: number, 
+    col: number
+  ) {
+    return (col * 3) + row
+  }
+
+  entry (
+    row: number, 
+    col: number
+  ) {
+    invariant((row >= 0) && (row < this.dimension))
+    invariant((col >= 0) && (col < this.dimension))
+
+    return this[this.index(row, col)]
+  }
+
+  setEntry (
+    row: number, 
+    col: number,
+    v: number
+  ) {
+    invariant((row >= 0) && (row < this.dimension))
+    invariant((col >= 0) && (col < this.dimension))
+
+    this[this.index(row, col)] = v
+  }
+
+  values (
+    factor0: number, 
+    factor1: number, 
+    factor2: number, 
+    factor3: number,
+    factor4: number, 
+    factor5: number, 
+    factor6: number, 
+    factor7: number, 
+    factor8: number
+  ) {
+    this[8] = factor8
+    this[7] = factor7
+    this[6] = factor6
+    this[5] = factor5
+    this[4] = factor4
+    this[3] = factor3
+    this[2] = factor2
+    this[1] = factor1
+    this[0] = factor0
+  }
+
+  columns (
+    v0: Vector3, 
+    v1: Vector3, 
+    v2: Vector3
+  ) {
+    this[0] = v0[0]
+    this[1] = v0[1]
+    this[2] = v0[2]
+    this[3] = v1[0]
+    this[4] = v1[1]
+    this[5] = v1[2]
+    this[6] = v2[0]
+    this[7] = v2[1]
+    this[8] = v2[2]
+  }
+
+  from (m3: Matrix3) {
+    this[8] = m3[8]
+    this[7] = m3[7]
+    this[6] = m3[6]
+    this[5] = m3[5]
+    this[4] = m3[4]
+    this[3] = m3[3]
+    this[2] = m3[2]
+    this[1] = m3[1]
+    this[0] = m3[0]
+  }
+
+  outer (
+    u: Vector3, 
+    v: Vector3
+  ) {
+    this[0] = u[0] * v[0]
+    this[1] = u[0] * v[1]
+    this[2] = u[0] * v[2]
+    this[3] = u[1] * v[0]
+    this[4] = u[1] * v[1]
+    this[5] = u[1] * v[2]
+    this[6] = u[2] * v[0]
+    this[7] = u[2] * v[1]
+    this[8] = u[2] * v[2]
+  }
+
+  splatDiagonal (factor: number) {
+    this[0] = factor
+    this[4] = factor
+    this[8] = factor
+  }
+
+  setDiagonal (v3: Vector3) {
+    this[0] = v3[0]
+    this[4] = v3[1]
+    this[8] = v3[2]
+  }
+
+  setUpper2x2 (m2: Matrix2) {
+    this[0] = m2[0]
+    this[1] = m2[1]
+    this[3] = m2[2]
+    this[4] = m2[3]
+  }
+
   setRow (
     row: number, 
     arg: Vector3
@@ -320,7 +319,7 @@ export class Matrix3 extends Array<number> {
   }
 
   getRow (row: number) {
-    const r = Vector3.zero()
+    const r = Vector3.ZERO.clone()
     r[0] = this[this.index(row, 0)]
     r[1] = this[this.index(row, 1)]
     r[2] = this[this.index(row, 2)]
@@ -338,7 +337,7 @@ export class Matrix3 extends Array<number> {
   }
 
   getColumn (column: number) {
-    const r = Vector3.zero()
+    const r = Vector3.ZERO.clone()
     const entry = column * 3
     r[2] = this[entry + 2]
     r[1] = this[entry + 1]
@@ -363,7 +362,7 @@ export class Matrix3 extends Array<number> {
     return arg
   }
 
-  setZero () {
+  zero () {
     this[0] = 0.0
     this[1] = 0.0
     this[2] = 0.0
@@ -375,7 +374,7 @@ export class Matrix3 extends Array<number> {
     this[8] = 0.0
   }
 
-  setIdentity () {
+  identity () {
     this[0] = 1.0
     this[1] = 0.0
     this[2] = 0.0
@@ -407,7 +406,7 @@ export class Matrix3 extends Array<number> {
   }
 
   absolute () {
-    const r = Matrix3.zero()
+    const r = Matrix3.ZERO.clone()
     r[0] = Math.abs(this[0])
     r[1] = Math.abs(this[1])
     r[2] = Math.abs(this[2])
@@ -497,7 +496,7 @@ export class Matrix3 extends Array<number> {
   copyInverse (arg: Matrix3 ) {
     let det = arg.determinant()
     if (det === 0.0) {
-      this.setFrom(arg)
+      this.from(arg)
       return 0.0
     }
     const invDet = 1.0 / det
@@ -672,7 +671,7 @@ export class Matrix3 extends Array<number> {
     this[8] = this[8] - o[8]
   }
 
-  negate () {
+  inverse () {
     this[0] = -this[0]
     this[1] = -this[1]
     this[2] = -this[2]
@@ -684,7 +683,7 @@ export class Matrix3 extends Array<number> {
     this[8] = -this[8]
   }
 
-  multiply (arg: Matrix3 ) {
+  multiply (m3: Matrix3 ) {
     const m00 = this[0]
     const m01 = this[3]
     const m02 = this[6]
@@ -694,15 +693,15 @@ export class Matrix3 extends Array<number> {
     const m20 = this[2]
     const m21 = this[5]
     const m22 = this[8]
-    const n00 = arg[0]
-    const n01 = arg[3]
-    const n02 = arg[6]
-    const n10 = arg[1]
-    const n11 = arg[4]
-    const n12 = arg[7]
-    const n20 = arg[2]
-    const n21 = arg[5]
-    const n22 = arg[8]
+    const n00 = m3[0]
+    const n01 = m3[3]
+    const n02 = m3[6]
+    const n10 = m3[1]
+    const n11 = m3[4]
+    const n12 = m3[7]
+    const n20 = m3[2]
+    const n21 = m3[5]
+    const n22 = m3[8]
     this[0] = (m00 * n00) + (m01 * n10) + (m02 * n20)
     this[3] = (m00 * n01) + (m01 * n11) + (m02 * n21)
     this[6] = (m00 * n02) + (m01 * n12) + (m02 * n22)
@@ -714,13 +713,13 @@ export class Matrix3 extends Array<number> {
     this[8] = (m20 * n02) + (m21 * n12) + (m22 * n22)
   }
 
-  multiplied (arg: Matrix3 ) {
+  multiplied (m3: Matrix3 ) {
     const mat = this.clone()
-    mat.multiply(arg)
+    mat.multiply(m3)
     return mat
   }
 
-  transposeMultiply (arg: Matrix3 ) {
+  transposeMultiply (m3: Matrix3 ) {
     const m00 = this[0]
     const m01 = this[1]
     const m02 = this[2]
@@ -730,18 +729,18 @@ export class Matrix3 extends Array<number> {
     const m20 = this[6]
     const m21 = this[7]
     const m22 = this[8]
-    this[0] = (m00 * arg[0]) + (m01 * arg[1]) + (m02 * arg[2])
-    this[3] = (m00 * arg[3]) + (m01 * arg[4]) + (m02 * arg[5])
-    this[6] = (m00 * arg[6]) + (m01 * arg[7]) + (m02 * arg[8])
-    this[1] = (m10 * arg[0]) + (m11 * arg[1]) + (m12 * arg[2])
-    this[4] = (m10 * arg[3]) + (m11 * arg[4]) + (m12 * arg[5])
-    this[7] = (m10 * arg[6]) + (m11 * arg[7]) + (m12 * arg[8])
-    this[2] = (m20 * arg[0]) + (m21 * arg[1]) + (m22 * arg[2])
-    this[5] = (m20 * arg[3]) + (m21 * arg[4]) + (m22 * arg[5])
-    this[8] = (m20 * arg[6]) + (m21 * arg[7]) + (m22 * arg[8])
+    this[0] = (m00 * m3[0]) + (m01 * m3[1]) + (m02 * m3[2])
+    this[3] = (m00 * m3[3]) + (m01 * m3[4]) + (m02 * m3[5])
+    this[6] = (m00 * m3[6]) + (m01 * m3[7]) + (m02 * m3[8])
+    this[1] = (m10 * m3[0]) + (m11 * m3[1]) + (m12 * m3[2])
+    this[4] = (m10 * m3[3]) + (m11 * m3[4]) + (m12 * m3[5])
+    this[7] = (m10 * m3[6]) + (m11 * m3[7]) + (m12 * m3[8])
+    this[2] = (m20 * m3[0]) + (m21 * m3[1]) + (m22 * m3[2])
+    this[5] = (m20 * m3[3]) + (m21 * m3[4]) + (m22 * m3[5])
+    this[8] = (m20 * m3[6]) + (m21 * m3[7]) + (m22 * m3[8])
   }
 
-  multiplyTranspose(arg: Matrix3 ) {
+  multiplyTranspose(m3: Matrix3 ) {
     const m00 = this[0]
     const m01 = this[3]
     const m02 = this[6]
@@ -751,37 +750,37 @@ export class Matrix3 extends Array<number> {
     const m20 = this[2]
     const m21 = this[5]
     const m22 = this[8]
-    this[0] = (m00 * arg[0]) + (m01 * arg[3]) + (m02 * arg[6])
-    this[3] = (m00 * arg[1]) + (m01 * arg[4]) + (m02 * arg[7])
-    this[6] = (m00 * arg[2]) + (m01 * arg[5]) + (m02 * arg[8])
-    this[1] = (m10 * arg[0]) + (m11 * arg[3]) + (m12 * arg[6])
-    this[4] = (m10 * arg[1]) + (m11 * arg[4]) + (m12 * arg[7])
-    this[7] = (m10 * arg[2]) + (m11 * arg[5]) + (m12 * arg[8])
-    this[2] = (m20 * arg[0]) + (m21 * arg[3]) + (m22 * arg[6])
-    this[5] = (m20 * arg[1]) + (m21 * arg[4]) + (m22 * arg[7])
-    this[8] = (m20 * arg[2]) + (m21 * arg[5]) + (m22 * arg[8])
+    this[0] = (m00 * m3[0]) + (m01 * m3[3]) + (m02 * m3[6])
+    this[3] = (m00 * m3[1]) + (m01 * m3[4]) + (m02 * m3[7])
+    this[6] = (m00 * m3[2]) + (m01 * m3[5]) + (m02 * m3[8])
+    this[1] = (m10 * m3[0]) + (m11 * m3[3]) + (m12 * m3[6])
+    this[4] = (m10 * m3[1]) + (m11 * m3[4]) + (m12 * m3[7])
+    this[7] = (m10 * m3[2]) + (m11 * m3[5]) + (m12 * m3[8])
+    this[2] = (m20 * m3[0]) + (m21 * m3[3]) + (m22 * m3[6])
+    this[5] = (m20 * m3[1]) + (m21 * m3[4]) + (m22 * m3[7])
+    this[8] = (m20 * m3[2]) + (m21 * m3[5]) + (m22 * m3[8])
   }
 
-  transform (arg: Vector3) {
-    const x = (this[0] * arg[0]) + (this[3] * arg[1]) + (this[6] * arg[2])
-    const y = (this[1] * arg[0]) + (this[4] * arg[1]) + (this[7] * arg[2])
-    const z = (this[2] * arg[0]) + (this[5] * arg[1]) + (this[8] * arg[2])
+  transform (v3: Vector3) {
+    const x = (this[0] * v3[0]) + (this[3] * v3[1]) + (this[6] * v3[2])
+    const y = (this[1] * v3[0]) + (this[4] * v3[1]) + (this[7] * v3[2])
+    const z = (this[2] * v3[0]) + (this[5] * v3[1]) + (this[8] * v3[2])
     
-    arg[0] = x
-    arg[1] = y
-    arg[2] = z
-    return arg
+    v3[0] = x
+    v3[1] = y
+    v3[2] = z
+    return v3
   }
 
   transformed (
-    arg: Vector3, 
+    v3: Vector3, 
     out?: Vector3 | null
   ) {
     out = out ?? null
     if (out === null) {
-      out = Vector3.copy(arg)
+      out = Vector3.copy(v3)
     } else {
-      out.setFrom(arg)
+      out.from(v3)
     }
     return this.transform(out)
   }
@@ -826,15 +825,15 @@ export class Matrix3 extends Array<number> {
       // @TODO
       const v = Vector3.array(array, j)
       v.applyMatrix3(this)
-      array[j] = v.storage[0]
-      array[j + 1] = v.storage[1]
-      array[j + 2] = v.storage[2]
+      array[j] = v[0]
+      array[j + 1] = v[1]
+      array[j + 2] = v[2]
     }
 
     return array
   }
 
-  isIdentity () {
+  identity () {
     return (
       this[0] === 1.0 && // col 1
       this[1] === 0.0 &&
@@ -847,21 +846,6 @@ export class Matrix3 extends Array<number> {
       this[8] === 1.0
     )
   }
-
-  isZero () {
-    return (
-      this[0] === 0.0 && // col 1
-      this[1] === 0.0 &&
-      this[2] === 0.0 &&
-      this[3] === 0.0 && // col 2
-      this[4] === 0.0 &&
-      this[5] === 0.0 &&
-      this[6] === 0.0 && // col 3
-      this[7] === 0.0 &&
-      this[8] === 0.0
-    )
-  }
-
 
   equal (other: Matrix3 | null) {
     return (
@@ -883,6 +867,6 @@ export class Matrix3 extends Array<number> {
   }
 
   toString () {
-    return `[0] ${this.getRow(0)}\n[1] ${this.getRow(1)}\n[2] ${this.getRow(2)}\n'`
+    return `Matrix3([0]: ${this.getRow(0)}, [1]: ${this.getRow(1)}, [2]:${this.getRow(2)})`
   }
 }

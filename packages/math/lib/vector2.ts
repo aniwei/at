@@ -1,10 +1,8 @@
-import { clamp } from './helper'
+import { clamp, Numberic } from '@at/basic'
 import { Matrix2 } from './matrix2'
-import { Vector3 } from './vector3'
-import { Vector4 } from './vector4'
 
 // 二维向量
-export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
+export class Vector2 extends Numberic<Vector2> {
   static ZERO = new Vector2()
 
   /**
@@ -83,9 +81,9 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
    * @param other 
    * @returns 
    */
-  static copy (other: Vector2) {
+  static copy (other: Vector2): Vector2 {
     const vec = Vector2.ZERO.clone()
-    vec.setFrom(other)
+    vec.from(other)
     return vec
   }
 
@@ -94,7 +92,7 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
    * @param v 
    * @returns 
    */
-  static fromArrayLike (v: ArrayLike<number>) {
+  static fromList (v: Iterable<number>) {
     return new Vector2(...v)
   }
 
@@ -108,7 +106,7 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
     buffer: ArrayBuffer, 
     offset: number
   ) {
-    return Vector2.fromArrayLike(
+    return Vector2.fromList(
       new Float64Array(
         buffer, 
         offset, 
@@ -132,8 +130,8 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
     return this
   }
 
-  // => length
-  set length (value: number) {
+  // => distance
+  set distance (value: number) {
     if (value === 0.0) {
       this.zero()
     } else {
@@ -145,30 +143,16 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
       }
     }
   }
-  get length () {
-    return Math.sqrt(this.length2)
+  get distance () {
+    return Math.sqrt(this.distance2)
   }
 
-  // => length2
-  get length2 () {
+  // => distance2
+  get distance2 () {
     let sum
     sum = this[0] * this[0]
     sum += this[1] * this[1]
     return sum
-  }
-
-  get isInfinite () {
-    let isInfinite = false
-    isInfinite = isInfinite || !Number.isFinite(this[0])
-    isInfinite = isInfinite || !Number.isFinite(this[1])
-    return isInfinite
-  }
-
-  get isNaN () {
-    let isNaN = false
-    isNaN = isNaN || Number.isNaN(this[0])
-    isNaN = isNaN || Number.isNaN(this[1])
-    return isNaN
   }
 
   // => x
@@ -180,7 +164,7 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
     return this[1]
   }
 
-  setValues (x: number, y: number) {
+  values (x: number, y: number) {
     this[0] = x
     this[1] = y
   }
@@ -190,7 +174,7 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
     this[1] = 0.0
   }
 
-  setFrom (other: Vector2) {
+  from (other: Vector2) {
     this[1] = other[1]
     this[0] = other[0]
   }
@@ -222,7 +206,7 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
   }
 
   normalizeInto (out: Vector2) {
-    out.setFrom(this)
+    out.from(this)
     out.normalize()
 
     return out
@@ -287,7 +271,7 @@ export class Vector2 extends Computable<Vector2> implements ArrayLike<number> {
     scale: number, 
     out: Vector2
   ) {
-    out.setValues(-scale * this[1], scale * this[0])
+    out.values(-scale * this[1], scale * this[0])
     return out
   }
 
