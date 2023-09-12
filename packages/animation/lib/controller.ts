@@ -382,7 +382,6 @@ export class AnimationController extends Animation<number> {
   }
 }
 
-//// 
 type DirectionSetter = (direction: AnimationDirectionKind) => void
 
 

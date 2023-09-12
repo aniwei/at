@@ -2,6 +2,8 @@ import invariant from 'ts-invariant'
 import { isNative } from './is'
 import { VoidCallback } from './global.d'
 
+
+//// => MicroTaskQueue
 export type MicroTask<T = unknown> = {
   context: T,
   handler: VoidCallback,
@@ -47,7 +49,7 @@ export class MicroTaskQueue {
   }
 }
 
-// => nextTick
+//// => nextTick
 export const nextTick = (tick: VoidCallback, context?: unknown) => {
   return new Promise((resolve) => MicroTaskQueue.q.enqueue(tick, resolve, context))
 }

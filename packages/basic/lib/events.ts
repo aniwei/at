@@ -7,7 +7,7 @@ type Listener = {
   once: boolean
 }
 
-
+//// => EventEmitter
 export class EventEmitter<T extends string> {
   protected events: Map<T, Listener[]> = new Map()
 

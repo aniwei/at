@@ -1,9 +1,10 @@
 import { Equalable } from './equalable'
 
-export interface Numberic<T extends Numberic<T>> extends ArrayLike<number>, Iterable<number> {
+export interface Numberic<T extends Numberic<T>> extends ListLike<T> {
   [n: number]: number,
 }
 
+//// => Numberic
 export interface CreateFactory {
   new (...rests: unknown[]): unknown,
   create (...rests: unknown[]): unknown

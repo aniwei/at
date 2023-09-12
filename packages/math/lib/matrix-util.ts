@@ -6,13 +6,13 @@ import { Vector4 } from './vector4'
 //// => MatrixUtils
 export class MatrixUtils {
   /**
-   * 
-   * @param transform 
-   * @returns 
+   * 将 Matrix4 转成 Offset
+   * @param {Matrix4} transform 
+   * @returns {Offset | null}
    */
   static getAsTranslation (transform: Matrix4): Offset | null {
     invariant(transform !== null, `The argument "transform" cannot be null.`)
-    const values = transform.storage
+    const values = transform
 
     if (
       values[0] === 1.0 && // col 1
@@ -37,9 +37,9 @@ export class MatrixUtils {
   }
 
  /**
-  * 
-  * @param transform 
-  * @returns 
+  * 获取 Matrix4 的 scale
+  * @param {Matrix4} transform 
+  * @returns {number | null}
   */
   static getAsScale (transform: Matrix4): number | null {
     invariant(transform !== null)
@@ -67,10 +67,10 @@ export class MatrixUtils {
   }
 
   /**
-   * 
-   * @param a 
-   * @param b 
-   * @returns 
+   * 矩阵比较
+   * @param {Matrix4 | null} a 
+   * @param {Matrix4 | null} b 
+   * @returns {boolean}
    */
   static matrixEquals (
     a: Matrix4 | null, 
@@ -79,44 +79,45 @@ export class MatrixUtils {
     if (a === b) {
       return true
     }
+
     invariant(a !== null || b !== null)
 
     if (a === null) {
-      return MatrixUtils.identity(b!)
+      return MatrixUtils.isIdentity(b)
     } 
 
     if (b === null) {
-      return MatrixUtils.identity(a)
+      return MatrixUtils.isIdentity(a)
     }
 
     invariant(a !== null && b !== null)
 
     return (
-      a.storage[0] === b.storage[0] &&
-      a.storage[1] === b.storage[1] &&
-      a.storage[2] === b.storage[2] &&
-      a.storage[3] === b.storage[3] &&
-      a.storage[4] === b.storage[4] &&
-      a.storage[5] === b.storage[5] &&
-      a.storage[6] === b.storage[6] &&
-      a.storage[7] === b.storage[7] &&
-      a.storage[8] === b.storage[8] &&
-      a.storage[9] === b.storage[9] &&
-      a.storage[10] === b.storage[10] &&
-      a.storage[11] === b.storage[11] &&
-      a.storage[12] === b.storage[12] &&
-      a.storage[13] === b.storage[13] &&
-      a.storage[14] === b.storage[14] &&
-      a.storage[15] === b.storage[15]
+      a[0] === b[0] &&
+      a[1] === b[1] &&
+      a[2] === b[2] &&
+      a[3] === b[3] &&
+      a[4] === b[4] &&
+      a[5] === b[5] &&
+      a[6] === b[6] &&
+      a[7] === b[7] &&
+      a[8] === b[8] &&
+      a[9] === b[9] &&
+      a[10] === b[10] &&
+      a[11] === b[11] &&
+      a[12] === b[12] &&
+      a[13] === b[13] &&
+      a[14] === b[14] &&
+      a[15] === b[15]
     )
   }
 
   /**
-   * 
-   * @param a 
-   * @returns 
+   * 是否为恒等式
+   * @param {Matrix4} a 
+   * @returns {boolean}
    */
-  static identity (a: Matrix4): boolean {
+  static isIdentity (a: Matrix4): boolean {
     invariant(a !== null, 'The argument "a" cannot be null.')
     return (
       a[0] === 1.0 && // col 1
@@ -139,28 +140,23 @@ export class MatrixUtils {
   }
 
   /**
-   * 
-   * @param transform 
-   * @param point 
-   * @returns 
+   * 相乘
+   * @param {Matrix4} transform 
+   * @param {Offset} point 
+   * @returns {Offset}
    */
   static transformPoint (
     transform: Matrix4, 
     point: Offset
   ): Offset {
-    const storage = transform.storage
     const x = point.dx
     const y = point.dy
 
-    const rx = storage[0] * x + storage[4] * y + storage[12]
-    const ry = storage[1] * x + storage[5] * y + storage[13]
-    const rw = storage[3] * x + storage[7] * y + storage[15]
+    const rx = transform[0] * x + transform[4] * y + transform[12]
+    const ry = transform[1] * x + transform[5] * y + transform[13]
+    const rw = transform[3] * x + transform[7] * y + transform[15]
 
-    if (rw === 1.0) {
-      return new Offset(rx, ry)
-    } else {
-      return new Offset(rx / rw, ry / rw)
-    }
+    return rw === 1.0 ? new Offset(rx, ry) : new Offset(rx / rw, ry / rw)
   }
 
   /**
@@ -173,7 +169,7 @@ export class MatrixUtils {
     transform: Matrix4, 
     rect: Rect
   ) {
-    const storage = transform.storage
+    const storage = transform
     const isAffine = (
       storage[3] === 0.0 &&
       storage[7] === 0.0 &&
@@ -204,7 +200,7 @@ export class MatrixUtils {
    * @param isAffine 
    */
   static accumulate (
-    m: ArrayLike<number>, 
+    m: ListLike<number>, 
     x: number, 
     y: number, 
     first: boolean, 
@@ -232,11 +228,17 @@ export class MatrixUtils {
     }
   }
 
+  /**
+   * 
+   * @param {Matrix4} transform 
+   * @param {Rect} rect 
+   * @returns {Rect}
+   */
   static transformRect (
     transform: Matrix4, 
     rect: Rect
   ) {
-    const storage = transform.storage
+    const storage = transform
     const x = rect.left
     const y = rect.top
     const w = rect.right - x
@@ -321,6 +323,7 @@ export class MatrixUtils {
     const f = (c < d) ? c : d
     return (e < f) ? e : f
   }
+
   static max4(
     a: number, 
     b: number, 
@@ -332,6 +335,12 @@ export class MatrixUtils {
     return (e > f) ? e : f
   }
 
+  /**
+   * 
+   * @param {Matrix4} transform 
+   * @param {Rect} rect 
+   * @returns {Rect}
+   */
   static inverseTransformRect(
     transform: Matrix4 , 
     rect: Rect
@@ -350,7 +359,6 @@ export class MatrixUtils {
     radius: number,
     angle: number,
     perspective = 0.001,
-    // orientation: Axis = Axis.Vertical,
   ) {
     invariant(radius !== null)
     invariant(angle !== null)
@@ -362,17 +370,14 @@ export class MatrixUtils {
     result.setEntry(2, 3, -radius)
     result.setEntry(3, 3, perspective * radius + 1.0)
 
-    // @TODO
-    // const m = orientation === Axis.Horizontal
-    //   ? Matrix4.rotationY(angle)
-    //   : Matrix4.rotationX(angle)
-   
-    // m.multiply(Matrix4.translationValues(0.0, 0.0, radius))
-    // result.multiply(m)
-
     return result
   }
 
+  /**
+   * 
+   * @param {Offset} offset 
+   * @returns {Matrix4}
+   */
   static forceToPoint (offset: Offset) {
     const mat = Matrix4.identity()
     mat.setRow(0, new Vector4(0, 0, 0, offset.dx))

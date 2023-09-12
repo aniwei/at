@@ -4,8 +4,10 @@ import { Matrix4 } from './matrix4'
 import { Vector2 } from './vector2'
 import { Vector3 } from './vector3'
 
-export class Matrix3 extends Array<number> {
-  static ZERO = new Matrix3(9)
+export class Matrix3 extends Numberic<number> {
+  static get ZERO () {
+    return new Matrix3(9)
+  }
 
   static solve2 (
     A: Matrix3, 
