@@ -3,7 +3,9 @@ import { Matrix2 } from './matrix2'
 
 // 二维向量
 export class Vector2 extends Numberic<Vector2> {
-  static ZERO = new Vector2()
+  static get ZERO () {
+    return new Vector2()
+  }
 
   /**
    * 
@@ -15,7 +17,7 @@ export class Vector2 extends Numberic<Vector2> {
     a: Vector2, 
     b: Vector2,
   ) {
-    const result = Vector2.ZERO.clone()
+    const result = Vector2.ZERO
     result[0] = Math.min(a[0], b[0])
     result[1] = Math.min(a[1], b[1])
   }
@@ -30,7 +32,7 @@ export class Vector2 extends Numberic<Vector2> {
     a: Vector2, 
     b: Vector2,
   ) {
-    const result = Vector2.ZERO.clone()
+    const result = Vector2.ZERO
     result[0] = Math.max(a[0], b[0])
     result[1] = Math.max(a[1], b[1])
   }
@@ -47,7 +49,7 @@ export class Vector2 extends Numberic<Vector2> {
     max: Vector2, 
     a: number
   ) {
-    const result = Vector2.ZERO.clone()
+    const result = Vector2.ZERO
     result[0] = min[0] + a * (max[0] - min[0])
     result[1] = min[1] + a * (max[1] - min[1])
   }
@@ -59,7 +61,7 @@ export class Vector2 extends Numberic<Vector2> {
    * @returns 
    */
   static copyFromArray (array: number[], offset = 0) {
-    const vec = Vector2.ZERO.clone()
+    const vec = Vector2.ZERO
     vec.copyFromArray(array, offset)
 
     return vec
@@ -71,7 +73,7 @@ export class Vector2 extends Numberic<Vector2> {
    * @returns 
    */
   static all (value: number) {
-    const vec = Vector2.ZERO.clone()
+    const vec = Vector2.ZERO
     vec.splat(value)
     return vec
   }
@@ -82,7 +84,7 @@ export class Vector2 extends Numberic<Vector2> {
    * @returns 
    */
   static copy (other: Vector2): Vector2 {
-    const vec = Vector2.ZERO.clone()
+    const vec = Vector2.ZERO
     vec.from(other)
     return vec
   }
@@ -412,6 +414,11 @@ export class Vector2 extends Numberic<Vector2> {
     this[0] = array[offset + 0]
   }  
 
+  /**
+   * 是否相等
+   * @param other 
+   * @returns 
+   */
   equal (other: Vector2 | null) {
     return (
       (other instanceof Vector2) &&
@@ -420,10 +427,19 @@ export class Vector2 extends Numberic<Vector2> {
     )
   }
 
+  /**
+   * 是否相等
+   * @param other 
+   * @returns 
+   */
   notEqual (other: Vector2 | null) {
     return !this.equal(other)
   }
 
+  /**
+   * 输出字符串
+   * @returns 
+   */
   toString () {
     return `Vector2([0]${this[0]},[1]${this[1]})`
   }

@@ -12,7 +12,7 @@ export class Matrix2 extends Numberic<Matrix2> {
    * @param {number[]} values 
    * @returns {Matrix2}
    */
-  static fromList (values: ListLike<number>) {
+  static fromList (values: ArrayLike<number>) {
     const mat = Matrix2.ZERO
     mat.values(
       values[0], 
@@ -154,7 +154,7 @@ export class Matrix2 extends Numberic<Matrix2> {
    */
   entry (row: number, col: number): number
   entry (row: number, col: number, v: number): undefined
-  entry (row: number, col: number, v: number | undefined | null): number | undefined {
+  entry (row: number, col: number, v?: number | null): number | undefined {
     invariant((row >= 0) && (row < this.dimension), 'The "row" cannot out of matrix2 edge.')
     invariant((col >= 0) && (col < this.dimension), 'The "col" cannot out of matrix2 edge.')
     
@@ -249,12 +249,12 @@ export class Matrix2 extends Numberic<Matrix2> {
    * @param {number} row 
    * @param {Vector2 | null | undefined} v2 
    */
-  row (row: number): number
-  row (row: number, v2: Vector): undefined
-  row (row: number, v2?: Vector2 | null): number | undefined {
+  row (row: number): Vector2
+  row (row: number, v2: Vector2): undefined
+  row (row: number, v2?: Vector2 | null): Vector2 | undefined {
     v2 ??= null
     if (v2 === null) {
-      const r = Vector2.ZERO.clone()
+      const r = Vector2.ZERO
       r[0] = this[this.index(row, 0)]
       r[1] = this[this.index(row, 1)]
       return r
@@ -269,22 +269,22 @@ export class Matrix2 extends Numberic<Matrix2> {
    * @param {number} column 
    * @param {Vector2 | null | undefined} v2 
    */
-  column (column: number): number
-  column (column: number, v2: Vector): undefined
+  column (column: number): Vector2
+  column (column: number, v2: Vector2): undefined
   column (column: number, v2?: Vector2 | null) {
     v2 ??= null
 
-    if (v2 !== null) {
-      const entry = column * 2
-      this[entry + 1] = v2[1]
-      this[entry + 0] = v2[0]
-    } else {
-      const r = Vector2.ZERO.clone()
+    if (v2 === null) {
+      const r = Vector2.ZERO
       const entry = column * 2
       r[1] = this[entry + 1]
       r[0] = this[entry + 0]
       
       return r
+    } else {
+      const entry = column * 2
+      this[entry + 1] = v2[1]
+      this[entry + 0] = v2[0]
     }
 
   }
@@ -323,7 +323,7 @@ export class Matrix2 extends Numberic<Matrix2> {
    * 矩阵转置
    * @returns {Matrix2} 
    */
-  transpose() {
+  transpose () {
     const m2 = this[2]
     this[2] = this[1]
     this[1] = m2
@@ -343,10 +343,20 @@ export class Matrix2 extends Numberic<Matrix2> {
     return r
   }
 
+  /**
+   * 
+   * @returns 
+   */
   determinant () {
     return (this[0] * this[3]) - (this[1] * this[2])
   }
     
+  /**
+   * 求行乘积
+   * @param i 
+   * @param v 
+   * @returns 
+   */
   dotRow (
     i: number, 
     v: Vector2
@@ -354,6 +364,12 @@ export class Matrix2 extends Numberic<Matrix2> {
     return this[i] * v[0] + this[2 + i] * v[1]
   }
 
+  /**
+   * 求列乘积
+   * @param j 
+   * @param v 
+   * @returns 
+   */
   dotColumn (
     j: number, 
     v: Vector2
@@ -361,6 +377,10 @@ export class Matrix2 extends Numberic<Matrix2> {
     return this[j * 2] * v[0] + this[(j * 2) + 1] * v[1]
   }
 
+  /**
+   * 
+   * @returns 
+   */
   trace () {
     let t = 0.0
     t += this[0]
@@ -368,6 +388,10 @@ export class Matrix2 extends Numberic<Matrix2> {
     return t
   }
 
+  /**
+   * 
+   * @returns 
+   */
   infinityNorm () {
     let norm = 0.0
     {
@@ -385,6 +409,11 @@ export class Matrix2 extends Numberic<Matrix2> {
     return norm
   }
 
+  /**
+   * 
+   * @param {Matrix2} correct 
+   * @returns {number}
+   */
   relativeError (correct: Matrix2) {
     const diff = correct.clone() 
     diff.substract(this)
@@ -393,6 +422,11 @@ export class Matrix2 extends Numberic<Matrix2> {
     return diffNorm / correctNorm
   }
 
+  /**
+   * 
+   * @param {Matrix2} correct 
+   * @returns {number}
+   */
   absoluteError (correct: Matrix2) {
     const thisNorm = this.infinityNorm()
     const correctNorm = correct.infinityNorm()
@@ -673,7 +707,7 @@ export class Matrix2 extends Numberic<Matrix2> {
    * @param other 
    * @returns 
    */
-  notEqaul (other: Matrix2 | null) {
+  notEqual (other: Matrix2 | null) {
     return !this.equal(other)
   }
 

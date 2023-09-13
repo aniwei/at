@@ -1,5 +1,5 @@
 import { invariant } from 'ts-invariant'
-import { UnimplementedError, ArgumentError } from '@at/basic'
+import { UnimplementedError, ArgumentError, Numberic } from '@at/basic'
 import { Matrix2 } from './matrix2'
 import { Matrix3 } from './matrix3'
 import { Vector2 } from './vector2'
@@ -8,12 +8,14 @@ import { Vector3 } from './vector3'
 import { Quaternion } from './quaternion'
 
 
-export class Matrix4 extends Array<number> {
+export class Matrix4 extends Numberic<Matrix4> {
   static decomposeV: Vector3 | null = null
   static decomposeM: Matrix4 | null = null
   static decomposeR: Matrix3 | null =null
 
-  static ZERO = new Matrix4(16)
+  static get ZERO () {
+    return new Matrix4(16)
+  }
 
   /**
    * @description: 
@@ -158,7 +160,7 @@ export class Matrix4 extends Array<number> {
   }
 
   static tryInvert (other: Matrix4) {
-    const r = Matrix4.zero()
+    const r = Matrix4.ZERO
     const determinant = r.copyInverse(other)
     if (determinant === 0.0) {
       return null
@@ -172,8 +174,8 @@ export class Matrix4 extends Array<number> {
    * @return {*}
    */  
   static from (values: number[]) {
-    const mat = Matrix4.zero()
-    mat.setValues(
+    const mat = Matrix4.ZERO
+    mat.values(
       values[0],
       values[1],
       values[2],
@@ -199,19 +201,19 @@ export class Matrix4 extends Array<number> {
    * @return {*}
    */
   static identity () {
-    const mat = Matrix4.zero()
-    mat.setIdentity()
+    const mat = Matrix4.ZERO
+    mat.identity()
     return mat
   }
 
   static copy (other: Matrix4) {
-    const m = Matrix4.zero()
-    m.setFrom(other)
+    const m = Matrix4.ZERO
+    m.from(other)
     return m
   }
 
   static inverted (other: Matrix4) {
-    const r = Matrix4.zero()
+    const r = Matrix4.ZERO
     const determinant: number = r.copyInverse(other)
 
     if (determinant === 0.0) {
@@ -231,42 +233,42 @@ export class Matrix4 extends Array<number> {
     arg2: Vector4, 
     arg3: Vector4
   ) {
-    const mat = Matrix4.zero()
-    mat.setColumns(arg0, arg1, arg2, arg3)
+    const mat = Matrix4.ZERO
+    mat.columns(arg0, arg1, arg2, arg3)
   }
 
   static outer (
     u: Vector4, 
     v: Vector4
   ) {
-    const mat = Matrix4.zero()
-    mat.setOuter(u, v)
+    const mat = Matrix4.ZERO
+    mat.outer(u, v)
     return mat
   } 
 
   static rotationX (radians: number) {
-    const m = Matrix4.zero()
+    const m = Matrix4.ZERO
     m[15] = 1.0
     m.setRotationX(radians)
     return m
   }
 
   static rotationY (radians: number) {
-    const m = Matrix4.zero()
+    const m = Matrix4.ZERO
     m[15] = 1.0
     m.setRotationY(radians)
     return m
   }
 
   static rotationZ (radians: number) {
-    const m = Matrix4.zero()
+    const m = Matrix4.ZERO
     m[15] = 1.0
     m.setRotationZ(radians)
     return m
   }
 
   static translation (translation: Vector3) {
-    const mat = Matrix4.zero()
+    const mat = Matrix4.ZERO
     mat.setIdentity()
     mat.setTranslation(translation)
     return mat
@@ -277,14 +279,14 @@ export class Matrix4 extends Array<number> {
     y: number,
     z: number
   ) {
-    const mat = Matrix4.zero()
+    const mat = Matrix4.ZERO
     mat.setIdentity()
     mat.setTranslationRaw(x, y, z)
     return mat
   }
 
   static diagonal3 (scale: Vector3) {
-    const m = Matrix4.zero()
+    const m = Matrix4.ZERO
     m[15] = 1.0
     m[10] = scale[2]
     m[5] = scale[1]
@@ -297,7 +299,7 @@ export class Matrix4 extends Array<number> {
     y: number, 
     z: number
   ) {
-    const m = Matrix4.zero()
+    const m = Matrix4.ZERO
     m[15] = 1.0
     m[10] = z
     m[5] = y
@@ -327,7 +329,7 @@ export class Matrix4 extends Array<number> {
     return m
   }
 
-  static fromArrayLike (m4: ArrayLike<number>) {
+  static fromList (m4: Iterable<number>) {
     return new Matrix4(...m4)
   }
 
@@ -337,7 +339,7 @@ export class Matrix4 extends Array<number> {
     length: number = 16
   ) {
     length ??= Math.floor((buffer.byteLength - offset) / Float64Array.BYTES_PER_ELEMENT)
-    return Matrix4.fromArrayLike(new Float64Array(
+    return Matrix4.fromList(new Float64Array(
       buffer,
       offset,
       length
@@ -345,44 +347,48 @@ export class Matrix4 extends Array<number> {
   }
      
   static compose (translation: Vector3, rotation: Quaternion, scale: Vector3) {
-    const mat = Matrix4.zero()
+    const mat = Matrix4.ZERO
     mat.setFromTranslationRotationScale(translation, rotation, scale)
     return mat
   }
-
-  get storage () {
-    return this
-  }
-
+  // => dimension
   get dimension () {
     return 4
   }
 
+  // => row0
   get row0 () { 
-    return this.getRow(0) 
+    return this.row(0) 
   }
-  get row1 () { 
-    return this.getRow(1) 
-  }
-  get row2 () { 
-    return this.getRow(2) 
-  }
-  get row3 () { 
-    return this.getRow(3) 
-  }
-  set row0 (arg: Vector4) { 
-    this.setRow(0, arg)
-  }
-  set row1 (arg: Vector4) { 
-    this.setRow(1, arg)
-  }
-  set row2 (arg: Vector4) { 
-    this.setRow(2, arg)
-  }
-  set row3 (arg: Vector4) { 
-    this.setRow(3, arg)
+  set row0 (v4: Vector4) { 
+    this.row(0, v4)
   }
 
+  // => row1
+  get row1 () { 
+    return this.row(1) 
+  }
+  set row1 (arg: Vector4) { 
+    this.row(1, arg)
+  }
+
+  // => row2
+  get row2 () { 
+    return this.row(2) 
+  }
+  set row2 (v4: Vector4) { 
+    this.row(2, v4)
+  }
+
+  // => row3
+  get row3 () { 
+    return this.row(3) 
+  }
+  set row3 (v4: Vector4) { 
+    this.row(3, v4)
+  }
+
+  // => right
   get right () {
     const x = this[0]
     const y = this[1]
@@ -391,6 +397,7 @@ export class Matrix4 extends Array<number> {
     return vec
   }
 
+  // => up
   get up () {
     const x = this[4]
     const y = this[5]
@@ -399,6 +406,7 @@ export class Matrix4 extends Array<number> {
     return vec
   }
 
+  // => forward
   get forward () {
     const x = this[8]
     const y = this[9]
@@ -407,116 +415,167 @@ export class Matrix4 extends Array<number> {
     return vec
   }
 
+  identity () {
+    this[0] = 1
+    this[1] = 0
+    this[2] = 0
+    this[3] = 0
+    this[4] = 0
+    this[5] = 1
+    this[6] = 0
+    this[7] = 0
+    this[8] = 0
+    this[9] = 0
+    this[10] = 1
+    this[11] = 0
+    this[12] = 0
+    this[13] = 0
+    this[14] = 0
+    this[15] = 1
+  }
 
+  /**
+   * 
+   * @param {number} row 
+   * @param {number} col 
+   * @returns 
+   */
   index (row: number, col: number): number {
     return (col * 4) + row
   }
 
-  entry (row: number, col: number): number {
+  /**
+   * 
+   * @param row 
+   * @param col 
+   */
+  entry (row: number, col: number): number
+  entry (row: number, col: number, v: number): number
+  entry (row: number, col: number, v?: number | null): number | undefined {
     invariant((row >= 0) && (row < this.dimension), `The argument row cannot less than zero or gather than this.dimension`)
     invariant((col >= 0) && (col < this.dimension), `The argument col cannot less than zero or gather than this.dimension`)
-
-    return this[this.index(row, col)]
-  }
-
-  setEntry (row: number, col: number, v: number) {
-    invariant((row >= 0) && (row < this.dimension), `The argument row cannot less than zero or gather than this.dimension`)
-    invariant((col >= 0) && (col < this.dimension), `The argument col cannot less than zero or gather than this.dimension`)
+    v ??= null
+    if (v === null) {
+      return this[this.index(row, col)]
+    }
 
     this[this.index(row, col)] = v
-  }  
-
-  splatDiagonal (arg: number) {
-    this[0] = arg
-    this[5] = arg
-    this[10] = arg
-    this[15] = arg
   }
 
-  setValues (
-    arg0: number,
-    arg1: number,
-    arg2: number,
-    arg3: number,
-    arg4: number,
-    arg5: number,
-    arg6: number,
-    arg7: number,
-    arg8: number,
-    arg9: number,
-    arg10: number,
-    arg11: number,
-    arg12: number,
-    arg13: number,
-    arg14: number,
-    arg15: number
+  /**
+   * 
+   * @param arg 
+   */
+  splatDiagonal (factor: number) {
+    this[0] = factor
+    this[5] = factor
+    this[10] = factor
+    this[15] = factor
+  }
+
+  /**
+   * 
+   * @param {number} arg0 
+   * @param {number} arg1 
+   * @param {number} arg2 
+   * @param {number} arg3 
+   * @param {number} arg4 
+   * @param {number} arg5 
+   * @param {number} arg6 
+   * @param {number} arg7 
+   * @param {number} arg8 
+   * @param {number} arg9 
+   * @param {number} arg10 
+   * @param {number} arg11 
+   * @param {number} arg12 
+   * @param {number} arg13 
+   * @param {number} arg14 
+   * @param {number} arg15 
+   */
+  values (
+    factor0: number,
+    factor1: number,
+    factor2: number,
+    factor3: number,
+    factor4: number,
+    factor5: number,
+    factor6: number,
+    factor7: number,
+    factor8: number,
+    factor9: number,
+    factor10: number,
+    factor11: number,
+    factor12: number,
+    factor13: number,
+    factor14: number,
+    factor15: number
   ) {
-    this[15] = arg15
-    this[14] = arg14
-    this[13] = arg13
-    this[12] = arg12
-    this[11] = arg11
-    this[10] = arg10
-    this[9] = arg9
-    this[8] = arg8
-    this[7] = arg7
-    this[6] = arg6
-    this[5] = arg5
-    this[4] = arg4
-    this[3] = arg3
-    this[2] = arg2
-    this[1] = arg1
-    this[0] = arg0
+    this[15] = factor15
+    this[14] = factor14
+    this[13] = factor13
+    this[12] = factor12
+    this[11] = factor11
+    this[10] = factor10
+    this[9] = factor9
+    this[8] = factor8
+    this[7] = factor7
+    this[6] = factor6
+    this[5] = factor5
+    this[4] = factor4
+    this[3] = factor3
+    this[2] = factor2
+    this[1] = factor1
+    this[0] = factor0
   }
 
-  setColumns (
-    arg0: Vector4, 
-    arg1: Vector4, 
-    arg2: Vector4, 
-    arg3: Vector4
+  columns (
+    v0: Vector4, 
+    v1: Vector4, 
+    v2: Vector4, 
+    v3: Vector4
   ) {
-    this[0] = arg0[0]
-    this[1] = arg0[1]
-    this[2] = arg0[2]
-    this[3] = arg0[3]
-    this[4] = arg1[0]
-    this[5] = arg1[1]
-    this[6] = arg1[2]
-    this[7] = arg1[3]
-    this[8] = arg2[0]
-    this[9] = arg2[1]
-    this[10] = arg2[2]
-    this[11] = arg2[3]
-    this[12] = arg3[0]
-    this[13] = arg3[1]
-    this[14] = arg3[2]
-    this[15] = arg3[3]
+    this[0] = v0[0]
+    this[1] = v0[1]
+    this[2] = v0[2]
+    this[3] = v0[3]
+    this[4] = v1[0]
+    this[5] = v1[1]
+    this[6] = v1[2]
+    this[7] = v1[3]
+    this[8] = v2[0]
+    this[9] = v2[1]
+    this[10] = v2[2]
+    this[11] = v2[3]
+    this[12] = v3[0]
+    this[13] = v3[1]
+    this[14] = v3[2]
+    this[15] = v3[3]
   }
 
-  setFrom (arg: Matrix4) {
-    this[15] = arg[15]
-    this[14] = arg[14]
-    this[13] = arg[13]
-    this[12] = arg[12]
-    this[11] = arg[11]
-    this[10] = arg[10]
-    this[9] = arg[9]
-    this[8] = arg[8]
-    this[7] = arg[7]
-    this[6] = arg[6]
-    this[5] = arg[5]
-    this[4] = arg[4]
-    this[3] = arg[3]
-    this[2] = arg[2]
-    this[1] = arg[1]
-    this[0] = arg[0]
+  from (m4: Matrix4) {
+    this[15] = m4[15]
+    this[14] = m4[14]
+    this[13] = m4[13]
+    this[12] = m4[12]
+    this[11] = m4[11]
+    this[10] = m4[10]
+    this[9] = m4[9]
+    this[8] = m4[8]
+    this[7] = m4[7]
+    this[6] = m4[6]
+    this[5] = m4[5]
+    this[4] = m4[4]
+    this[3] = m4[3]
+    this[2] = m4[2]
+    this[1] = m4[1]
+    this[0] = m4[0]
   }
 
-  setFromTranslationRotation (arg0: Vector3, arg1: Quaternion) {
-    const x = arg1[0]
-    const y = arg1[1]
-    const z = arg1[2]
-    const w = arg1[3]
+  setFromTranslationRotation (v3: Vector3, q: Quaternion) {
+    const x = q[0]
+    const y = q[1]
+    const z = q[2]
+    const w = q[3]
     const x2 = x + x
     const y2 = y + y
     const z2 = z + z
@@ -542,9 +601,9 @@ export class Matrix4 extends Array<number> {
     this[9] = yz - wx
     this[10] = 1.0 - (xx + yy)
     this[11] = 0.0
-    this[12] = arg0[0]
-    this[13] = arg0[1]
-    this[14] = arg0[2]
+    this[12] = v3[0]
+    this[13] = v3[1]
+    this[14] = v3[2]
     this[15] = 1.0
   }
 
@@ -557,21 +616,21 @@ export class Matrix4 extends Array<number> {
     this.scale(scale)
   }
 
-  setUpper2x2 (arg: Matrix2) {
-    this[0] = arg[0]
-    this[1] = arg[1]
-    this[4] = arg[2]
-    this[5] = arg[3]
+  setUpper2x2 (m2: Matrix2) {
+    this[0] = m2[0]
+    this[1] = m2[1]
+    this[4] = m2[2]
+    this[5] = m2[3]
   }
 
-  setDiagonal (arg: Vector4) {
-    this[0] = arg[0]
-    this[5] = arg[1]
-    this[10] = arg[2]
-    this[15] = arg[3]
+  setDiagonal (v4: Vector4) {
+    this[0] = v4[0]
+    this[5] = v4[1]
+    this[10] = v4[2]
+    this[15] = v4[3]
   }
 
-  setOuter (u: Vector4, v: Vector4) {
+  outer (u: Vector4, v: Vector4) {
     this[0] = u[0] * v[0]
     this[1] = u[0] * v[1]
     this[2] = u[0] * v[2]
@@ -590,65 +649,70 @@ export class Matrix4 extends Array<number> {
     this[15] = u[3] * v[3]
   }
 
-  setRow (row: number, arg: Vector4) {
-    this[this.index(row, 0)] = arg[0]
-    this[this.index(row, 1)] = arg[1]
-    this[this.index(row, 2)] = arg[2]
-    this[this.index(row, 3)] = arg[3]
+  row (row: number): Vector4
+  row (row: number, v4: Vector4): undefined
+  row (row: number, v4?: Vector4 | null): Vector4 | undefined {
+    v4 ??= null
+    if (v4 === null) {
+      const r = Vector4.ZERO
+      r[0] = this[this.index(row, 0)]
+      r[1] = this[this.index(row, 1)]
+      r[2] = this[this.index(row, 2)]
+      r[3] = this[this.index(row, 3)]
+      return r
+    }
+
+    this[this.index(row, 0)] = v4[0]
+    this[this.index(row, 1)] = v4[1]
+    this[this.index(row, 2)] = v4[2]
+    this[this.index(row, 3)] = v4[3]
   }
 
-  getRow (row: number) {
-    const r = Vector4.zero()
-    r[0] = this[this.index(row, 0)]
-    r[1] = this[this.index(row, 1)]
-    r[2] = this[this.index(row, 2)]
-    r[3] = this[this.index(row, 3)]
-    return r
-  }
+  column (column: number): Vector4
+  column (column: number, v4: Vector4): undefined
+  column (column: number, v4?: Vector4 | null): Vector4 | undefined {
+    v4 ??= null
 
-  setColumn (column: number, arg: Vector4) {
+    if (v4 === null) {
+      const r = Vector4.ZERO
+      const entry = column * 4
+      r[3] = this[entry + 3]
+      r[2] = this[entry + 2]
+      r[1] = this[entry + 1]
+      r[0] = this[entry + 0]
+      return r
+    }
+
     const entry = column * 4
-    
-    this[entry + 3] = arg[3]
-    this[entry + 2] = arg[2]
-    this[entry + 1] = arg[1]
-    this[entry + 0] = arg[0]
-  }
-
-  getColumn (column: number) {
-    const r = Vector4.zero()
-    const entry = column * 4
-    r[3] = this[entry + 3]
-    r[2] = this[entry + 2]
-    r[1] = this[entry + 1]
-    r[0] = this[entry + 0]
-    return r
+    this[entry + 3] = v4[3]
+    this[entry + 2] = v4[2]
+    this[entry + 1] = v4[1]
+    this[entry + 0] = v4[0]
   }
 
   clone () {
     return Matrix4.copy(this)
   }
 
-  copyInto (arg: Matrix4) {
-    arg[15] = this[15]
-    arg[0] = this[0]
-    arg[1] = this[1]
-    arg[2] = this[2]
-    arg[3] = this[3]
-    arg[4] = this[4]
-    arg[5] = this[5]
-    arg[6] = this[6]
-    arg[7] = this[7]
-    arg[8] = this[8]
-    arg[9] = this[9]
-    arg[10] = this[10]
-    arg[11] = this[11]
-    arg[12] = this[12]
-    arg[13] = this[13]
-    arg[14] = this[14]
-    return arg
+  copyInto (m4: Matrix4) {
+    m4[15] = this[15]
+    m4[0] = this[0]
+    m4[1] = this[1]
+    m4[2] = this[2]
+    m4[3] = this[3]
+    m4[4] = this[4]
+    m4[5] = this[5]
+    m4[6] = this[6]
+    m4[7] = this[7]
+    m4[8] = this[8]
+    m4[9] = this[9]
+    m4[10] = this[10]
+    m4[11] = this[11]
+    m4[12] = this[12]
+    m4[13] = this[13]
+    m4[14] = this[14]
+    return m4
   }
-
 
   translate (x: Vector3 | Vector4 | number, y = 0, z = 0) {
     let tx: number
@@ -953,7 +1017,7 @@ export class Matrix4 extends Array<number> {
   }
 
   absolute () {
-    const r = Matrix4.zero()
+    const r = Matrix4.ZERO
     r[0] = Math.abs(this[0])
     r[1] = Math.abs(this[1])
     r[2] = Math.abs(this[2])
@@ -1071,7 +1135,7 @@ export class Matrix4 extends Array<number> {
     const y = this[13]
     const x = this[12]
     const vec = new Vector3()
-    vec.setValues(x, y, z)
+    vec.values(x, y, z)
     return vec
   }
 
@@ -1091,7 +1155,7 @@ export class Matrix4 extends Array<number> {
   }
 
   getRotation () {
-    const r = Matrix3.zero()
+    const r = Matrix3.ZERO
     this.copyRotation(r)
     return r
   }
@@ -1190,7 +1254,7 @@ export class Matrix4 extends Array<number> {
     const b11 = a22 * a33 - a23 * a32
     const det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06
     if (det === 0.0) {
-      this.setFrom(m)
+      this.from(m)
       return 0.0
     }
     const invDet = 1.0 / det
@@ -1298,6 +1362,43 @@ export class Matrix4 extends Array<number> {
     this[3] = 0.0
     this[7] = 0.0
     this[11] = 0.0
+  }
+
+  setFromRotation (rotationMatrix: Matrix3) {
+    const trace = rotationMatrix.trace()
+    if (trace > 0.0) {
+      let s = Math.sqrt(trace + 1.0)
+      this[3] = s * 0.5
+      s = 0.5 / s
+      this[0] = (rotationMatrix[5] - rotationMatrix[7]) * s
+      this[1] = (rotationMatrix[6] - rotationMatrix[2]) * s
+      this[2] = (rotationMatrix[1] - rotationMatrix[3]) * s
+    } else {
+      const i = rotationMatrix[0] < rotationMatrix[4]
+          ? (rotationMatrix[4] < rotationMatrix[8] ? 2 : 1)
+          : (rotationMatrix[0] < rotationMatrix[8] ? 2 : 0)
+      const j = (i + 1) % 3
+      const k = (i + 2) % 3
+      let s = Math.sqrt(
+        rotationMatrix[rotationMatrix.index(i, i)] -
+        rotationMatrix[rotationMatrix.index(j, j)] -
+        rotationMatrix[rotationMatrix.index(k, k)] + 1.0
+      )
+      this[i] = s * 0.5
+      s = 0.5 / s
+      this[3] = (
+        rotationMatrix[rotationMatrix.index(k, j)] -
+        rotationMatrix[rotationMatrix.index(j, k)]
+      ) * s
+      this[j] = (
+        rotationMatrix[rotationMatrix.index(j, i)] +
+        rotationMatrix[rotationMatrix.index(i, j)]
+      ) * s
+      this[k] = (
+        rotationMatrix[rotationMatrix.index(k, i)] +
+        rotationMatrix[rotationMatrix.index(i, k)]
+      ) * s
+    }
   }
 
   scaleAdjoint (scale: number) {
@@ -1456,7 +1557,7 @@ export class Matrix4 extends Array<number> {
   }
 
 
-  negate () {
+  inverse () {
     this[0] = -this[0]
     this[1] = -this[1]
     this[2] = -this[2]
@@ -1682,15 +1783,25 @@ export class Matrix4 extends Array<number> {
     )
   }
 
-  decompose (translation: Vector3, rotation: Quaternion, scale: Vector3) {
-    const v = Matrix4.decomposeV ??= Vector3.zero()
-    v.setValues(this[0], this[1], this[2])
+  /**
+   * 
+   * @param {Vector3} translation 
+   * @param {Quaternion} rotation 
+   * @param {Vector3} scale 
+   */
+  decompose (
+    translation: Vector3, 
+    rotation: Quaternion, 
+    scale: Vector3
+  ) {
+    const v = Matrix4.decomposeV ??= Vector3.ZERO
+    v.values(this[0], this[1], this[2])
     let sx = v.length
 
-    v.setValues(this[4], this[5], this[6])
+    v.values(this[4], this[5], this[6])
     const sy = v.length
 
-    v.setValues(this[8], this[9], this[10])
+    v.values(this[8], this[9], this[10])
     const sz = v.length
 
     if (this.determinant() < 0) {
@@ -1705,8 +1816,8 @@ export class Matrix4 extends Array<number> {
     const invSY = 1.0 / sy
     const invSZ = 1.0 / sz
 
-    const m = Matrix4.decomposeM ??= Matrix4.zero()
-    m.setFrom(this)
+    const m = Matrix4.decomposeM ??= Matrix4.ZERO
+    m.from(this)
     m[0] *= invSX
     m[1] *= invSX
     m[2] *= invSX
@@ -1717,7 +1828,7 @@ export class Matrix4 extends Array<number> {
     m[9] *= invSZ
     m[10] *= invSZ
 
-    const r = Matrix4.decomposeR ??= Matrix3.zero()
+    const r = Matrix4.decomposeR ??= Matrix3.ZERO
     m.copyRotation(r)
     rotation.setFromRotation(r)
 
@@ -1736,12 +1847,12 @@ export class Matrix4 extends Array<number> {
     return arg
   }
 
-  rotated3 (arg: Vector3, out?: Vector3 | null) {
+  rotated3 (v3: Vector3, out?: Vector3 | null) {
     out = out ?? null
     if (out === null) {
-      out = Vector3.copy(arg)
+      out = Vector3.copy(v3)
     } else {
-      out.setFrom(arg)
+      out.from(v3)
     }
     return this.rotate3(out)
   }
@@ -1761,12 +1872,12 @@ export class Matrix4 extends Array<number> {
    * @param {Vector3} out
    * @return {*}
    */
-  transformed3 (arg: Vector3, out?: Vector3 | null) {
+  transformed3 (v3: Vector3, out?: Vector3 | null) {
     out = out ?? null
     if (out === null) {
-      out = Vector3.copy(arg)
+      out = Vector3.copy(v3)
     } else {
-      out.setFrom(arg)
+      out.from(v3)
     }
     return this.transform3(out)
   }
@@ -1783,23 +1894,23 @@ export class Matrix4 extends Array<number> {
     return arg
   }
 
-  perspectiveTransform (arg: Vector3) {
-    const x1 = (this[0] * arg[0]) + (this[4] * arg[1]) + (this[8] * arg[2]) + this[12]
-    const y1 = (this[1] * arg[0]) + (this[5] * arg[1]) + (this[9] * arg[2]) + this[13]
-    const z1 = (this[2] * arg[0]) + (this[6] * arg[1]) + (this[10] * arg[2]) + this[14]
-    const w1 = 1.0 / ((this[3] * arg[0]) + (this[7] * arg[1]) + (this[11] * arg[2]) + this[15])
-    arg[0] = x1 * w1
-    arg[1] = y1 * w1
-    arg[2] = z1 * w1
-    return arg
+  perspectiveTransform (v3: Vector3) {
+    const x1 = (this[0] * v3[0]) + (this[4] * v3[1]) + (this[8] * v3[2]) + this[12]
+    const y1 = (this[1] * v3[0]) + (this[5] * v3[1]) + (this[9] * v3[2]) + this[13]
+    const z1 = (this[2] * v3[0]) + (this[6] * v3[1]) + (this[10] * v3[2]) + this[14]
+    const w1 = 1.0 / ((this[3] * v3[0]) + (this[7] * v3[1]) + (this[11] * v3[2]) + this[15])
+    v3[0] = x1 * w1
+    v3[1] = y1 * w1
+    v3[2] = z1 * w1
+    return v3
   }
 
-  transformed (arg: Vector4, out?: Vector4 | null) {
+  transformed (v4: Vector4, out?: Vector4 | null) {
     out = out ?? null
     if (out === null) {
-      out = Vector4.copy(arg)
+      out = Vector4.copy(v4)
     } else {
-      out.setFrom(arg)
+      out.from(v4)
     }
     return this.transform(out)
   }
@@ -1830,7 +1941,7 @@ export class Matrix4 extends Array<number> {
    * @param {number} offset
    * @return {*}
    */  
-  copyFromArray (array: number[], offset: number = 0) {
+  copyFromList (array: number[], offset: number = 0) {
     const i = offset
     this[15] = array[i + 15]
     this[14] = array[i + 14]
@@ -1858,11 +1969,11 @@ export class Matrix4 extends Array<number> {
    */  
   applyToVector3Array (array: number[], offset: number = 0) {
     for (let i = 0, j = offset; i < array.length; i += 3, j += 3) {
-      const v = Vector3.array(array, j)
+      const v = Vector3.copyFromList(array, j)
       v.applyMatrix4(this)
-      array[j] = v.storage[0]
-      array[j + 1] = v.storage[1]
-      array[j + 2] = v.storage[2]
+      array[j] = v[0]
+      array[j + 1] = v[1]
+      array[j + 2] = v[2]
     }
 
     return array
@@ -1959,6 +2070,6 @@ export class Matrix4 extends Array<number> {
   }
 
   toString () {
-    return  `[0] ${this.getRow(0)}\n[1] ${this.getRow(1)}\n[2] ${this.getRow(2)}\n[3] ${this.getRow(3)}\n`
+    return  `Matrix4([0]: ${this.row(0)}, [1]: ${this.row(1)}, [2]: ${this.row(2)}, [3]: ${this.row(3)})`
   }
 }

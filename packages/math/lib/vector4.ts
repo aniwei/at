@@ -2,7 +2,9 @@ import { clamp, Numberic } from '@at/basic'
 import { Matrix4 } from './matrix4'
 
 export class Vector4 extends Numberic<Vector4> {
-  static ZERO = new Vector4(4)
+  static get ZERO () {
+    return new Vector4(4)
+  } 
   /**
    * 求最小
    * @param a 
@@ -13,7 +15,7 @@ export class Vector4 extends Numberic<Vector4> {
     a: Vector4, 
     b: Vector4, 
     ) {
-    const result: Vector4 = Vector4.ZERO.clone()
+    const result: Vector4 = Vector4.ZERO
     result[0] = Math.min(a[0], b[0])
     result[1] = Math.min(a[1], b[1])
     result[2] = Math.min(a[2], b[2])
@@ -31,7 +33,7 @@ export class Vector4 extends Numberic<Vector4> {
     a: Vector4, 
     b: Vector4, 
   ) {
-    const result: Vector4 = Vector4.ZERO.clone()
+    const result: Vector4 = Vector4.ZERO
     result[0] = Math.max(a[0], b[0])
     result[1] = Math.max(a[1], b[1])
     result[2] = Math.max(a[2], b[2])
@@ -51,7 +53,7 @@ export class Vector4 extends Numberic<Vector4> {
     max: Vector4, 
     a: number, 
   ) {
-    const result: Vector4 = Vector4.ZERO.clone()
+    const result: Vector4 = Vector4.ZERO
     result[0] = min[0] + a * (max[0] - min[0])
     result[1] = min[1] + a * (max[1] - min[1])
     result[2] = min[2] + a * (max[2] - min[2])
@@ -69,25 +71,25 @@ export class Vector4 extends Numberic<Vector4> {
     array: number[], 
     offset = 0
   ) {
-    const vec = Vector4.ZERO.clone()
+    const vec = Vector4.ZERO
     vec.copyFromList(array, offset)
     return vec
   }
 
   static identity () {
-    const vec = Vector4.ZERO.clone()
+    const vec = Vector4.ZERO
     vec.identity()
     return vec
   } 
 
   static all (value: number) {
-    const vec = Vector4.ZERO.clone()
+    const vec = Vector4.ZERO
     vec.splat(value)
     return vec
   } 
 
   static copy (other: Vector4): Vector4 {
-    const vec = Vector4.ZERO.clone()
+    const vec = Vector4.ZERO
     vec.from(other)
     return vec
   }

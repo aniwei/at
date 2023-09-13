@@ -1,14 +1,21 @@
 import { invariant } from 'ts-invariant'
+import { Numberic } from '@at/basic'
 import { Matrix2 } from './matrix2'
 import { Matrix4 } from './matrix4'
 import { Vector2 } from './vector2'
 import { Vector3 } from './vector3'
 
-export class Matrix3 extends Numberic<number> {
+export class Matrix3 extends Numberic<Matrix3> {
   static get ZERO () {
     return new Matrix3(9)
   }
 
+  /**
+   * 
+   * @param A 
+   * @param x 
+   * @param b 
+   */
   static solve2 (
     A: Matrix3, 
     x: Vector2, 
@@ -96,19 +103,33 @@ export class Matrix3 extends Numberic<number> {
     return mat
   }
 
+  /**
+   * 
+   * @returns 
+   */
   static identity () {
     const mat = Matrix3.ZERO.clone()
-    mat.setIdentity()
+    mat.identity()
     return mat
   }
   
-
+  /**
+   * 
+   * @param other 
+   * @returns 
+   */
   static copy (other: Matrix3): Matrix3 {
     const mat = Matrix3.ZERO.clone()
     mat.from(other)
     return mat
   }
 
+  /**
+   * 
+   * @param arg0 
+   * @param arg1 
+   * @param arg2 
+   */
   static columns (
     arg0: Vector3 , 
     arg1: Vector3, 
@@ -118,6 +139,12 @@ export class Matrix3 extends Numberic<number> {
     mat.columns(arg0, arg1, arg2)
   }
 
+  /**
+   * 
+   * @param u 
+   * @param v 
+   * @returns 
+   */
   static outer (
     u: Vector3, 
     v: Vector3
@@ -127,32 +154,46 @@ export class Matrix3 extends Numberic<number> {
     return mat
   }
 
+  /**
+   * 
+   * @param radians 
+   * @returns 
+   */
   static rotationX (radians: number) {
     const mat = Matrix3.ZERO.clone()
     mat.setRotationX(radians)
     return mat
   }
 
+  /**
+   * 
+   * @param radians 
+   * @returns 
+   */
   static rotationY (radians: number) {
     const mat = Matrix3.ZERO.clone()
     mat.setRotationY(radians)
     return mat
   }
 
+  /**
+   * 
+   * @param radians 
+   * @returns 
+   */
   static rotationZ (radians: number) {
     const mat = Matrix3.ZERO.clone()
     mat.setRotationZ(radians)
     return mat
   }
 
-  get storage () {
-    return this
-  }
-
+  // 纬度
+  // => dimension
   get dimension () {
     return 3
   }
 
+  // => right
   get right () {
     const x = this[0]
     const y = this[1]
@@ -160,6 +201,7 @@ export class Matrix3 extends Numberic<number> {
     return new Vector3(x, y, z)
   }
 
+  // => up
   get up () {
     const x = this[3]
     const y = this[4]
@@ -167,6 +209,7 @@ export class Matrix3 extends Numberic<number> {
     return new Vector3(x, y, z)
   }
 
+  // => forward
   get forward () {
     const x = this[6]
     const y = this[7]
@@ -174,31 +217,36 @@ export class Matrix3 extends Numberic<number> {
     return new Vector3(x, y, z)
   }
   
+  // => row0
   get row0 () {
-    return this.getRow(0)
+    return this.row(0)
+  }
+  set row0 (v3: Vector3) {
+    this.row(0, v3)
   }
 
+  // => row1
   get row1 () {
-    return this.getRow(1)
+    return this.row(1)
+  }
+  set row1 (v3: Vector3) {
+    this.row(1, v3)
   }
 
+  // => row2
   get row2 () {
-    return this.getRow(2)
+    return this.row(2)
   }
-
-  set row0 (arg: Vector3) {
-    this.setRow(0, arg)
-  }
-
-  set row1 (arg: Vector3) {
-    this.setRow(1, arg)
-  }
-
   set row2 (arg: Vector3) {
-    this.setRow(2, arg)
+    this.row(2, arg)
   }
 
-
+  /**
+   * 
+   * @param row 
+   * @param col 
+   * @returns 
+   */
   index (
     row: number, 
     col: number
@@ -206,27 +254,36 @@ export class Matrix3 extends Numberic<number> {
     return (col * 3) + row
   }
 
-  entry (
-    row: number, 
-    col: number
-  ) {
+  /**
+   * 
+   * @param {number} row 
+   * @param {number} col 
+   * @returns {undefined | number}
+   */
+  entry (row: number, col: number): number
+  entry (row: number, col: number, v: number | null): undefined
+  entry (row: number, col: number, v?: number | null): undefined | number {
     invariant((row >= 0) && (row < this.dimension))
     invariant((col >= 0) && (col < this.dimension))
-
-    return this[this.index(row, col)]
+    v ??= null
+    if (v !== null) {
+      this[this.index(row, col)] = v
+    } else {
+      return this[this.index(row, col)]
+    }
   }
-
-  setEntry (
-    row: number, 
-    col: number,
-    v: number
-  ) {
-    invariant((row >= 0) && (row < this.dimension))
-    invariant((col >= 0) && (col < this.dimension))
-
-    this[this.index(row, col)] = v
-  }
-
+  /**
+   * 
+   * @param factor0 
+   * @param factor1 
+   * @param factor2 
+   * @param factor3 
+   * @param factor4 
+   * @param factor5 
+   * @param factor6 
+   * @param factor7 
+   * @param factor8 
+   */
   values (
     factor0: number, 
     factor1: number, 
@@ -249,6 +306,12 @@ export class Matrix3 extends Numberic<number> {
     this[0] = factor0
   }
 
+  /**
+   * 
+   * @param {Vector3} v0 
+   * @param {Vector3} v1 
+   * @param {Vector3} v2 
+   */
   columns (
     v0: Vector3, 
     v1: Vector3, 
@@ -265,6 +328,10 @@ export class Matrix3 extends Numberic<number> {
     this[8] = v2[2]
   }
 
+  /**
+   * 
+   * @param m3 
+   */
   from (m3: Matrix3) {
     this[8] = m3[8]
     this[7] = m3[7]
@@ -277,6 +344,11 @@ export class Matrix3 extends Numberic<number> {
     this[0] = m3[0]
   }
 
+  /**
+   * 
+   * @param {Vector3} u 
+   * @param {Vector3} v 
+   */
   outer (
     u: Vector3, 
     v: Vector3
@@ -292,13 +364,21 @@ export class Matrix3 extends Numberic<number> {
     this[8] = u[2] * v[2]
   }
 
+  /**
+   * 
+   * @param factor 
+   */
   splatDiagonal (factor: number) {
     this[0] = factor
     this[4] = factor
     this[8] = factor
   }
 
-  setDiagonal (v3: Vector3) {
+  /**
+   * 
+   * @param v3 
+   */
+  diagonal (v3: Vector3) {
     this[0] = v3[0]
     this[4] = v3[1]
     this[8] = v3[2]
@@ -311,44 +391,50 @@ export class Matrix3 extends Numberic<number> {
     this[4] = m2[3]
   }
 
-  setRow (
-    row: number, 
-    arg: Vector3
-  ) {
-    this[this.index(row, 0)] = arg[0]
-    this[this.index(row, 1)] = arg[1]
-    this[this.index(row, 2)] = arg[2]
+  /**
+   * 
+   * @param row 
+   * @param row 
+   */
+  row (row: number): Vector3
+  row (row: number, v3: Vector3): undefined
+  row (row: number, v3?: Vector3 | null): Vector3 | undefined {
+    v3 ??= null
+    if (v3 === null) {
+      const r = Vector3.ZERO.clone()
+      r[0] = this[this.index(row, 0)]
+      r[1] = this[this.index(row, 1)]
+      r[2] = this[this.index(row, 2)]
+      return r
+    } else {
+      this[this.index(row, 0)] = v3[0]
+      this[this.index(row, 1)] = v3[1]
+      this[this.index(row, 2)] = v3[2]
+    }
   }
 
-  getRow (row: number) {
-    const r = Vector3.ZERO.clone()
-    r[0] = this[this.index(row, 0)]
-    r[1] = this[this.index(row, 1)]
-    r[2] = this[this.index(row, 2)]
-    return r
-  }
-
-  setColumn (
-    column: number, 
-    arg: Vector3
-  ) {
-    const entry = column * 3
-    this[entry + 2] = arg[2]
-    this[entry + 1] = arg[1]
-    this[entry + 0] = arg[0]
-  }
-
-  getColumn (column: number) {
-    const r = Vector3.ZERO.clone()
-    const entry = column * 3
-    r[2] = this[entry + 2]
-    r[1] = this[entry + 1]
-    r[0] = this[entry + 0]
-    return r
-  }
-
-  clone () {
-    return Matrix3.copy(this)
+  /**
+   * 
+   * @param column 
+   * @param arg 
+   */
+  column (column: number): Vector3
+  column (column: number, v3: Vector3): undefined
+  column (column: number, v3?: Vector3 | null): Vector3 | undefined {
+    v3 ??= null
+    if (v3 === null) {
+      const r = Vector3.ZERO.clone()
+      const entry = column * 3
+      r[2] = this[entry + 2]
+      r[1] = this[entry + 1]
+      r[0] = this[entry + 0]
+      return r
+    } else {
+      const entry = column * 3
+      this[entry + 2] = v3[2]
+      this[entry + 1] = v3[1]
+      this[entry + 0] = v3[0]
+    }
   }
 
   copyInto (arg: Matrix3) {
@@ -408,7 +494,7 @@ export class Matrix3 extends Numberic<number> {
   }
 
   absolute () {
-    const r = Matrix3.ZERO.clone()
+    const r = Matrix3.ZERO
     r[0] = Math.abs(this[0])
     r[1] = Math.abs(this[1])
     r[2] = Math.abs(this[2])
@@ -495,39 +581,6 @@ export class Matrix3 extends Numberic<number> {
     return this.copyInverse(this)
   }
 
-  copyInverse (arg: Matrix3 ) {
-    let det = arg.determinant()
-    if (det === 0.0) {
-      this.from(arg)
-      return 0.0
-    }
-    const invDet = 1.0 / det
-    const ix = invDet * (arg[4] * arg[8] - arg[5] * arg[7])
-    const iy = invDet * (arg[2] * arg[7] - arg[1] * arg[8])
-    const iz = invDet * (arg[1] * arg[5] - arg[2] * arg[4])
-    const jx = invDet * (arg[5] * arg[6] - arg[3] * arg[8])
-    const jy = invDet * (arg[0] * arg[8] - arg[2] * arg[6])
-    const jz = invDet * (arg[2] * arg[3] - arg[0] * arg[5])
-    const kx = invDet * (arg[3] * arg[7] - arg[4] * arg[6])
-    const ky = invDet * (arg[1] * arg[6] - arg[0] * arg[7])
-    const kz = invDet * (arg[0] * arg[4] - arg[1] * arg[3])
-    this[0] = ix
-    this[1] = iy
-    this[2] = iz
-    this[3] = jx
-    this[4] = jy
-    this[5] = jz
-    this[6] = kx
-    this[7] = ky
-    this[8] = kz
-    return det
-  }
-
-  copyNormalMatrix (arg: Matrix4) {
-    this.copyInverse(arg.getRotation())
-    this.transpose()
-  }
-
   setRotationX (radians: number) {
     const c = Math.cos(radians)
     const s = Math.sin(radians)
@@ -592,7 +645,7 @@ export class Matrix3 extends Numberic<number> {
   }
 
   
-  absoluteRotate (arg: Vector3) {
+  absoluteRotate (v2: Vector3) {
     const m00 = Math.abs(this[0])
     const m01 = Math.abs(this[3])
     const m02 = Math.abs(this[6])
@@ -602,33 +655,33 @@ export class Matrix3 extends Numberic<number> {
     const m20 = Math.abs(this[2])
     const m21 = Math.abs(this[5])
     const m22 = Math.abs(this[8])
-    const x = arg[0]
-    const y = arg[1]
-    const z = arg[2]
-    arg[0] = x * m00 + y * m01 + z * m02
-    arg[1] = x * m10 + y * m11 + z * m12
-    arg[2] = x * m20 + y * m21 + z * m22
-    return arg
+    const x = v2[0]
+    const y = v2[1]
+    const z = v2[2]
+    v2[0] = x * m00 + y * m01 + z * m02
+    v2[1] = x * m10 + y * m11 + z * m12
+    v2[2] = x * m20 + y * m21 + z * m22
+    return v2
   }
 
-  absoluteRotate2 (arg: Vector2) {
+  absoluteRotate2 (v2: Vector2) {
     const m00 = Math.abs(this[0])
     const m01 = Math.abs(this[3])
     const m10 = Math.abs(this[1])
     const m11 = Math.abs(this[4])
-    const x = arg[0]
-    const y = arg[1]
-    arg[0] = x * m00 + y * m01
-    arg[1] = x * m10 + y * m11
-    return arg
+    const x = v2[0]
+    const y = v2[1]
+    v2[0] = x * m00 + y * m01
+    v2[1] = x * m10 + y * m11
+    return v2
   }
 
-  transform2 (arg: Vector2 ) {
-    const x = (this[0] * arg[0]) + (this[3] * arg[1]) + this[6]
-    const y = (this[1] * arg[0]) + (this[4] * arg[1]) + this[7]
-    arg[0] = x
-    arg[1] = y
-    return arg
+  transform2 (v2: Vector2) {
+    const x = (this[0] * v2[0]) + (this[3] * v2[1]) + this[6]
+    const y = (this[1] * v2[0]) + (this[4] * v2[1]) + this[7]
+    v2[0] = x
+    v2[1] = y
+    return v2
   }
 
   scale (scale: number) {
@@ -649,28 +702,28 @@ export class Matrix3 extends Numberic<number> {
     return mat
   }
 
-  add (o: Matrix3) {
-    this[0] = this[0] + o[0]
-    this[1] = this[1] + o[1]
-    this[2] = this[2] + o[2]
-    this[3] = this[3] + o[3]
-    this[4] = this[4] + o[4]
-    this[5] = this[5] + o[5]
-    this[6] = this[6] + o[6]
-    this[7] = this[7] + o[7]
-    this[8] = this[8] + o[8]
+  add (m3: Matrix3) {
+    this[0] = this[0] + m3[0]
+    this[1] = this[1] + m3[1]
+    this[2] = this[2] + m3[2]
+    this[3] = this[3] + m3[3]
+    this[4] = this[4] + m3[4]
+    this[5] = this[5] + m3[5]
+    this[6] = this[6] + m3[6]
+    this[7] = this[7] + m3[7]
+    this[8] = this[8] + m3[8]
   }
 
-  substract (o: Matrix3) {
-    this[0] = this[0] - o[0]
-    this[1] = this[1] - o[1]
-    this[2] = this[2] - o[2]
-    this[3] = this[3] - o[3]
-    this[4] = this[4] - o[4]
-    this[5] = this[5] - o[5]
-    this[6] = this[6] - o[6]
-    this[7] = this[7] - o[7]
-    this[8] = this[8] - o[8]
+  substract (m3: Matrix3) {
+    this[0] = this[0] - m3[0]
+    this[1] = this[1] - m3[1]
+    this[2] = this[2] - m3[2]
+    this[3] = this[3] - m3[3]
+    this[4] = this[4] - m3[4]
+    this[5] = this[5] - m3[5]
+    this[6] = this[6] - m3[6]
+    this[7] = this[7] - m3[7]
+    this[8] = this[8] - m3[8]
   }
 
   inverse () {
@@ -685,7 +738,7 @@ export class Matrix3 extends Numberic<number> {
     this[8] = -this[8]
   }
 
-  multiply (m3: Matrix3 ) {
+  multiply (m3: Matrix3) {
     const m00 = this[0]
     const m01 = this[3]
     const m02 = this[6]
@@ -742,7 +795,7 @@ export class Matrix3 extends Numberic<number> {
     this[8] = (m20 * m3[6]) + (m21 * m3[7]) + (m22 * m3[8])
   }
 
-  multiplyTranspose(m3: Matrix3 ) {
+  multiplyTranspose (m3: Matrix3) {
     const m00 = this[0]
     const m01 = this[3]
     const m02 = this[6]
@@ -787,7 +840,61 @@ export class Matrix3 extends Numberic<number> {
     return this.transform(out)
   }
 
-  copyIntoArray (
+  applyToVector3Array (
+    array: number[], 
+    offset = 0
+  ) {
+    for (let i = 0, j = offset; i < array.length; i += 3, j += 3) {
+      // @TODO
+      const v = Vector3.copyFromList(array, j)
+      v.applyMatrix3(this)
+      array[j] = v[0]
+      array[j + 1] = v[1]
+      array[j + 2] = v[2]
+    }
+
+    return array
+  }
+
+  /**
+   * 
+   * @param {Matrix3} arg 
+   * @returns {number}
+   */
+  copyInverse (arg: Matrix3) {
+    let det = arg.determinant()
+    if (det === 0.0) {
+      this.from(arg)
+      return 0.0
+    }
+    const invDet = 1.0 / det
+    const ix = invDet * (arg[4] * arg[8] - arg[5] * arg[7])
+    const iy = invDet * (arg[2] * arg[7] - arg[1] * arg[8])
+    const iz = invDet * (arg[1] * arg[5] - arg[2] * arg[4])
+    const jx = invDet * (arg[5] * arg[6] - arg[3] * arg[8])
+    const jy = invDet * (arg[0] * arg[8] - arg[2] * arg[6])
+    const jz = invDet * (arg[2] * arg[3] - arg[0] * arg[5])
+    const kx = invDet * (arg[3] * arg[7] - arg[4] * arg[6])
+    const ky = invDet * (arg[1] * arg[6] - arg[0] * arg[7])
+    const kz = invDet * (arg[0] * arg[4] - arg[1] * arg[3])
+    this[0] = ix
+    this[1] = iy
+    this[2] = iz
+    this[3] = jx
+    this[4] = jy
+    this[5] = jz
+    this[6] = kx
+    this[7] = ky
+    this[8] = kz
+    return det
+  }
+
+  copyNormalMatrix (arg: Matrix4) {
+    this.copyInverse(arg.getRotation())
+    this.transpose()
+  }
+
+  copyIntoList (
     array: number[], 
     offset = 0
   ) {
@@ -803,7 +910,7 @@ export class Matrix3 extends Numberic<number> {
     array[i + 0] = this[0]
   }
 
-  copyFromArray (
+  copyFromList (
     array: number[], 
     offset = 0
   ) {
@@ -819,36 +926,15 @@ export class Matrix3 extends Numberic<number> {
     this[0] = array[i + 0]
   }
 
-  applyToVector3Array (
-    array: number[], 
-    offset = 0
-  ) {
-    for (let i = 0, j = offset; i < array.length; i += 3, j += 3) {
-      // @TODO
-      const v = Vector3.array(array, j)
-      v.applyMatrix3(this)
-      array[j] = v[0]
-      array[j + 1] = v[1]
-      array[j + 2] = v[2]
-    }
-
-    return array
+  clone () {
+    return Matrix3.copy(this)
   }
 
-  identity () {
-    return (
-      this[0] === 1.0 && // col 1
-      this[1] === 0.0 &&
-      this[2] === 0.0 &&
-      this[3] === 0.0 && // col 2
-      this[4] === 1.0 &&
-      this[5] === 0.0 &&
-      this[6] === 0.0 && // col 3
-      this[7] === 0.0 &&
-      this[8] === 1.0
-    )
-  }
-
+  /**
+   * 
+   * @param other 
+   * @returns 
+   */
   equal (other: Matrix3 | null) {
     return (
       (other instanceof Matrix3) &&
@@ -864,11 +950,16 @@ export class Matrix3 extends Numberic<number> {
     )
   }
 
+  /**
+   * 
+   * @param other 
+   * @returns 
+   */
   notEqual (other: Matrix3 | null) {
     return !this.equal(other)
   }
 
   toString () {
-    return `Matrix3([0]: ${this.getRow(0)}, [1]: ${this.getRow(1)}, [2]:${this.getRow(2)})`
+    return `Matrix3([0]: ${this.row(0)}, [1]: ${this.row(1)}, [2]:${this.row(2)})`
   }
 }

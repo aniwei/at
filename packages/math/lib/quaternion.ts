@@ -44,7 +44,7 @@ export class Quaternion extends Numberic<Quaternion> {
     return q
   }
 
-  static axisAngle (
+  static setAxisAngle (
     axis: Vector3, 
     angle: number
   ) {
@@ -53,12 +53,12 @@ export class Quaternion extends Numberic<Quaternion> {
     return q
   }
 
-  static fromTwoVectors (
+  static setFromTwoVectors (
     a: Vector3, 
     b: Vector3
   ) {
     const q = new Quaternion()
-    q.fromTwoVectors(a, b)
+    q.setFromTwoVectors(a, b)
     return q
   }
 
@@ -186,44 +186,80 @@ export class Quaternion extends Numberic<Quaternion> {
   }
 
   rotation (rotationMatrix: Matrix3) {
-    const rotationMatrixStorage = rotationMatrix.storage
     const trace = rotationMatrix.trace()
     if (trace > 0.0) {
       let s = Math.sqrt(trace + 1.0)
       this[3] = s * 0.5
       s = 0.5 / s
-      this[0] = (rotationMatrixStorage[5] - rotationMatrixStorage[7]) * s
-      this[1] = (rotationMatrixStorage[6] - rotationMatrixStorage[2]) * s
-      this[2] = (rotationMatrixStorage[1] - rotationMatrixStorage[3]) * s
+      this[0] = (rotationMatrix[5] - rotationMatrix[7]) * s
+      this[1] = (rotationMatrix[6] - rotationMatrix[2]) * s
+      this[2] = (rotationMatrix[1] - rotationMatrix[3]) * s
     } else {
-      const i = rotationMatrixStorage[0] < rotationMatrixStorage[4]
-          ? (rotationMatrixStorage[4] < rotationMatrixStorage[8] ? 2 : 1)
-          : (rotationMatrixStorage[0] < rotationMatrixStorage[8] ? 2 : 0)
+      const i = rotationMatrix[0] < rotationMatrix[4]
+          ? (rotationMatrix[4] < rotationMatrix[8] ? 2 : 1)
+          : (rotationMatrix[0] < rotationMatrix[8] ? 2 : 0)
       const j = (i + 1) % 3
       const k = (i + 2) % 3
       let s = Math.sqrt(
-        rotationMatrixStorage[rotationMatrix.index(i, i)] -
-        rotationMatrixStorage[rotationMatrix.index(j, j)] -
-        rotationMatrixStorage[rotationMatrix.index(k, k)] + 1.0
+        rotationMatrix[rotationMatrix.index(i, i)] -
+        rotationMatrix[rotationMatrix.index(j, j)] -
+        rotationMatrix[rotationMatrix.index(k, k)] + 1.0
       )
       this[i] = s * 0.5
       s = 0.5 / s
       this[3] = (
-        rotationMatrixStorage[rotationMatrix.index(k, j)] -
-        rotationMatrixStorage[rotationMatrix.index(j, k)]
+        rotationMatrix[rotationMatrix.index(k, j)] -
+        rotationMatrix[rotationMatrix.index(j, k)]
       ) * s
       this[j] = (
-        rotationMatrixStorage[rotationMatrix.index(j, i)] +
-        rotationMatrixStorage[rotationMatrix.index(i, j)]
+        rotationMatrix[rotationMatrix.index(j, i)] +
+        rotationMatrix[rotationMatrix.index(i, j)]
       ) * s
       this[k] = (
-        rotationMatrixStorage[rotationMatrix.index(k, i)] +
-        rotationMatrixStorage[rotationMatrix.index(i, k)]
+        rotationMatrix[rotationMatrix.index(k, i)] +
+        rotationMatrix[rotationMatrix.index(i, k)]
       ) * s
     }
   }
 
-  fromTwoVectors (
+  setFromRotation (rotationMatrix: Matrix3) {
+    const trace = rotationMatrix.trace()
+    if (trace > 0.0) {
+      let s = Math.sqrt(trace + 1.0)
+      this[3] = s * 0.5
+      s = 0.5 / s
+      this[0] = (rotationMatrix[5] - rotationMatrix[7]) * s
+      this[1] = (rotationMatrix[6] - rotationMatrix[2]) * s
+      this[2] = (rotationMatrix[1] - rotationMatrix[3]) * s
+    } else {
+      const i = rotationMatrix[0] < rotationMatrix[4]
+          ? (rotationMatrix[4] < rotationMatrix[8] ? 2 : 1)
+          : (rotationMatrix[0] < rotationMatrix[8] ? 2 : 0)
+      const j = (i + 1) % 3
+      const k = (i + 2) % 3
+      let s = Math.sqrt(
+        rotationMatrix[rotationMatrix.index(i, i)] -
+        rotationMatrix[rotationMatrix.index(j, j)] -
+        rotationMatrix[rotationMatrix.index(k, k)] + 1.0
+      )
+      this[i] = s * 0.5
+      s = 0.5 / s
+      this[3] = (
+        rotationMatrix[rotationMatrix.index(k, j)] -
+        rotationMatrix[rotationMatrix.index(j, k)]
+      ) * s
+      this[j] = (
+        rotationMatrix[rotationMatrix.index(j, i)] +
+        rotationMatrix[rotationMatrix.index(i, j)]
+      ) * s
+      this[k] = (
+        rotationMatrix[rotationMatrix.index(k, i)] +
+        rotationMatrix[rotationMatrix.index(i, k)]
+      ) * s
+    }
+  }
+
+  setFromTwoVectors (
     a: Vector3, 
     b: Vector3
   ) {
@@ -251,7 +287,7 @@ export class Quaternion extends Numberic<Quaternion> {
     this.setAxisAngle(axis.normalized(), angle)
   }
 
-  setRandom (random: { (): number }) {
+  random (random: { (): number }) {
     const x0 = random()
     const r1 = Math.sqrt(1.0 - x0)
     const r2 = Math.sqrt(x0)

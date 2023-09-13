@@ -43,7 +43,7 @@ export class MatrixUtils {
   */
   static getAsScale (transform: Matrix4): number | null {
     invariant(transform !== null)
-    const values = transform.storage
+    const values = transform
     if (
       values[1] === 0.0 && // col 1 (value 0 is the scale)
       values[2] === 0.0 &&
@@ -83,6 +83,7 @@ export class MatrixUtils {
     invariant(a !== null || b !== null)
 
     if (a === null) {
+      invariant(b !== null)
       return MatrixUtils.isIdentity(b)
     } 
 
@@ -200,7 +201,7 @@ export class MatrixUtils {
    * @param isAffine 
    */
   static accumulate (
-    m: ListLike<number>, 
+    m: ArrayLike<number>, 
     x: number, 
     y: number, 
     first: boolean, 
@@ -341,12 +342,12 @@ export class MatrixUtils {
    * @param {Rect} rect 
    * @returns {Rect}
    */
-  static inverseTransformRect(
+  static inverseTransformRect (
     transform: Matrix4 , 
     rect: Rect
   ) {
     invariant(rect !== null, `The argument "rect" cannot be null.`)
-    if (this.identity(transform)) {
+    if (MatrixUtils.isIdentity(transform)) {
       return rect
     }
     
@@ -366,9 +367,9 @@ export class MatrixUtils {
     invariant(orientation !== null)
 
     const result = Matrix4.identity()
-    result.setEntry(3, 2, -perspective)
-    result.setEntry(2, 3, -radius)
-    result.setEntry(3, 3, perspective * radius + 1.0)
+    result.entry(3, 2, -perspective)
+    result.entry(2, 3, -radius)
+    result.entry(3, 3, perspective * radius + 1.0)
 
     return result
   }
@@ -380,8 +381,8 @@ export class MatrixUtils {
    */
   static forceToPoint (offset: Offset) {
     const mat = Matrix4.identity()
-    mat.setRow(0, new Vector4(0, 0, 0, offset.dx))
-    mat.setRow(1, new Vector4(0, 0, 0, offset.dy))
+    mat.row(0, new Vector4(0, 0, 0, offset.dx))
+    mat.row(1, new Vector4(0, 0, 0, offset.dy))
     return mat
   }
 }

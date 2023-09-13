@@ -57,20 +57,10 @@ export class Vector3 extends Numberic<Vector3> {
     return new Vector3(...v3)
   }
 
-  static fromBuffer (
-    buffer: ArrayBuffer, 
-    offset: number
-  ) {
-    // @TODO
-  }
 
   static random (random?: { (): number }) {
     random ??= () => Math.random()
     return new Vector3(random(), random(), random())
-  }
-
-  get storage () {
-    return this
   }
 
   // => distance
@@ -266,7 +256,6 @@ export class Vector3 extends Numberic<Vector3> {
     return sum
   }
 
-  
   postmultiply (arg: Matrix3) {
     const v0 = this[0]
     const v1 = this[1]
@@ -316,7 +305,7 @@ export class Vector3 extends Numberic<Vector3> {
    * @param {number} angle 
    */
   applyAxisAngle (axis: Vector3, angle: number) {
-    this.applyQuaternion(Quaternion.axisAngle(axis, angle))
+    this.applyQuaternion(Quaternion.setAxisAngle(axis, angle))
   }
 
   /**
