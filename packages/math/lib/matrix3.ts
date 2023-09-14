@@ -82,12 +82,8 @@ export class Matrix3 extends Numberic<Matrix3> {
     x[2] = z1
   }
 
-  static fromArrayLike (m3: Iterable<number>) {
-    return new Matrix3(...m3)
-  }
-
   static fromList (values: number[]) {
-    const mat = Matrix3.ZERO.clone()
+    const mat = Matrix3.ZERO
     mat.values(
       values[0], 
       values[1],
@@ -108,7 +104,7 @@ export class Matrix3 extends Numberic<Matrix3> {
    * @returns 
    */
   static identity () {
-    const mat = Matrix3.ZERO.clone()
+    const mat = Matrix3.ZERO
     mat.identity()
     return mat
   }
@@ -119,7 +115,7 @@ export class Matrix3 extends Numberic<Matrix3> {
    * @returns 
    */
   static copy (other: Matrix3): Matrix3 {
-    const mat = Matrix3.ZERO.clone()
+    const mat = Matrix3.ZERO
     mat.from(other)
     return mat
   }
@@ -135,7 +131,7 @@ export class Matrix3 extends Numberic<Matrix3> {
     arg1: Vector3, 
     arg2: Vector3
   ) {
-    const mat = Matrix3.ZERO.clone()
+    const mat = Matrix3.ZERO
     mat.columns(arg0, arg1, arg2)
   }
 
@@ -149,7 +145,7 @@ export class Matrix3 extends Numberic<Matrix3> {
     u: Vector3, 
     v: Vector3
   ) {
-    const mat = Matrix3.ZERO.clone()
+    const mat = Matrix3.ZERO
     mat.outer(u, v)
     return mat
   }
@@ -160,7 +156,7 @@ export class Matrix3 extends Numberic<Matrix3> {
    * @returns 
    */
   static rotationX (radians: number) {
-    const mat = Matrix3.ZERO.clone()
+    const mat = Matrix3.ZERO
     mat.setRotationX(radians)
     return mat
   }
@@ -171,7 +167,7 @@ export class Matrix3 extends Numberic<Matrix3> {
    * @returns 
    */
   static rotationY (radians: number) {
-    const mat = Matrix3.ZERO.clone()
+    const mat = Matrix3.ZERO
     mat.setRotationY(radians)
     return mat
   }
@@ -182,7 +178,7 @@ export class Matrix3 extends Numberic<Matrix3> {
    * @returns 
    */
   static rotationZ (radians: number) {
-    const mat = Matrix3.ZERO.clone()
+    const mat = Matrix3.ZERO
     mat.setRotationZ(radians)
     return mat
   }
@@ -401,7 +397,7 @@ export class Matrix3 extends Numberic<Matrix3> {
   row (row: number, v3?: Vector3 | null): Vector3 | undefined {
     v3 ??= null
     if (v3 === null) {
-      const r = Vector3.ZERO.clone()
+      const r = Vector3.ZERO
       r[0] = this[this.index(row, 0)]
       r[1] = this[this.index(row, 1)]
       r[2] = this[this.index(row, 2)]
@@ -423,7 +419,7 @@ export class Matrix3 extends Numberic<Matrix3> {
   column (column: number, v3?: Vector3 | null): Vector3 | undefined {
     v3 ??= null
     if (v3 === null) {
-      const r = Vector3.ZERO.clone()
+      const r = Vector3.ZERO
       const entry = column * 3
       r[2] = this[entry + 2]
       r[1] = this[entry + 1]
@@ -437,17 +433,17 @@ export class Matrix3 extends Numberic<Matrix3> {
     }
   }
 
-  copyInto (arg: Matrix3) {
-    arg[0] = this[0]
-    arg[1] = this[1]
-    arg[2] = this[2]
-    arg[3] = this[3]
-    arg[4] = this[4]
-    arg[5] = this[5]
-    arg[6] = this[6]
-    arg[7] = this[7]
-    arg[8] = this[8]
-    return arg
+  copyInto (m3: Matrix3) {
+    m3[0] = this[0]
+    m3[1] = this[1]
+    m3[2] = this[2]
+    m3[3] = this[3]
+    m3[4] = this[4]
+    m3[5] = this[5]
+    m3[6] = this[6]
+    m3[7] = this[7]
+    m3[8] = this[8]
+    return m3
   }
 
   zero () {
@@ -528,7 +524,7 @@ export class Matrix3 extends Numberic<Matrix3> {
     return this[j * 3] * v[0] + this[j * 3 + 1] * v[1] + this[j * 3 + 2] * v[2]
   }
 
-  trace() {
+  trace () {
     let t = 0.0
     t += this[0]
     t += this[4]
@@ -581,7 +577,7 @@ export class Matrix3 extends Numberic<Matrix3> {
     return this.copyInverse(this)
   }
 
-  setRotationX (radians: number) {
+  rotationX (radians: number) {
     const c = Math.cos(radians)
     const s = Math.sin(radians)
     this[0] = 1.0
@@ -595,7 +591,7 @@ export class Matrix3 extends Numberic<Matrix3> {
     this[8] = c
   }
 
-  setRotationY (radians: number) {
+  rotationY (radians: number) {
     const c = Math.cos(radians)
     const s = Math.sin(radians)
     this[0] = c
@@ -609,7 +605,7 @@ export class Matrix3 extends Numberic<Matrix3> {
     this[8] = c
   }
 
-  setRotationZ (radians: number) {
+  rotationZ (radians: number) {
     const c = Math.cos(radians)
     const s = Math.sin(radians)
     this[0] = c
@@ -959,6 +955,10 @@ export class Matrix3 extends Numberic<Matrix3> {
     return !this.equal(other)
   }
 
+  /**
+   * 输出字符串
+   * @returns {string}
+   */
   toString () {
     return `Matrix3([0]: ${this.row(0)}, [1]: ${this.row(1)}, [2]:${this.row(2)})`
   }

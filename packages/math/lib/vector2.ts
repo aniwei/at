@@ -8,10 +8,10 @@ export class Vector2 extends Numberic<Vector2> {
   }
 
   /**
-   * 
+   * 求最小
    * @param {Vector2} a 
    * @param {Vector2} b 
-   * @param result 
+   * @param {Vector2} result 
    */
   static min (
     a: Vector2, 
@@ -23,10 +23,10 @@ export class Vector2 extends Numberic<Vector2> {
   }
 
   /**
-   * 
+   * 求最大
    * @param {Vector2} a 
    * @param {Vector2} b 
-   * @param result 
+   * @param {Vector2} result 
    */
   static max (
     a: Vector2, 
@@ -39,10 +39,10 @@ export class Vector2 extends Numberic<Vector2> {
 
   /**
    * 
-   * @param min 
-   * @param max 
-   * @param a 
-   * @param result 
+   * @param {Vector2} min 
+   * @param {Vector2} max 
+   * @param {number} a 
+   * @param {Vector2} result 
    */
   static mix (
     min: Vector2, 
@@ -55,22 +55,22 @@ export class Vector2 extends Numberic<Vector2> {
   }
 
   /**
-   * 
+   * 从数组复制
    * @param array 
    * @param offset 
    * @returns 
    */
-  static copyFromArray (array: number[], offset = 0) {
+  static copyFromList (array: number[], offset = 0) {
     const vec = Vector2.ZERO
-    vec.copyFromArray(array, offset)
+    vec.copyFromList(array, offset)
 
     return vec
   }
   
   /**
-   * 
-   * @param value 
-   * @returns 
+   * 抹平
+   * @param {number} value 
+   * @returns {Vector2}
    */
   static all (value: number) {
     const vec = Vector2.ZERO
@@ -79,9 +79,9 @@ export class Vector2 extends Numberic<Vector2> {
   }
 
   /**
-   * 
-   * @param other 
-   * @returns 
+   * 从向量复制
+   * @param {Vector2} other 
+   * @returns {Vector2}
    */
   static copy (other: Vector2): Vector2 {
     const vec = Vector2.ZERO
@@ -90,21 +90,21 @@ export class Vector2 extends Numberic<Vector2> {
   }
 
   /**
-   * 
-   * @param v 
-   * @returns 
+   * 从列表创建
+   * @param {Iterable<number>} v 
+   * @returns {Vector2}
    */
   static fromList (v: Iterable<number>) {
     return new Vector2(...v)
   }
 
   /**
-   * 
-   * @param buffer 
-   * @param offset 
+   * 从 ArrayBuffer 创建
+   * @param {ArrayBuffer} buffer 
+   * @param {number} offset 
    * @returns 
    */
-  static fromBuffer (
+  static fromArrayBuffer (
     buffer: ArrayBuffer, 
     offset: number
   ) {
@@ -118,18 +118,13 @@ export class Vector2 extends Numberic<Vector2> {
   }
 
   /**
-   * 
-   * @param random 
-   * @returns 
+   * 随机生成
+   * @param {(): number} random 
+   * @returns {Vector2}
    */
   static random (random?: { (): number }) {
     random ??= () => Math.random()
     return new Vector2(random(), random())
-  }
-
-  // => storage
-  public get storage () {
-    return this
   }
 
   // => distance
@@ -166,24 +161,40 @@ export class Vector2 extends Numberic<Vector2> {
     return this[1]
   }
 
+  /**
+   * 设置值
+   * @param {number} x 
+   * @param {number} y 
+   */
   values (x: number, y: number) {
     this[0] = x
     this[1] = y
   }
 
+  /**
+   * 清零
+   */
   zero () {
     this[0] = 0.0
     this[1] = 0.0
   }
 
+  /**
+   * 从向量设置值
+   * @param {Vector2} other 
+   */
   from (other: Vector2) {
     this[1] = other[1]
     this[0] = other[0]
   }
 
-  splat (arg: number) {
-    this[0] = arg
-    this[1] = arg
+  /**
+   * 抹平
+   * @param {number} factor 
+   */
+  splat (factor: number) {
+    this[0] = factor
+    this[1] = factor
   }
 
   normalize () {
@@ -218,6 +229,11 @@ export class Vector2 extends Numberic<Vector2> {
     return Math.sqrt(this.distanceToSquared(v2))
   }
 
+  /**
+   * 
+   * @param {Vector2} v2 
+   * @returns {number}
+   */
   distanceToSquared (v2: Vector2) {
     const dx = this[0] - v2[0]
     const dy = this[1] - v2[1]
@@ -225,11 +241,13 @@ export class Vector2 extends Numberic<Vector2> {
     return dx * dx + dy * dy
   }
 
+  /**
+   * 
+   * @param {Vector2} other 
+   * @returns {number}
+   */
   angleTo (other: Vector2) {
-    if (
-      this[0] === other[0] && 
-      this[1] === other[1]
-    ) {
+    if (this[0] === other[0] && this[1] === other[1]) {
       return 0.0
     }
 
@@ -237,6 +255,11 @@ export class Vector2 extends Numberic<Vector2> {
     return Math.acos(clamp(d, -1.0, 1.0))
   }
 
+  /**
+   * 
+   * @param {Vector2} other 
+   * @returns {number}
+   */
   angleToSigned (other: Vector2) {
     if (
       this[0] === other[0] && 
@@ -251,6 +274,11 @@ export class Vector2 extends Numberic<Vector2> {
     return Math.atan2(s, c)
   }
 
+  /**
+   * 求乘积
+   * @param {Vector2} other 
+   * @returns {number}
+   */
   dot (other: Vector2) {
     let sum
     sum = this[0] * other[0]
@@ -258,13 +286,22 @@ export class Vector2 extends Numberic<Vector2> {
     return sum
   }
 
-  postmultiply (arg: Matrix2) {
+  /**
+   * 
+   * @param {Matrix2} m2 
+   */
+  postmultiply (m2: Matrix2) {
     const v0 = this[0]
     const v1 = this[1]
-    this[0] = v0 * arg[0] + v1 * arg[1]
-    this[1] = v0 * arg[2] + v1 * arg[3]
+    this[0] = v0 * m2[0] + v1 * m2[1]
+    this[1] = v0 * m2[2] + v1 * m2[3]
   }
 
+  /**
+   * 
+   * @param {Vector2} other 
+   * @returns {number}
+   */
   cross (other: Vector2) {
     return this[0] * other[1] - this[1] * other[0]
   }
@@ -301,8 +338,11 @@ export class Vector2 extends Numberic<Vector2> {
     return diff.length
   }
 
-
-  add (v2: Vector2 ) {
+  /**
+   * 加法
+   * @param {Vector2} v2 
+   */
+  add (v2: Vector2) {
     this[0] = this[0] + v2[0]
     this[1] = this[1] + v2[1]
   }
@@ -315,37 +355,64 @@ export class Vector2 extends Numberic<Vector2> {
     this[1] = this[1] + v2[1] * factor
   }
 
+  /**
+   * 减法
+   * @param {Vector2} v2 
+   */
   substract (v2: Vector2) {
     this[0] = this[0] - v2[0]
     this[1] = this[1] - v2[1]
   }
 
+  /**
+   * 乘法
+   * @param {Vector2} v2 
+   */
   multiply (v2: Vector2) {
     this[0] = this[0] * v2[0]
     this[1] = this[1] * v2[1]
   }
 
+  /**
+   * 除法
+   * @param {Vector2} v2 
+   */
   divide (v2: Vector2) {
     this[0] = this[0] / v2[0]
     this[1] = this[1] / v2[1]
   }
 
+  /**
+   * 放大
+   * @param {number} factor 
+   */
   scale (factor: number) {
     this[1] = this[1] * factor
     this[0] = this[0] * factor
   }
 
+  /**
+   * 放大并创建新的向量
+   * @param {number} factor 
+   * @returns {Vector2}
+   */
   scaled (factor: number) {
     const vec = this.clone()
     vec.scale(factor)
     return vec
   }
 
+  /**
+   * 取反
+   */
   inverse () {
     this[1] = -this[1]
     this[0] = -this[0]
   }
 
+  /**
+   * 绝对值
+   */
   absolute () {
     this[1] = Math.abs(this[1])
     this[0] = Math.abs(this[0])
@@ -398,7 +465,7 @@ export class Vector2 extends Numberic<Vector2> {
     return v2
   }
 
-  copyIntoArray (
+  copyIntoList (
     array: number[], 
     offset = 0
   ) {
@@ -406,7 +473,7 @@ export class Vector2 extends Numberic<Vector2> {
     array[offset + 0] = this[0]
   }
 
-  copyFromArray (
+  copyFromList (
     array: number[], 
     offset = 0
   ) {

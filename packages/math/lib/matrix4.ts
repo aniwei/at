@@ -9,9 +9,9 @@ import { Quaternion } from './quaternion'
 
 
 export class Matrix4 extends Numberic<Matrix4> {
-  static decomposeV: Vector3 | null = null
-  static decomposeM: Matrix4 | null = null
-  static decomposeR: Matrix3 | null =null
+  static DECOMPOSE_V: Vector3 | null = null
+  static DECOMPOSE_M: Matrix4 | null = null
+  static DECOMPOSE_R: Matrix3 | null =null
 
   static get ZERO () {
     return new Matrix4(16)
@@ -950,7 +950,7 @@ export class Matrix4 extends Numberic<Matrix4> {
     return m
   }
 
-  setZero () {
+  zero () {
     this[0] = 0.0
     this[1] = 0.0
     this[2] = 0.0
@@ -969,7 +969,7 @@ export class Matrix4 extends Numberic<Matrix4> {
     this[15] = 0.0
   }
 
-  setIdentity () {
+  identity () {
     this[0] = 1
     this[1] = 0
     this[2] = 0
@@ -1130,16 +1130,22 @@ export class Matrix4 extends Numberic<Matrix4> {
     return diffNorm
   }
 
-  getTranslation () {
-    const z = this[14]
-    const y = this[13]
-    const x = this[12]
-    const vec = new Vector3()
-    vec.values(x, y, z)
-    return vec
-  }
+  /**
+   * 
+   */
+  translation(): Vector3
+  translation (t: Vector3): undefined
+  translation (t: Vector3): Vector3 | undefined {
+    t ??= null
+    if (t === null) {
+      const z = this[14]
+      const y = this[13]
+      const x = this[12]
+      const vec = new Vector3()
+      vec.values(x, y, z)
+      return vec
+    }
 
-  setTranslation (t: Vector3) {
     const z = t[2]
     const y = t[1]
     const x = t[0]
@@ -1152,13 +1158,7 @@ export class Matrix4 extends Numberic<Matrix4> {
     this[14] = z
     this[13] = y
     this[12] = x
-  }
-
-  getRotation () {
-    const r = Matrix3.ZERO
-    this.copyRotation(r)
-    return r
-  }
+  }  
 
   copyRotation (r: Matrix3) {
     r[0] = this[0]
@@ -1172,7 +1172,16 @@ export class Matrix4 extends Numberic<Matrix4> {
     r[8] = this[10]
   }
 
-  setRotation (r: Matrix3) {
+  rotation (): Matrix3
+  rotation (r: Matrix3): undefined
+  rotation (r?: Matrix3 | null): Matrix3 | undefined {
+    r ??= null
+    if (r === null) {
+      const r = Matrix3.ZERO
+      this.copyRotation(r)
+      return r
+    }
+
     this[0] = r[0]
     this[1] = r[1]
     this[2] = r[2]
@@ -1313,7 +1322,7 @@ export class Matrix4 extends Numberic<Matrix4> {
     return det
   }
 
-  setRotationX (radians: number) {
+  rotationX (radians: number) {
     const c = Math.cos(radians)
     const s = Math.sin(radians)
     this[0] = 1.0
@@ -1330,7 +1339,7 @@ export class Matrix4 extends Numberic<Matrix4> {
     this[11] = 0.0
   }
 
-  setRotationY (radians: number) {
+  rotationY (radians: number) {
     const c = Math.cos(radians)
     const s = Math.sin(radians)
     this[0] = c
@@ -1347,7 +1356,7 @@ export class Matrix4 extends Numberic<Matrix4> {
     this[11] = 0.0
   }
 
-  setRotationZ (radians: number) {
+  rotationZ (radians: number) {
     const c = Math.cos(radians)
     const s = Math.sin(radians)
     this[0] = c
@@ -1627,13 +1636,13 @@ export class Matrix4 extends Numberic<Matrix4> {
     this[15] = (m30 * n03) + (m31 * n13) + (m32 * n23) + (m33 * n33)
   }
 
-  multiplied (arg: Matrix4) {
+  multiplied (m4: Matrix4) {
     const mat = this.clone()
-    mat.multiply(arg)
+    mat.multiply(m4)
     return mat
   }
 
-  transposeMultiply (arg: Matrix4) {
+  transposeMultiply (m4: Matrix4) {
     const m00 = this[0]
     const m01 = this[1]
     const m02 = this[2]
@@ -1650,22 +1659,22 @@ export class Matrix4 extends Numberic<Matrix4> {
     const m31 = this[13]
     const m32 = this[14]
     const m33 = this[15]
-    this[0] = (m00 * arg[0]) + (m01 * arg[1]) + (m02 * arg[2]) + (m03 * arg[3])
-    this[4] = (m00 * arg[4]) + (m01 * arg[5]) + (m02 * arg[6]) + (m03 * arg[7])
-    this[8] = (m00 * arg[8]) + (m01 * arg[9]) + (m02 * arg[10]) + (m03 * arg[11])
-    this[12] = (m00 * arg[12]) + (m01 * arg[13]) + (m02 * arg[14]) + (m03 * arg[15])
-    this[1] = (m10 * arg[0]) + (m11 * arg[1]) + (m12 * arg[2]) + (m13 * arg[3])
-    this[5] = (m10 * arg[4]) + (m11 * arg[5]) + (m12 * arg[6]) + (m13 * arg[7])
-    this[9] = (m10 * arg[8]) + (m11 * arg[9]) + (m12 * arg[10]) + (m13 * arg[11])
-    this[13] = (m10 * arg[12]) + (m11 * arg[13]) + (m12 * arg[14]) + (m13 * arg[15])
-    this[2] = (m20 * arg[0]) + (m21 * arg[1]) + (m22 * arg[2]) + (m23 * arg[3])
-    this[6] = (m20 * arg[4]) + (m21 * arg[5]) + (m22 * arg[6]) + (m23 * arg[7])
-    this[10] = (m20 * arg[8]) + (m21 * arg[9]) + (m22 * arg[10]) + (m23 * arg[11])
-    this[14] = (m20 * arg[12]) + (m21 * arg[13]) + (m22 * arg[14]) + (m23 * arg[15])
-    this[3] = (m30 * arg[0]) + (m31 * arg[1]) + (m32 * arg[2]) + (m33 * arg[3])
-    this[7] = (m30 * arg[4]) + (m31 * arg[5]) + (m32 * arg[6]) + (m33 * arg[7])
-    this[11] = (m30 * arg[8]) + (m31 * arg[9]) + (m32 * arg[10]) + (m33 * arg[11])
-    this[15] = (m30 * arg[12]) + (m31 * arg[13]) + (m32 * arg[14]) + (m33 * arg[15])
+    this[0] = (m00 * m4[0]) + (m01 * m4[1]) + (m02 * m4[2]) + (m03 * m4[3])
+    this[4] = (m00 * m4[4]) + (m01 * m4[5]) + (m02 * m4[6]) + (m03 * m4[7])
+    this[8] = (m00 * m4[8]) + (m01 * m4[9]) + (m02 * m4[10]) + (m03 * m4[11])
+    this[12] = (m00 * m4[12]) + (m01 * m4[13]) + (m02 * m4[14]) + (m03 * m4[15])
+    this[1] = (m10 * m4[0]) + (m11 * m4[1]) + (m12 * m4[2]) + (m13 * m4[3])
+    this[5] = (m10 * m4[4]) + (m11 * m4[5]) + (m12 * m4[6]) + (m13 * m4[7])
+    this[9] = (m10 * m4[8]) + (m11 * m4[9]) + (m12 * m4[10]) + (m13 * m4[11])
+    this[13] = (m10 * m4[12]) + (m11 * m4[13]) + (m12 * m4[14]) + (m13 * m4[15])
+    this[2] = (m20 * m4[0]) + (m21 * m4[1]) + (m22 * m4[2]) + (m23 * m4[3])
+    this[6] = (m20 * m4[4]) + (m21 * m4[5]) + (m22 * m4[6]) + (m23 * m4[7])
+    this[10] = (m20 * m4[8]) + (m21 * m4[9]) + (m22 * m4[10]) + (m23 * m4[11])
+    this[14] = (m20 * m4[12]) + (m21 * m4[13]) + (m22 * m4[14]) + (m23 * m4[15])
+    this[3] = (m30 * m4[0]) + (m31 * m4[1]) + (m32 * m4[2]) + (m33 * m4[3])
+    this[7] = (m30 * m4[4]) + (m31 * m4[5]) + (m32 * m4[6]) + (m33 * m4[7])
+    this[11] = (m30 * m4[8]) + (m31 * m4[9]) + (m32 * m4[10]) + (m33 * m4[11])
+    this[15] = (m30 * m4[12]) + (m31 * m4[13]) + (m32 * m4[14]) + (m33 * m4[15])
   }
 
   multiplyTranspose (m: Matrix4) {
@@ -1794,7 +1803,7 @@ export class Matrix4 extends Numberic<Matrix4> {
     rotation: Quaternion, 
     scale: Vector3
   ) {
-    const v = Matrix4.decomposeV ??= Vector3.ZERO
+    const v = Matrix4.DECOMPOSE_V ??= Vector3.ZERO
     v.values(this[0], this[1], this[2])
     let sx = v.length
 
@@ -1816,7 +1825,7 @@ export class Matrix4 extends Numberic<Matrix4> {
     const invSY = 1.0 / sy
     const invSZ = 1.0 / sz
 
-    const m = Matrix4.decomposeM ??= Matrix4.ZERO
+    const m = Matrix4.DECOMPOSE_M ??= Matrix4.ZERO
     m.from(this)
     m[0] *= invSX
     m[1] *= invSX
@@ -1828,7 +1837,7 @@ export class Matrix4 extends Numberic<Matrix4> {
     m[9] *= invSZ
     m[10] *= invSZ
 
-    const r = Matrix4.decomposeR ??= Matrix3.ZERO
+    const r = Matrix4.DECOMPOSE_R ??= Matrix3.ZERO
     m.copyRotation(r)
     rotation.setFromRotation(r)
 
@@ -1915,7 +1924,7 @@ export class Matrix4 extends Numberic<Matrix4> {
     return this.transform(out)
   }
 
-  copyIntoArray (array: number[], offset: number = 0) {
+  copyIntoList (array: number[], offset: number = 0) {
     const i = offset
     array[i + 15] = this[15]
     array[i + 14] = this[14]
@@ -2043,6 +2052,11 @@ export class Matrix4 extends Numberic<Matrix4> {
     )
   }
 
+  /**
+   * 是否相等
+   * @param {Matrix4 | null} other 
+   * @returns {boolean}
+   */
   equal (other: Matrix4 | null) {
     return (
       (other instanceof Matrix4) &&
@@ -2065,10 +2079,19 @@ export class Matrix4 extends Numberic<Matrix4> {
     )
   }
 
+  /**
+   * 是否相等
+   * @param {Matrix4 | null} other 
+   * @returns {boolean}
+   */
   notEqual (other: Matrix4 | null) {
     return !this.equal(other)
   }
 
+  /**
+   * 输出字符串
+   * @returns 
+   */
   toString () {
     return  `Matrix4([0]: ${this.row(0)}, [1]: ${this.row(1)}, [2]: ${this.row(2)}, [3]: ${this.row(3)})`
   }

@@ -4,7 +4,9 @@ import { Matrix4 } from './matrix4'
 import { Quaternion } from './quaternion'
 
 export class Vector3 extends Numberic<Vector3> {
-  static ZERO = new Vector3()
+  static get ZERO () {
+    return new Vector3()
+  } 
 
   /**
    * 求最小
@@ -13,7 +15,7 @@ export class Vector3 extends Numberic<Vector3> {
    * @param {Vector3} result 
    */
   static min (a: Vector3, b: Vector3) {
-    const result: Vector3 = Vector3.ZERO.clone()
+    const result: Vector3 = Vector3.ZERO
     result[0] = Math.min(a[0], b[0])
     result[1] = Math.min(a[1], b[1])
     result[2] = Math.min(a[2], b[2])
@@ -27,37 +29,62 @@ export class Vector3 extends Numberic<Vector3> {
    * @param {Vector3} result 
    */
   static max (a: Vector3, b: Vector3) {
-    const result: Vector3 = Vector3.ZERO.clone()
+    const result: Vector3 = Vector3.ZERO
     result[0] = Math.max(a[0], b[0])
     result[1] = Math.max(a[1], b[1])
     result[2] = Math.max(a[2], b[2])
     return result
   }
 
+  /**
+   * 从数组复制
+   * @param {number[]} array 
+   * @param {number} offset 
+   * @returns {Vector3}
+   */
   static copyFromList (array: number[], offset = 0) {
-    const vec = Vector3.ZERO.clone()
+    const vec = Vector3.ZERO
     vec.copyFromList(array, offset)
     return vec
   }
 
+  /**
+   * 从一个数创建
+   * @param {number} value 
+   * @returns {Vector3}
+   */
   static all (value: number) {
-    const v = Vector3.ZERO.clone()
+    const v = Vector3.ZERO
     v.splat(value)
     return v
   }
 
+  /**
+   * 从向量复制
+   * @param {Vector3} other 
+   * @returns {Vector3}
+   */
   static copy (other: Vector3): Vector3 {
-    const v = Vector3.ZERO.clone()
+    const v = Vector3.ZERO
     v.from(other)
 
     return v
   }
 
-  static fromList (v3: Iterable<number>) {
+  /**
+   * 从数组复制
+   * @param {number} v3 
+   * @returns 
+   */
+  static fromList (v3: number[]) {
     return new Vector3(...v3)
   }
 
-
+  /**
+   * 随机创建
+   * @param {(): number} random 
+   * @returns {Vector3}
+   */
   static random (random?: { (): number }) {
     random ??= () => Math.random()
     return new Vector3(random(), random(), random())

@@ -76,29 +76,55 @@ export class Vector4 extends Numberic<Vector4> {
     return vec
   }
 
+  /**
+   * 
+   * @returns 
+   */
   static identity () {
     const vec = Vector4.ZERO
     vec.identity()
     return vec
   } 
 
+  /**
+   * 
+   * @param value 
+   * @returns 
+   */
   static all (value: number) {
     const vec = Vector4.ZERO
     vec.splat(value)
     return vec
   } 
 
+  /**
+   * 
+   * @param other 
+   * @returns 
+   */
   static copy (other: Vector4): Vector4 {
     const vec = Vector4.ZERO
     vec.from(other)
     return vec
   }
 
+  /**
+   * 
+   * @param v4 
+   * @returns 
+   */
   static fromList (v4: Iterable<number>) {
     return new Vector4(...v4)
   }
   
-  static fromBuffer (
+  /**
+   * 从 ArrayBuffer 创建
+   * @param {ArrayBuffer} buffer 
+   * @param {number} offset 
+   * @param {number} length 
+   * @returns {Vector4}
+   */
+  static fromArrayBuffer (
     buffer: ArrayBuffer, 
     offset: number,
     length: number = 4
@@ -115,15 +141,14 @@ export class Vector4 extends Numberic<Vector4> {
     ))
   }
  
-
+  /**
+   * 随机创建
+   * @param {(): number} random 
+   * @returns {Vector4}
+   */
   static random (random?: { (): number }) {
     random ??= () => Math.random()
     return new Vector4(random(), random(), random())
-  }
-
-  // => storage
-  public get storage () {
-    return this
   }
 
   // => length
@@ -325,20 +350,19 @@ export class Vector4 extends Numberic<Vector4> {
 
   /**
    * 
-   * @param v4 
-   * @returns 
+   * @param {Vector4} v4 
+   * @returns {void}
    */
   substract (v4: Vector4) {
     this[0] = this[0] - v4[0]
     this[1] = this[1] - v4[1]
     this[2] = this[2] - v4[2]
     this[3] = this[3] - v4[3]
-    return this
   }
 
   /**
    * 
-   * @param arg 
+   * @param {Vector4} v4 
    */
   multiply (v4: Vector4) {
     this[0] = this[0] * v4[0]
@@ -419,7 +443,7 @@ export class Vector4 extends Numberic<Vector4> {
     this[3] = Math.round(this[3])
   }
 
-  roundToZero() {
+  roundToZero () {
     this[0] = this[0] < 0.0
       ? Math.ceil(this[0])
       : Math.floor(this[0])
@@ -494,6 +518,10 @@ export class Vector4 extends Numberic<Vector4> {
     return !this.equal(other)
   }
 
+  /**
+   * 输出字符串
+   * @returns {string}
+   */
   toString () {
     return `Vector4([0]${this[0]},[1]${this[1]},[2]${this[2]},[3]${this[3]})`
   }

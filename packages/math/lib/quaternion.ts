@@ -53,6 +53,12 @@ export class Quaternion extends Numberic<Quaternion> {
     return q
   }
 
+  /**
+   * 
+   * @param {Vector3} a 
+   * @param {Vector3} b 
+   * @returns {Quaternion} 
+   */
   static setFromTwoVectors (
     a: Vector3, 
     b: Vector3
@@ -62,12 +68,22 @@ export class Quaternion extends Numberic<Quaternion> {
     return q
   }
 
-  static copy (original: Quaternion) {
+  /**
+   * 从 Quaternionu 复制
+   * @param {Quaternion} origin 
+   * @returns {Quaternion}
+   */
+  static copy (origin: Quaternion) {
     const q = new Quaternion()
-    q.from(original)
+    q.from(origin)
     return q
   }
 
+  /**
+   * 随机创建
+   * @param {(): number} random 
+   * @returns {Quaternion}
+   */
   static random (random: { (): number }) {
     const q = new Quaternion()
     q.random(random)
@@ -103,7 +119,14 @@ export class Quaternion extends Numberic<Quaternion> {
     return new Quaternion(...q)
   }
 
-  static fromBuffer (
+  /**
+   * 从 ArrayBuffer 创建
+   * @param {ArrayBuffer} buffer 
+   * @param {number} offset 
+   * @param {number} length 
+   * @returns {Vector4}
+   */
+  static fromArrayBuffer (
     buffer: ArrayBuffer,
     offset: number = 0,
     length?: number
@@ -151,6 +174,10 @@ export class Quaternion extends Numberic<Quaternion> {
     return Math.sqrt(this.distance2)
   }
 
+  /**
+   * 从 Quaternion 赋值
+   * @param {Quaternion} source 
+   */
   from (source: Quaternion) {
     this[0] = source[0]
     this[1] = source[1]
@@ -259,6 +286,11 @@ export class Quaternion extends Numberic<Quaternion> {
     }
   }
 
+  /**
+   * 
+   * @param {Vector3} a 
+   * @param {Vector3} b 
+   */
   setFromTwoVectors (
     a: Vector3, 
     b: Vector3
@@ -287,6 +319,10 @@ export class Quaternion extends Numberic<Quaternion> {
     this.setAxisAngle(axis.normalized(), angle)
   }
 
+  /**
+   * 随机赋值
+   * @param {(): number} random 
+   */
   random (random: { (): number }) {
     const x0 = random()
     const r1 = Math.sqrt(1.0 - x0)
