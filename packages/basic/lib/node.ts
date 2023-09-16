@@ -1,5 +1,6 @@
 import { invariant } from 'ts-invariant'
 
+//// => AbstractNode
 export abstract class AbstractNode<T extends AbstractNode<T>, U extends unknown = unknown> {
   // => attached
   // 是否挂载

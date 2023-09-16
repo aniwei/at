@@ -12,7 +12,7 @@ export type MessageContent<T = {
     command?: C;
     payload?: T;
 };
-export declare enum MessageOwnerState {
+export declare enum MessageOwnerKind {
     Active = 1,
     Replied = 2
 }
@@ -40,7 +40,7 @@ export declare class MessageError extends Error {
 export declare class MessageOwner {
     transport: MessageTransport;
     content: MessageContent;
-    state: MessageOwnerState;
+    state: MessageOwnerKind;
     get id(): string | undefined;
     get sid(): string | undefined;
     get payload(): string | void | {
@@ -69,7 +69,7 @@ export declare class MessageOwner {
      */
     receive(): void;
 }
-export declare enum MessageTransportState {
+export declare enum MessageTransportKind {
     Ready = 1,
     Connected = 2,
     Disconnected = 4,
@@ -78,7 +78,7 @@ export declare enum MessageTransportState {
 /**
  * 终端
  */
-export declare abstract class MessageTransport<T extends MessageTransportPort = MessageTransportPort, S extends MessageTransportState = MessageTransportState, Command extends MessageTransportCommands = MessageTransportCommands> extends EventEmitter<`open` | `close` | `message` | `error` | string> {
+export declare abstract class MessageTransport<T extends MessageTransportPort = MessageTransportPort, S extends MessageTransportKind = MessageTransportKind, Command extends MessageTransportCommands = MessageTransportCommands> extends EventEmitter<`open` | `close` | `message` | `error` | string> {
     state: S;
     transport: T | null;
     commands: Map<Command, MessageHandle> | null;

@@ -13,3 +13,4 @@ export * from './try';
 export * from './transport';
 export * from './unsupported-error';
 export * from './unimplemented-error';
+export * from './global.d';

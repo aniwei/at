@@ -10,10 +10,13 @@ export declare abstract class AbstractNode<T extends AbstractNode<T>, U extends 
     redepthChild(child: AbstractNode<T>): void;
     redepthChildren(): void;
     /**
-     *
+     * 挂载
      * @param {U} owner
      */
     attach(owner: U): void;
+    /**
+     * 卸载
+     */
     detach(): void;
     /**
      *

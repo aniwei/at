@@ -1,8 +1,9 @@
+import { invariant } from 'ts-invariant'
 import { Rect, RRect } from '@at/geometry'
 import { Path } from './Path'
 import * as Sk from './skia'
 
-export class Canvas extends Sk.Object<Canvas> {
+export class Canvas extends Sk.ManagedSkiaRef<Sk.Canvas> {
   // => count
   public get count () {
     return this.skia.getSaveCount()

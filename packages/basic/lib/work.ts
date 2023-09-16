@@ -8,7 +8,7 @@ import {
   MessageTransport, 
   MessageTransportCommands, 
   MessageTransportPort, 
-  MessageTransportState 
+  MessageTransportKind 
 } from './transport'
 import { UnsupportedError } from './unsupported-error'
 
@@ -167,12 +167,12 @@ export class WorkTransport<T extends string = string> extends MessageTransport<W
       }
     })).on('error', (error: any) => {
       this.transport = null
-      this.state = MessageTransportState.Error
+      this.state = MessageTransportKind.Error
 
       ;(port as WorkPort).removeAllListeners()
       this.emit('error', error)
     }).on('open', () => {
-      this.state = MessageTransportState.Connected
+      this.state = MessageTransportKind.Connected
       this.emit('open')
     })
 
@@ -249,6 +249,7 @@ export class MessageReceiver extends EventEmitter<'finished' | 'progress'> {
   }
 }
 
+//// => MessageReceivers
 export class MessageReceivers {
   static receivers: Map<string, MessageReceiver> = new Map()
 
@@ -292,6 +293,7 @@ export class MessageReceivers {
 
 }
 
+//// => MessageSender
 export class MessageSender extends EventEmitter<string> {
   public id: string
   public transport: WorkPort

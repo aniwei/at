@@ -1,12 +1,11 @@
 import { invariant } from 'ts-invariant'
+import { Offset, Radius, Rect, RRect } from '@at/geometry'
+import { toPoints, toMatrix } from '@at/basic'
+import { Matrix4 } from '@at/math'
+
 import { ManagedSkiaRef } from './skia'
-import { Offset, Radius, Rect, RRect } from '../basic/geometry'
-import { toPoints, toMatrix } from '../basic/helper'
 
-import { ArrayLike, At } from '../at'
-import { Matrix4 } from '../basic/matrix4'
-
-import type { PathOp, Path, FillType } from './skia'
+import * as Sk from './skia'
 
 /**
  * @description: 路径类
@@ -19,7 +18,7 @@ export class Path extends ManagedSkiaRef<Sk.Path> {
    * @returns 
    */
   static fromSVGString (svg: string) {
-    return AtPath.create(At.Path.MakeFromSVGString(svg) as Path)
+    return Path.create(At.Path.MakeFromSVGString(svg) as Path)
   }
 
   /**
@@ -28,7 +27,7 @@ export class Path extends ManagedSkiaRef<Sk.Path> {
    * @param fillType 
    * @returns 
    */
-  static resurrect (cachedCommands: ArrayLike<number>, fillType: FillType) {
+  static resurrect (cachedCommands: ArrayLike<number>, fillType: Sk.FillType) {
     const path = At.Path.MakeFromCmds(cachedCommands as Float32Array) as Path
     path.setFillType(fillType)
     return path

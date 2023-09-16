@@ -1,10 +1,8 @@
-// @ts-nocheck
 import { invariant } from 'ts-invariant'
 import { clamp } from './clamp'
 import { lerp } from './lerp'
-import { Equalable } from './equalable'
 import { UnsupportedError } from './unsupported-error'
-import { Numberic } from '.'
+import { Numberic } from './numberic'
 
 /**
  * 放大颜色 Alpha
@@ -19,7 +17,7 @@ export function scaleAlpha (a: Color, factor: number) {
 /**
  * 颜色类
  */
-export class Color extends Numberic {
+export class Color extends Numberic<Color> {
   static BLACK = new Color(0x00000000)
 
   /**
@@ -76,7 +74,11 @@ export class Color extends Numberic {
 
       switch (color.length) {
         case 9: {
+          r = parseInt(color.slice(1, 3), 16)
+          g = parseInt(color.slice(3, 5), 16)
+          b = parseInt(color.slice(5, 7), 16)
           a = parseInt(color.slice(7, 9), 16)
+          break
         }
 
         case 7: {
@@ -87,7 +89,11 @@ export class Color extends Numberic {
         }
 
         case 5: {
+          r = parseInt(color.slice(1, 2), 16) * 17
+          g = parseInt(color.slice(2, 3), 16) * 17
+          b = parseInt(color.slice(3, 4), 16) * 17
           a = parseInt(color.slice(4, 5), 16) * 17
+          break
         }
 
         case 4: {

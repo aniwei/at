@@ -1,5 +1,12 @@
 import { Equalable } from '@at/basic'
 
+
+export type {
+  Canvas,
+  Path,
+  FillType,
+} from 'canvaskit-wasm'
+
 export abstract class SkiaRef<T extends SkiaRef<T>> {
   abstract clone (): T
   abstract delete (): void

@@ -7,7 +7,7 @@ import {
   MessageOwner, 
   MessageTransport, 
   MessageTransportPort, 
-  MessageTransportState,
+  MessageTransportKind,
   MessageTransportCommands, 
 } from './message-transport'
 
@@ -89,7 +89,7 @@ export class WorkerTransport extends MessageTransport<WorkerMessagePort> {
       this.transport?.removeAllListeners()
       this.transport = null
       this.commands = null
-      this.state = MessageTransportState.Destroyed
+      this.state = MessageTransportKind.Destroyed
 
       this.emit('close')
     })

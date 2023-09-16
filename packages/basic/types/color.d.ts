@@ -1,4 +1,4 @@
-import { Numberic } from '.';
+import { Numberic } from './numberic';
 /**
  * 放大颜色 Alpha
  * @param {Color} a
@@ -9,7 +9,7 @@ export declare function scaleAlpha(a: Color, factor: number): Color;
 /**
  * 颜色类
  */
-export declare class Color extends Numberic {
+export declare class Color extends Numberic<Color> {
     static BLACK: Color;
     /**
      * 创建

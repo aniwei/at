@@ -33,7 +33,7 @@ export type MessageContent<T = {
   payload?: T,
 }
 
-export enum MessageOwnerState {
+export enum MessageOwnerKind {
   Active = 1,
   Replied = 2
 }
@@ -77,7 +77,7 @@ export class MessageError extends Error {
 export class MessageOwner {
   public transport: MessageTransport
   public content: MessageContent
-  public state: MessageOwnerState = MessageOwnerState.Active
+  public state: MessageOwnerKind = MessageOwnerKind.Active
 
   public get id () {
     return this.content.id
@@ -119,8 +119,8 @@ export class MessageOwner {
    * @param {MessageContent} content 
    */
   reply (content: MessageContent) {
-    if (this.state === MessageOwnerState.Active) {
-      this.state = MessageOwnerState.Replied
+    if (this.state === MessageOwnerKind.Active) {
+      this.state = MessageOwnerKind.Replied
       this.send({ ...content, command: MessageTransportCommands.Callback })
     }
   }
@@ -129,15 +129,15 @@ export class MessageOwner {
    * 回复收到指令
    */
   receive () {
-    if (this.state === MessageOwnerState.Active) {
-      this.state = MessageOwnerState.Replied
+    if (this.state === MessageOwnerKind.Active) {
+      this.state = MessageOwnerKind.Replied
       this.send({ command: MessageTransportCommands.Received })
     }
   }
 }
 
 
-export enum MessageTransportState {
+export enum MessageTransportKind {
   // 销毁
   Destroyed = 0,
   // 未授权
@@ -158,7 +158,7 @@ export enum MessageTransportState {
  */
 export abstract class MessageTransport<
   T extends MessageTransportPort = MessageTransportPort, 
-  S extends MessageTransportState = MessageTransportState,
+  S extends MessageTransportKind = MessageTransportKind,
   Command extends MessageTransportCommands = MessageTransportCommands,
 > extends EventEmitter<'message' | string> {
   public state: S
@@ -171,12 +171,12 @@ export abstract class MessageTransport<
    * 激活状态
    */
   public get isActive () {
-    return this.compare(MessageTransportState.Active)
+    return this.compare(MessageTransportKind.Active)
   }
 
   constructor () {
     super()
-    this.state = MessageTransportState.Active as S
+    this.state = MessageTransportKind.Active as S
   }
 
   /**
@@ -184,7 +184,7 @@ export abstract class MessageTransport<
    * @param state 
    * @returns 
    */
-  protected compare (state: MessageTransportState) {
+  protected compare (state: MessageTransportKind) {
     return (this.state & state) == state
   }
 

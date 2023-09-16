@@ -12,7 +12,7 @@ import { EventEmitter } from '../basic/events'
 import { 
   MessageError, 
   MessageOwner,
-  MessageOwnerState, 
+  MessageOwnerKind, 
   MessageTransport,
   MessageTransportCommands,
 } from '../basic/message-transport'
@@ -272,7 +272,7 @@ export class AtFramework extends AtPlatform<AtFrameworkEvents> implements AtFram
   public MessageError = MessageError
   public MessageOwner = MessageOwner
   public MessageTransport = MessageTransport
-  public MessageOwnerState = MessageOwnerState 
+  public MessageOwnerKind = MessageOwnerKind 
   public MessageTransportCommands = MessageTransportCommands
   public Offset = Offset 
   public Point = Point

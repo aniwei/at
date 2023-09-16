@@ -1,5 +1,7 @@
 import { Equalable } from './equalable';
 export interface Numberic<T extends Numberic<T>> extends ArrayLike<number>, Iterable<number> {
+    length: number;
+    [Symbol.iterator](): Iterator<number>;
     [n: number]: number;
 }
 export interface CreateFactory {
@@ -14,7 +16,7 @@ export declare abstract class Numberic<T extends Numberic<T>> extends Equalable<
     length: number;
     /**
      * 构造函数
-     * @param {number[]} rests
+     * @param {T[]} rests
      */
     constructor(...rests: number[]);
 }

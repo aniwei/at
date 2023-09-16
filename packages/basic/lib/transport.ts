@@ -17,11 +17,12 @@ export type MessageContent<T = {
   payload?: T,
 }
 
-export enum MessageOwnerState {
+export enum MessageOwnerKind {
   Active = 1,
   Replied = 2
 }
 
+//// => MessageTransportPort
 export abstract class MessageTransportPort {
   abstract send (message: unknown): void
   abstract close (): void
@@ -31,6 +32,7 @@ export abstract class MessageTransportPort {
   abstract removeAllListeners (event?: string | symbol): this
 }
 
+//// => MessageError
 export class MessageError extends Error {
   public sid: string
   public detail: string
@@ -58,23 +60,26 @@ export class MessageError extends Error {
 /**
  * 信息对象
  */
+//// => MessageOwner
 export class MessageOwner {
   public transport: MessageTransport
   public content: MessageContent
-  public state: MessageOwnerState = MessageOwnerState.Active
+  public state: MessageOwnerKind = MessageOwnerKind.Active
 
+  // => id
   public get id () {
     return this.content.id
   }
-
   public get sid () {
     return this.content.sid
   }
 
+  // => payload
   public get payload () {
     return this.content.payload
   }
 
+  // => command
   public get command () {
     return this.content.command
   }
@@ -103,8 +108,8 @@ export class MessageOwner {
    * @param {MessageContent} content 
    */
   reply (content: MessageContent) {
-    if (this.state === MessageOwnerState.Active) {
-      this.state = MessageOwnerState.Replied
+    if (this.state === MessageOwnerKind.Active) {
+      this.state = MessageOwnerKind.Replied
       this.send({ ...content, command: 'message::callback' })
     }
   }
@@ -113,15 +118,15 @@ export class MessageOwner {
    * 回复收到指令
    */
   receive () {
-    if (this.state === MessageOwnerState.Active) {
-      this.state = MessageOwnerState.Replied
+    if (this.state === MessageOwnerKind.Active) {
+      this.state = MessageOwnerKind.Replied
       this.send({ command: 'message::received' })
     }
   }
 }
 
 
-export enum MessageTransportState {
+export enum MessageTransportKind {
   // 活跃
   Ready = 1,
   // 空闲
@@ -137,7 +142,7 @@ export enum MessageTransportState {
  */
 export abstract class MessageTransport<
   T extends MessageTransportPort = MessageTransportPort, 
-  S extends MessageTransportState = MessageTransportState,
+  S extends MessageTransportKind = MessageTransportKind,
   Command extends MessageTransportCommands = MessageTransportCommands,
 > extends EventEmitter<`open` | `close` | `message` | `error` | string> {
   public state: S
@@ -148,7 +153,7 @@ export abstract class MessageTransport<
 
   constructor () {
     super()
-    this.state = MessageTransportState.Ready as S
+    this.state = MessageTransportKind.Ready as S
   }
 
   /**
