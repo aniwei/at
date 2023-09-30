@@ -1,15 +1,14 @@
 import { UnimplementedError } from '../basic/error'
-import { AtManagedSkiaObject, PathEffect } from './skia'
 import { At } from '../at'
+import * as Sk from './skia'
 
-export abstract class PathEffect extends ManagedSkiaRef<PathEffect> {
-  abstract equal (other: AtPathEffect | null): boolean
-  abstract notEqual (other: AtPathEffect | null): boolean
+
+export abstract class PathEffect extends Sk.ManagedSkiaRef<Sk.PathEffect> {
 }
 
-export class PathDashEffect extends AtPathEffect {
+export class PathDashEffect extends PathEffect {
   static create (pettern: number[], phase?: number) {
-    return new AtPathDashEffect(pettern, phase)
+    return new PathDashEffect(pettern, phase)
   }
 
   static resurrect (pettern: number[], phase: number) {
@@ -49,7 +48,7 @@ export class PathDashEffect extends AtPathEffect {
     pettern: number[] = [], 
     phase: number = 0
   ) {
-    super(AtPathDashEffect.resurrect(pettern, phase))
+    super(PathDashEffect.resurrect(pettern, phase))
 
     this._pettern = pettern
     this._phase = phase
@@ -59,16 +58,26 @@ export class PathDashEffect extends AtPathEffect {
     return PathDashEffect.resurrect(this.pettern, this.phase)
   }
 
+  /**
+   * 是否相等
+   * @param {PathDashEffect | null} other 
+   * @returns {boolean}
+   */
   equal (other: PathDashEffect | null): boolean {
     return (
       other instanceof PathDashEffect &&
       other.phase === this.phase &&
       other.pettern.length === this.pettern.length &&
-      !other.pettern.some((value: number, index: number) => other.pettern[index] !== this.pettern[index])
+      listEquals(this.pettern, other.pettern)
     )
   }
 
-  notEqual (other: AtPathDashEffect | null): boolean {
+  /**
+   * 是否相等
+   * @param {PathDashEffect | null} other 
+   * @returns {boolean}
+   */
+  notEqual (other: PathDashEffect | null): boolean {
     return !this.equal(other)
   }
 }

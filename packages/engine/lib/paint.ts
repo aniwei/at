@@ -1,7 +1,7 @@
-import { ManagedSkiaRef } from './skia'
-import * as skia from './skia'
+import * as Sk from './skia'
 
-export class PaintStroke extends ManagedSkiaRef<skia.Paint> {
+//// => PaintStroke
+export class PaintStroke extends Sk.ManagedSkiaRef<Sk.Paint> {
   // => miterLimit
   protected _miterLimit: number = 0
   public get miterLimit () {
@@ -51,7 +51,8 @@ export class PaintStroke extends ManagedSkiaRef<skia.Paint> {
   private _join: StrokeJoin = At.StrokeJoin.Miter
 }
 
-export class PaintFilter extends ManagedSkiaRef<skia.Paint> {
+//// => PaintFilter
+export class PaintFilter extends Sk.ManagedSkiaRef<Sk.Paint> {
   // => invertColors colors
   protected _invertColors: boolean = false
   public get invertColors () {
@@ -155,7 +156,7 @@ export class PaintFilter extends ManagedSkiaRef<skia.Paint> {
   public managedImage: ManagedSkiaRef<ImageFilter> | null = null
 }
 
-export class Paint extends ManagedSkiaRef<skia.Paint> {
+export class Paint extends Sk.ManagedSkiaRef<Sk.Paint> {
   static create () {
     return new Paint()
   }
@@ -290,6 +291,8 @@ export class Paint extends ManagedSkiaRef<skia.Paint> {
   constructor () {
     const skia = new At.Paint()
     super(skia)
+
+    
     this.skia.setAntiAlias(this.isAntiAlias)
     this.skia.setColorInt(this.color.value)
   }

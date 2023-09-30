@@ -7,6 +7,8 @@ export type {
   FillType,
 } from 'canvaskit-wasm'
 
+//// => SkiaRef
+// WASM 数据结构
 export abstract class SkiaRef<T extends SkiaRef<T>> {
   abstract clone (): T
   abstract delete (): void
@@ -15,7 +17,9 @@ export abstract class SkiaRef<T extends SkiaRef<T>> {
   abstract isDeleted (): boolean
 }
 
-export interface ManagedSkiaRefCreate<T>{
+//// => ManagedSkiaRef
+// WASM 对象管理，对象垃圾回收
+export interface ManagedSkiaRefFactory<T>{
   create (...rests: unknown[]): T
   resurrect (...rests: unknown[]): T
 }
@@ -23,13 +27,13 @@ export interface ManagedSkiaRefCreate<T>{
 export abstract class ManagedSkiaRef<T extends SkiaRef<T>> extends Equalable<ManagedSkiaRef<T>> {
   static create <T extends SkiaRef<T>> (skia?: T): T
   static create <T extends SkiaRef<T>> (...rests: unknown[]): T {
-    const ManagedSkiaRefCreate = this as unknown as ManagedSkiaRefCreate
-    return new ManagedSkiaRefCreate(...rests)
+    const ManagedSkiaRefFactory = this as unknown as ManagedSkiaRefFactory
+    return new ManagedSkiaRefFactory(...rests)
   }
 
   static resurrect (...rests: unknown[]) {
-    const ManagedSkiaRefCreate = this as unknown as ManagedSkiaRefCreate
-    return ManagedSkiaRefCreate.resurrect(...rests)
+    const ManagedSkiaRefFactory = this as unknown as ManagedSkiaRefFactory
+    return ManagedSkiaRefFactory.resurrect(...rests)
   }
 
   protected ref: T | null
@@ -64,17 +68,17 @@ export abstract class ManagedSkiaRef<T extends SkiaRef<T>> extends Equalable<Man
   abstract resurrect (): T
 
   /**
-   * 
-   * @param object 
-   * @returns 
+   * 是否相等
+   * @param {T | null} object 
+   * @returns {boolean} 
    */
   equal (object: T | null) {
     return object.skia === this.skia
   }
 
   /**
-   * 
-   * @param object 
+   * 是否相等
+   * @param {T | null} object 
    * @returns 
    */
   notEqual (object: T | null) {
@@ -98,6 +102,8 @@ export abstract class ManagedSkiaRef<T extends SkiaRef<T>> extends Equalable<Man
   }
 }
 
+//// => SkiaRefBox
+// 引用计数箱子
 export class SkiaRefBox<R, T extends SkiaRef<T>> {
   // 引用计数
   protected count: number = 0
@@ -106,10 +112,10 @@ export class SkiaRefBox<R, T extends SkiaRef<T>> {
   
   public ref: T | null = null
 
+  // => skia
   public get skia (): T {
     return this.ref as T
   }
-
   public set skia (skia: T | null) {
     this.ref = skia
   }
@@ -165,18 +171,21 @@ export class SkiaRefBox<R, T extends SkiaRef<T>> {
   }
 }
 
-export class SkiaRefs<T extends AtSkiarRef<T>> {
+//// => RefsRegistry
+// 引用注册
+export class RefsRegistry<T extends SkiarRef<T>> {
+  // => instance
   static _instance: null | unknown = null
   static get instance () {
-    SkiaRefs._instance ??= new SkiaRefs()
-    return SkiaRefs._instance as unknown as FinalizationRegistry<SkiaRef>
+    RefsRegistry._instance ??= new RefsRegistry()
+    return RefsRegistry._instance as unknown as FinalizationRegistry<SkiaRef>
   }
 
   static register (object: unknown, skia: T) {
     this.finalization.register(object, skia)
   }
   
-  
+  // => finalization
   protected _finalization: FinalizationRegistry<T> | null = null
   protected get finalization () {
     if (this._finalization === null) {
@@ -190,10 +199,10 @@ export class SkiaRefs<T extends AtSkiarRef<T>> {
   
   /**
    * 监听对象
-   * @param {object} object 
+   * @param {unknown} object 
    * @param {T} skia 
    */
-  registry (object: object, skia: T) {
+  register (object: unknown, skia: T) {
     this.finalization.register(object, skia)
   }
 
