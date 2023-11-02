@@ -2,18 +2,18 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   build: {
+    minify: false,
     lib: {
       entry: './lib/index.ts',
       name: 'index',
-      fileName: 'index'
-    }
-  },
-  rollupOptions: {
-    external: ['@at/basic'],
-    output: {
-      globals: {
-        "@at/basic": "@at/basic",
-      },
+      fileName: 'index',
+      formats: ['cjs', 'es']
     },
+    rollupOptions: {
+      external: [
+        '@catalyzed/basic', 
+        '@catalyzed/types'
+      ]
+    }
   }
 })
