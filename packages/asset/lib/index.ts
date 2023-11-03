@@ -1,3 +1,3 @@
-export * from './asset-bundle'
 export * from './asset-error'
-export * from './assets-manager'
+export * from './bundle'
+export * from './manager'

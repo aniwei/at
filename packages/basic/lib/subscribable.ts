@@ -1,24 +1,24 @@
-// @ts-nocheck
-// 订阅处理器
-export type SubscribeHandle = (...rests: unknown[]) => void 
-// 订阅器存储结构
+import { EventEmitter } from './events'
+
+export type SubscribeHandle = (...args: any[]) => Promise<unknown> | unknown
 export type Subscriber<T extends SubscribeHandle> = {
   handler: T ,
   context: unknown, 
   once: boolean
 }
 
-/**
- * 订阅类
- */
-export class Subscribable<T extends SubscribeHandle = SubscribeHandle> {
-  protected subscribers: Subscriber<T>[] = []
+export class Subscribable<E extends string = string, T extends SubscribeHandle = SubscribeHandle> extends EventEmitter<E> {
+  private subscribers: Subscriber<T>[] = []
+
+  public get size () {
+    return this.subscribers.length
+  }
 
   /**
    * 订阅消息
    * @param {T} handler 
-   * @param {unknown} context?
-   * @param {boolean} once = false
+   * @param {unknown} context 
+   * @param {boolean} once 
    */
   subscribe (
     handler: T, 
@@ -29,38 +29,37 @@ export class Subscribable<T extends SubscribeHandle = SubscribeHandle> {
       throw new TypeError('The listener handler must be a function.')
     }
   
-    this.subscribers.push({ handler, context, once })    
+    const listener: Subscriber<T> = {
+      handler,
+      context,
+      once
+    }
+  
+    this.subscribers.push(listener)    
   }
 
-  /**
-   * 一次订阅
-   * @param {T} handler 
-   * @param {unknown} context 
-   */
-  once ( 
-    handler: T, 
-    context?: unknown,
-  ) {
-    this.subscribe(handler, context, true)
-  }
+  // once ( 
+  //   handler: T, 
+  //   context?: unknown,
+  // ) {
+  //   this.subscribe(handler, context, true)
+  // }
 
   /**
    * 取消订阅
-   * @param {T} handler ?
-   * @param {unknown} context? 
+   * @param {T} handler 
+   * @param {unknown} context 
    */
   unsubscribe (
     handler?: T, 
-    context?: unknown,
-    once: boolean = false
+    context?: unknown
   ) {
   
-    for (const subscribers of this.subscribers) {
+    for (const listener of this.subscribers) {
       const index = this.subscribers.findIndex((findListener: Subscriber<T>) => {
         return (
-          handler === findListener.handler &&
-          context === findListener.context &&
-          once === findListener.once
+          listener.handler === handler &&
+          listener.context === context
         )
       })
       
@@ -73,23 +72,25 @@ export class Subscribable<T extends SubscribeHandle = SubscribeHandle> {
   /**
    * 发布消息
    * @param {unknown[]} rests 
+   * @returns 
    */
-  publish (...rests: unknown[]) {
+  async publish <R = unknown> (...rests: unknown[]) {
     for (const listener of this.subscribers) {
       try {
-        Reflect.apply(listener.handler, listener.context, rests)
         if (listener.once) {
           this.unsubscribe(listener.handler, listener.context)
         }
+
+        const result = Reflect.apply(listener.handler, listener.context, rests) ?? null
+        return Promise.resolve(result).then(result => result as R)
+
       } catch (error: any) {
         throw error
       }
     }
   }
 
-  /**
-   * 清除
-   */
+  // 清除订阅
   clear () {
     this.subscribers = []
   }

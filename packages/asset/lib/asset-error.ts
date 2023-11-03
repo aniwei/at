@@ -1,4 +1,4 @@
-export class AssetsManagerError extends Error {
+export class AssetError extends Error {
   public url: string
   public status: number
 

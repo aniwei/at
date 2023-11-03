@@ -1,39 +1,60 @@
-import { invariant } from 'ts-invariant'
+import { AssetError, AssetsManager } from '@at/asset'
 import { CanvasKit } from 'canvaskit-wasm'
+import { At } from './init'
 
+//// => Assets
+export class Assets<T extends string> extends AssetsManager<T> {
+  async load (asset: string): Promise<unknown> {
+    const uri = this.getAssetURI(asset)
 
-
-export enum AtStateKind {
-  Uninitialized = 1,
-  Initializing = 2,
-  Initialized = 4,
-}
-
-
-//// => At
-// const at = At.init({
-//   baseURL: '' 
-// })
-// at.start()
-export class AtInstance {
-  public _sk: CanvasKit | null = null
-  public get sk (): CanvasKit {
-    invariant(this._sk, `Not yet initialized sk.`)
-    return this._sk
-  }
-  public set (sk: CanvasKit) {
-    this._sk = sk
-  }
-  
-  public state: AtStateKind = AtStateKind.Uninitialized
-
-  ensure (): Promise<void> {
-    if (AtStateKind.Initialized) {
-      return Promise.resolve()
-    } else if ()
+    try {
+      return At.fetch(uri)
+    } catch (error: any) {
+      console.warn(`Caught ProgressEvent with target: ${1}`)
+      throw new AssetError(uri, error.status)
+    }
   }
 }
 
-export class At {
-  
+//// => Manifest
+export class Manifest<T extends string> extends Assets<T> {
+  start () {
+    return this.prepare()
+  }
+
+  prepare () {
+    return this.load('manifest.json')
+  }
 }
+
+//// => AtInstance
+export interface AtInstanceFactory<T> {
+  new (...rests: unknown[]): T
+  create <T extends AtInstance<E>, E extends string> (): T
+} 
+
+export abstract class AtInstance<T extends string> extends Manifest<T> {
+  static create <T extends AtInstance<E>, E extends string> (...rests: unknown[]): T
+  static create <T extends AtInstance<E>, E extends string> (...rests: unknown[]): T {
+    const Factory = this as unknown as  AtInstanceFactory<T>
+    return new Factory(...rests)
+  }
+
+  // => skia
+  public get skia (): CanvasKit {
+    return At.skia
+  }
+
+  start () {
+    return Promise.all([
+      At.ensure(At.env('SKIA_URI')),
+      super.start()
+    ])
+  }
+}
+
+
+
+
+
+

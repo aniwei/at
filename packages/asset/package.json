@@ -1,5 +1,5 @@
 {
-  "name": "basic",
+  "name": "@at/asset",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,20 +7,26 @@
     "dist",
     "index.d.ts"
   ],
-  "main": "dist/index.umd.cjs",
+  "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "index.d.ts",
   "exports": {
     "types": "./index.d.ts",
     "import": "./dist/index.js",
-    "require": "./dist/index.umd.cjs"
+    "require": "./dist/index.cjs"
   },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build"
   },
   "devDependencies": {
+    "@types/node": "^20.8.10",
     "typescript": "^5.1.3",
     "vite": "^4.3.9"
+  },
+  "dependencies": {
+    "@at/basic": "workspace:^",
+    "@at/core": "workspace:^",
+    "path-browserify": "^1.0.1"
   }
 }

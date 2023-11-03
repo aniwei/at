@@ -3,9 +3,22 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   build: {
     lib: {
-      entry: './lib/main.ts',
+      entry: './lib/index.ts',
       name: 'index',
-      fileName: 'index'
+      fileName: 'index',
+      formats: ['es', 'cjs']
+    },
+    rollupOptions: {
+      external: [
+        '@at/core',
+        '@at/basic',
+        'path-browserify'
+      ]
+    }
+  },
+  resolve: {
+    alias: {
+      path: 'path-browserify'
     }
   }
 })

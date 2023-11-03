@@ -8,6 +8,10 @@
   </head>
   <body>
     <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module">
+      import { App } from './lib'
+      const app = App.create()
+      app.start()
+    </script>
   </body>
 </html>
