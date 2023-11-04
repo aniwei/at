@@ -1,12 +1,16 @@
 import { invariant } from 'ts-invariant'
 import { Rect, RRect } from '@at/geometry'
-import { Path } from './Path'
-import * as Sk from './skia'
+import { At } from '@at/core'
+import { Path } from './path'
+import { Paint } from './paint'
+import { rrectIsValid } from './utility'
+import * as Skia from './skia'
 
-export class Canvas extends Sk.ManagedSkiaRef<Sk.Canvas> {
+export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
+
   // => count
   public get count () {
-    return this.skia.getSaveCount()
+    return this.skia?.getSaveCount()
   }
 
   /**
@@ -15,13 +19,16 @@ export class Canvas extends Sk.ManagedSkiaRef<Sk.Canvas> {
    * @param {boolean} doAntiAlias
    * @return {*}
    */
-  clipPath (path: Path, doAntiAlias: boolean = true) {
+  clipPath (
+    path: Path, 
+    doAntiAlias: boolean = true
+  ) {
     invariant(path !== null, `The path cannot be null.`)
     invariant(doAntiAlias !== null, `The doAntiAlias cannot be null.`)
 
-    this.skia.clipPath(
-      path.skia, 
-      At.ClipOp.Intersect, 
+    this.skia?.clipPath(
+      path.skia as Skia.Path, 
+      At.skia.ClipOp.Intersect, 
       doAntiAlias
     )
   }
@@ -36,9 +43,9 @@ export class Canvas extends Sk.ManagedSkiaRef<Sk.Canvas> {
     invariant(rrectIsValid(rrect), `The argument rrect is invalid.`)
     invariant(doAntiAlias !== null, `The argument doAntiAlias cannot be null.`)
 
-    this.skia.clipRRect(
-      rrect, 
-      At.ClipOp.Intersect, 
+    this.skia?.clipRRect(
+      rrect as unknown as number[], 
+      At.skia.ClipOp.Intersect, 
       doAntiAlias
     )
   }
@@ -50,12 +57,12 @@ export class Canvas extends Sk.ManagedSkiaRef<Sk.Canvas> {
    * @param {boolean} doAntiAlias
    * @return {void}
    */
-  clipRect (rect: Rect, clipOp: ClipOp, doAntiAlias = true) {
+  clipRect (rect: Rect, clipOp: Skia.ClipOp, doAntiAlias = true) {
     invariant(clipOp !== null, `The argument clipOp cannot be null.`)
     invariant(doAntiAlias !== null, `The argument doAntiAlias cannot be null.`)
 
-    this.skia.clipRect(
-      rect, 
+    this.skia?.clipRect(
+      rect as unknown as number[], 
       clipOp, 
       doAntiAlias
     )
@@ -74,11 +81,11 @@ export class Canvas extends Sk.ManagedSkiaRef<Sk.Canvas> {
     startAngle: number,
     sweepAngle: number,
     useCenter: boolean,
-    paint: AtPaint
+    paint: Paint
   ) {
     const degree = 180.0 / Math.PI
-    this.skia.drawArc(
-      oval,
+    this.skia?.drawArc(
+      oval as unknown as number[],
       startAngle * degree,
       sweepAngle * degree,
       useCenter,
@@ -95,21 +102,21 @@ export class Canvas extends Sk.ManagedSkiaRef<Sk.Canvas> {
    * @param colors 
    * @param blendMode 
    */
-  drawAtlasRaw (
-    paint: Paint,
-    atlas: Image,
-    rstTransforms: Float32Array,
-    rects: Float32Array,
-    colors: Uint32Array,
-    blendMode: BlendMode
-  ) {
-    this.skia.drawAtlas(
-      atlas.skia,
-      rects,
-      rstTransforms,
-      paint.skia,
-      blendMode,
-      colors
-    )
-  }
+  // drawAtlasRaw (
+  //   paint: Paint,
+  //   atlas: Image,
+  //   rstTransforms: Float32Array,
+  //   rects: Float32Array,
+  //   colors: Uint32Array,
+  //   blendMode: Skia.BlendMode
+  // ) {
+  //   this.skia?.drawAtlas(
+  //     atlas.skia as Skia.Image,
+  //     rects,
+  //     rstTransforms,
+  //     paint.skia,
+  //     blendMode,
+  //     colors
+  //   )
+  // }
 }

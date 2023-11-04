@@ -1,18 +1,18 @@
-import { UnimplementedError } from '../basic/error'
-import { At } from '../at'
-import * as Sk from './skia'
+import { listEquals } from '@at/basic'
+import { At } from '@at/core'
+import * as Skia from './skia'
 
 
-export abstract class PathEffect extends Sk.ManagedSkiaRef<Sk.PathEffect> {
-}
+export class PathDashEffect extends Skia.ManagedSkiaRef<Skia.PathEffect> {
+  // static create (
+  //   pettern: number[], 
+  //   phase?: number,
+  // ) {
+  //   return new PathDashEffect(pettern, phase)
+  // }
 
-export class PathDashEffect extends PathEffect {
-  static create (pettern: number[], phase?: number) {
-    return new PathDashEffect(pettern, phase)
-  }
-
-  static resurrect (pettern: number[], phase: number) {
-    return At.PathEffect.MakeDash(pettern, phase)
+  static resurrect <T extends Skia.PathEffect> (pettern: number[], phase: number): T{
+    return At.skia.PathEffect.MakeDash(pettern, phase) as T
   }
 
   // => pettern
@@ -54,7 +54,7 @@ export class PathDashEffect extends PathEffect {
     this._phase = phase
   } 
 
-  resurrect (): PathEffect {
+  resurrect (): Skia.PathEffect {
     return PathDashEffect.resurrect(this.pettern, this.phase)
   }
 

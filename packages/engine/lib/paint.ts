@@ -1,7 +1,10 @@
-import * as Sk from './skia'
+import { At } from '@at/core'
+import * as Skia from './skia'
+import invariant from 'ts-invariant'
+import { Color } from '@at/basic'
 
 //// => PaintStroke
-export class PaintStroke extends Sk.ManagedSkiaRef<Sk.Paint> {
+export class PaintStroke extends Skia.ManagedSkiaRef<Skia.Paint> {
   // => miterLimit
   protected _miterLimit: number = 0
   public get miterLimit () {
@@ -10,7 +13,7 @@ export class PaintStroke extends Sk.ManagedSkiaRef<Sk.Paint> {
   public set miterLimit (miterLimit: number) {
     if (this.miterLimit !== miterLimit) {
       this._miterLimit = miterLimit
-      this.skia.setStrokeMiter(miterLimit)
+      this.skia?.setStrokeMiter(miterLimit)
     }
   }
 
@@ -22,19 +25,19 @@ export class PaintStroke extends Sk.ManagedSkiaRef<Sk.Paint> {
   public set width (width: number) {
     if (this.width !== width) {
       this._width = width
-      this.skia.setwidth(width)
+      this.skia?.setStrokeWidth(width)
     }
   }
 
   // => cap
-  protected _cap: StrokeCap = At.StrokeCap.Butt
+  protected _cap: Skia.StrokeCap = At.skia.StrokeCap.Butt
   public get cap () {
     return this._cap
   }
-  public set cap (cap: StrokeCap) {
+  public set cap (cap: Skia.StrokeCap) {
     if (this._cap !== cap) {
       this._cap = cap
-      this.skia.setStrokeCap(cap)
+      this.skia?.setStrokeCap(cap)
     }
   }
 
@@ -42,132 +45,132 @@ export class PaintStroke extends Sk.ManagedSkiaRef<Sk.Paint> {
   public get join () {
     return this._join
   }
-  public set join (join: StrokeJoin) {
+  public set join (join: Skia.StrokeJoin) {
     if (this.join !== join) {
       this._join = join
-      this.skia.setStrokeJoin(join)
+      this.skia?.setStrokeJoin(join)
     }
   }
-  private _join: StrokeJoin = At.StrokeJoin.Miter
+  private _join: Skia.StrokeJoin = At.skia.StrokeJoin.Miter
 }
 
 //// => PaintFilter
-export class PaintFilter extends Sk.ManagedSkiaRef<Sk.Paint> {
+export class PaintFilter extends Skia.ManagedSkiaRef<Skia.Paint> {
   // => invertColors colors
-  protected _invertColors: boolean = false
-  public get invertColors () {
-    return this._invertColors
-  }
-  public set invertColors (invert: boolean) {
-    if (this.invertColors !== invert) {
-      if (invert) {
-        invariant(At.kPaintInvertedColorFilter)
+  // protected _invertColors: boolean = false
+  // public get invertColors () {
+  //   return this._invertColors
+  // }
+  // public set invertColors (invert: boolean) {
+  //   if (this.invertColors !== invert) {
+  //     if (invert) {
+  //       invariant(At.kPaintInvertedColorFilter)
 
-        this.originalColor = this.effectiveColor
-        this.effectiveColor = this.effectiveColor === null 
-          ? At.kPaintInvertedColorFilter
-          : new ManagedSkiaColorFilter(new ComposeColorFilter(At.kPaintInvertedColorFilter, this.effectiveColorFilter))
-      } else {
-        this.effectiveColor = this.originalColor
-        this.originalColor = null
-      }
+  //       this.originalColor = this.effectiveColor
+  //       this.effectiveColor = this.effectiveColor === null 
+  //         ? At.kPaintInvertedColorFilter
+  //         : new ManagedSkiaColorFilter(new ComposeColorFilter(At.kPaintInvertedColorFilter, this.effectiveColorFilter))
+  //     } else {
+  //       this.effectiveColor = this.originalColor
+  //       this.originalColor = null
+  //     }
 
-      this.skia.setColorFilter(this.effectiveColor?.skia ?? null)
-      this._invertColors = invert
-    }
-  }
+  //     this.skia.setColorFilter(this.effectiveColor?.skia ?? null)
+  //     this._invertColors = invert
+  //   }
+  // }
 
   // => shader 
-  protected _shader: Shader | null = null
-  public get shader () {
-    return this._shader
-  }
-  public set shader (shader: Shader | null) {
-    if (this.shader !== shader) {
-      this._shader = shader
-      this.skia.setShader(this.shader?.withQuality(this.filterQuality) ?? null)
-    }
-  }
+  // protected _shader: Shader | null = null
+  // public get shader () {
+  //   return this._shader
+  // }
+  // public set shader (shader: Shader | null) {
+  //   if (this.shader !== shader) {
+  //     this._shader = shader
+  //     this.skia.setShader(this.shader?.withQuality(this.filterQuality) ?? null)
+  //   }
+  // }
 
   // => color filter
-  public get color () {
-    return this.effectiveColor?.filter ?? null
-  }
-  public set color (filter: ColorFilter | null) {
-    if (!this.color?.equal(filter as ColorFilter)) {
-      this.originalColor = null
-      this.effectiveColor = filter === null
-        ? null 
-        : ManagedSkiaColorFilter.create(filter)
+  // public get color () {
+  //   return this.effectiveColor?.filter ?? null
+  // }
+  // public set color (filter: ColorFilter | null) {
+  //   if (!this.color?.equal(filter as ColorFilter)) {
+  //     this.originalColor = null
+  //     this.effectiveColor = filter === null
+  //       ? null 
+  //       : ManagedSkiaColorFilter.create(filter)
 
-      invariant(At.kPaintInvertedColorFilter)
+  //     invariant(At.kPaintInvertedColorFilter)
 
-      if (this.invertColors) {
-        this.originalColor = this.effectiveColor
-        this.effectiveColor = this.effectiveColor === null 
-          ? At.kPaintInvertedColorFilter
-          : new ManagedSkiaColorFilter(new AtComposeColorFilter(At.kPaintInvertedColorFilter, this.effectiveColorFilter))
-      } 
+  //     if (this.invertColors) {
+  //       this.originalColor = this.effectiveColor
+  //       this.effectiveColor = this.effectiveColor === null 
+  //         ? At.kPaintInvertedColorFilter
+  //         : new ManagedSkiaColorFilter(new AtComposeColorFilter(At.kPaintInvertedColorFilter, this.effectiveColorFilter))
+  //     } 
       
-      this.skia.setColorFilter(this.effectiveColor?.skia ?? null)
-    }
-  }
+  //     this.skia.setColorFilter(this.effectiveColor?.skia ?? null)
+  //   }
+  // }
 
   // => mask filter
-  protected _mask: MaskFilter | null = null
-  public get mask () {
-    return this._mask
-  }
-  public set mask (filter: MaskFilter | null) {
-    if (this.mask !== filter) {
-      this._mask = filter 
-      this.skia.setMaskFilter(this._mask?.skia ?? null)
-    }
-  }
+  // protected _mask: MaskFilter | null = null
+  // public get mask () {
+  //   return this._mask
+  // }
+  // public set mask (filter: MaskFilter | null) {
+  //   if (this.mask !== filter) {
+  //     this._mask = filter 
+  //     this.skia.setMaskFilter(this._mask?.skia ?? null)
+  //   }
+  // }
 
   // => image filter
-  protected _image: ManagedSkiaImageFilterConvertible | null = null
-  public get image () {
-    return this._image
-  }
-  public set image (filter: ManagedSkiaImageFilterConvertible | null) {
-    if (this.image !== filter) {
-      this._image = filter
+  // protected _image: ManagedSkiaImageFilterConvertible | null = null
+  // public get image () {
+  //   return this._image
+  // }
+  // public set image (filter: ManagedSkiaImageFilterConvertible | null) {
+  //   if (this.image !== filter) {
+  //     this._image = filter
 
-      this.managedImage = filter.image
-      this.skia.setImageFilter(this.managedImage?.skia ?? null)
-    }
-  }
+  //     this.managedImage = filter.image
+  //     this.skia.setImageFilter(this.managedImage?.skia ?? null)
+  //   }
+  // }
 
   // => filter quality
-  protected _quality: FilterQuality = At.FilterQuality.None
-  public get quality () {
-    return this._quality
-  }
-  public set quality (quality: FilterQuality) {
-    if (this.quality !== quality) {
-      this._quality = quality
-      this.skia.setShader((this.shader).withQuality(this.quality))
-    }
-  }
+  // protected _quality: FilterQuality = At.FilterQuality.None
+  // public get quality () {
+  //   return this._quality
+  // }
+  // public set quality (quality: FilterQuality) {
+  //   if (this.quality !== quality) {
+  //     this._quality = quality
+  //     this.skia.setShader((this.shader).withQuality(this.quality))
+  //   }
+  // }
 
-  public originalColor: ManagedSkiaColorFilter | null = null
-  public effectiveColor: ManagedSkiaColorFilter | null = null
-  public managedImage: ManagedSkiaRef<ImageFilter> | null = null
+  // public originalColor: ManagedSkiaColorFilter | null = null
+  // public effectiveColor: ManagedSkiaColorFilter | null = null
+  // public managedImage: ManagedSkiaRef<ImageFilter> | null = null
 }
 
-export class Paint extends Sk.ManagedSkiaRef<Sk.Paint> {
+export class Paint extends Skia.ManagedSkiaRef<Skia.Paint> {
   static create () {
     return new Paint()
   }
 
   static resurrect (
-    effect: PathEffect | null,
-    blendMode: BlendMode,
-    style: PaintStyle,
+    effect: Skia.PathEffect | null,
+    blendMode: Skia.BlendMode,
+    style: Skia.PaintStyle,
     width: number,
-    cap: StrokeCap,
-    join: StrokeJoin,
+    cap: Skia.StrokeCap,
+    join: Skia.StrokeJoin,
     miterLimit: number,
     isAntiAlias: boolean,
     color: Color,

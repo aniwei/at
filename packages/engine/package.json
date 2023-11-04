@@ -7,13 +7,13 @@
     "dist",
     "types/*/**.d.ts"
   ],
-  "main": "dist/index.umd.cjs",
+  "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "types/*/**.d.ts",
   "exports": {
     "types": "./types/*/**.d.ts",
     "import": "./dist/index.js",
-    "require": "./dist/index.umd.cjs"
+    "require": "./dist/index.cjs"
   },
   "scripts": {
     "dev": "vite",
@@ -24,6 +24,10 @@
     "vite": "^4.3.9"
   },
   "dependencies": {
+    "@at/basic": "workspace:^",
+    "@at/core": "workspace:^",
+    "@at/geometry": "workspace:^",
+    "canvaskit-wasm": "^0.38.0",
     "ts-invariant": "^0.10.3"
   }
 }

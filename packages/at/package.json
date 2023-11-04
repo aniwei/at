@@ -8,13 +8,13 @@
     "./index.d.ts",
     "./types/index.d.ts"
   ],
-  "main": "dist/index.umd.cjs",
+  "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "./index.d.ts",
   "exports": {
     "types": "./index.d.ts",
     "import": "./dist/index.js",
-    "require": "./dist/index.umd.cjs"
+    "require": "./dist/index.cjs"
   },
   "scripts": {
     "dev": "vite",
@@ -33,6 +33,7 @@
     "@at/api": "workspace:^",
     "@at/asset": "workspace:^",
     "@at/basic": "workspace:^",
+    "@at/engine": "workspace:^",
     "bytes": "^3.1.2",
     "canvaskit-wasm": "^0.38.0",
     "process": "^0.11.10"

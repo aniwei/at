@@ -1,4 +1,5 @@
 import { invariant } from 'ts-invariant'
+import { RefsRegistry } from './refs'
 import CanvasKitInit, { CanvasKit } from 'canvaskit-wasm'
 
 export enum AtStateKind {
@@ -29,9 +30,11 @@ export class AtInit {
 
   // skia 对象加载状态
   public state: AtStateKind = AtStateKind.Uninitialized
+  public refs: RefsRegistry = RefsRegistry.create()
   // skia 队列
   protected queue: VoidFunction[] = []
   protected envs: Environments
+
 
   constructor () {
     this.envs = process.env as unknown as  Environments
@@ -76,10 +79,15 @@ export class AtInit {
     }
   }
 
+  idle (callback: VoidFunction) {
+    requestIdleCallback(callback)
+  }
+
   /// => basic utility
   fetch (uri: RequestInfo, init?: RequestInit) {
     return fetch(uri, init)
   }
+  
 }
 
 export const At = AtInit.create()

@@ -1,10 +1,25 @@
-import { Equalable } from '@at/basic'
+import invariant from 'ts-invariant'
+import { Equalable, UnimplementedError } from '@at/basic'
+import { At } from '@at/core'
 
 
 export type {
+  BlendMode,
   Canvas,
-  Path,
+  ClipOp,
   FillType,
+  FilterOptions,
+  Font,
+  Image,
+  Path,
+  Paint,
+  PaintStyle,
+  PathEffect,
+  PathOp,
+  StrokeCap,
+  StrokeJoin,
+  Typeface,
+  TypefaceFontProvider
 } from 'canvaskit-wasm'
 
 //// => SkiaRef
@@ -20,20 +35,24 @@ export abstract class SkiaRef<T extends SkiaRef<T>> {
 //// => ManagedSkiaRef
 // WASM 对象管理，对象垃圾回收
 export interface ManagedSkiaRefFactory<T>{
+  new (...rests: unknown[]) : T
   create (...rests: unknown[]): T
   resurrect (...rests: unknown[]): T
 }
 
 export abstract class ManagedSkiaRef<T extends SkiaRef<T>> extends Equalable<ManagedSkiaRef<T>> {
+  /**
+   * 
+   * @param skia 
+   */
   static create <T extends SkiaRef<T>> (skia?: T): T
   static create <T extends SkiaRef<T>> (...rests: unknown[]): T {
-    const ManagedSkiaRefFactory = this as unknown as ManagedSkiaRefFactory
-    return new ManagedSkiaRefFactory(...rests)
+    const Factory = this as unknown as ManagedSkiaRefFactory<T>
+    return new Factory(...rests)
   }
 
-  static resurrect (...rests: unknown[]) {
-    const ManagedSkiaRefFactory = this as unknown as ManagedSkiaRefFactory
-    return ManagedSkiaRefFactory.resurrect(...rests)
+  static resurrect <T extends SkiaRef<T>> (...rests: unknown[]): T {
+    throw new UnimplementedError()
   }
 
   protected ref: T | null
@@ -45,7 +64,7 @@ export abstract class ManagedSkiaRef<T extends SkiaRef<T>> extends Equalable<Man
   }
   set skia (skia: T | null) {
     if (skia !== null) {
-      SkiaRefs.registry(this, skia)
+      At.refs.register(this, skia)
     }
 
     this.delete()
@@ -58,6 +77,7 @@ export abstract class ManagedSkiaRef<T extends SkiaRef<T>> extends Equalable<Man
    */
   constructor (...rests: unknown[])
   constructor (skia?: T) {
+    super()
     this.ref = skia ?? this.resurrect() ?? null
   }
 
@@ -65,15 +85,17 @@ export abstract class ManagedSkiaRef<T extends SkiaRef<T>> extends Equalable<Man
    * 构建 WASM 对象
    * @returns {T}
    */
-  abstract resurrect (): T
+  resurrect (): T {
+    throw new UnimplementedError()
+  }
 
   /**
    * 是否相等
    * @param {T | null} object 
    * @returns {boolean} 
    */
-  equal (object: T | null) {
-    return object.skia === this.skia
+  equal (object: ManagedSkiaRef<T> | null) {
+    return object?.skia === this.skia
   }
 
   /**
@@ -81,7 +103,7 @@ export abstract class ManagedSkiaRef<T extends SkiaRef<T>> extends Equalable<Man
    * @param {T | null} object 
    * @returns 
    */
-  notEqual (object: T | null) {
+  notEqual (object: ManagedSkiaRef<T> | null) {
     return !this.equal(object)
   }
 
@@ -110,14 +132,15 @@ export class SkiaRefBox<R, T extends SkiaRef<T>> {
   protected referrers: Set<R> = new Set()
   protected isDeletedPermanently = false
   
-  public ref: T | null = null
+  // skia ref
+  protected _ref: T | null = null
 
   // => skia
   public get skia (): T {
-    return this.ref as T
+    return this._ref as T
   }
   public set skia (skia: T | null) {
-    this.ref = skia
+    this._ref = skia
   }
   
   /**
@@ -126,7 +149,7 @@ export class SkiaRefBox<R, T extends SkiaRef<T>> {
    */
   constructor (skia: T) {
     this.skia = skia
-    SkiaRefs.register(this, skia)
+    At.refs.register(this, skia)
   }
   
   /**
@@ -154,7 +177,7 @@ export class SkiaRefBox<R, T extends SkiaRef<T>> {
 
     if (this.count === 0) {
       if (this.skia) {
-        AtSkiaObjectFinalization.instance.cleanup(this.skia)
+        At.refs.cleanUp(this.skia)
       }
 
       this.delete()
@@ -167,67 +190,6 @@ export class SkiaRefBox<R, T extends SkiaRef<T>> {
    */
   delete() {
     this.skia?.delete()
-    this.ref = null
-  }
-}
-
-//// => RefsRegistry
-// 引用注册
-export class RefsRegistry<T extends SkiarRef<T>> {
-  // => instance
-  static _instance: null | unknown = null
-  static get instance () {
-    RefsRegistry._instance ??= new RefsRegistry()
-    return RefsRegistry._instance as unknown as FinalizationRegistry<SkiaRef>
-  }
-
-  static register (object: unknown, skia: T) {
-    this.finalization.register(object, skia)
-  }
-  
-  // => finalization
-  protected _finalization: FinalizationRegistry<T> | null = null
-  protected get finalization () {
-    if (this._finalization === null) {
-      this._finalization = new FinalizationRegistry(this.cleanUp)
-    }
-
-    return this._finalization
-  }
-
-  protected queue: T[] = []
-  
-  /**
-   * 监听对象
-   * @param {unknown} object 
-   * @param {T} skia 
-   */
-  register (object: unknown, skia: T) {
-    this.finalization.register(object, skia)
-  }
-
-  /**
-   * 清理对象
-   * @param {T} ref
-   * @return {*}
-   */
-  cleanUp = (ref: T) => {
-    if (!ref.isDeleted()) {
-      invariant(!ref.isDeleted(), 'Attempted to delete an already deleted Skia object.')
-      this.queue.push(ref)
-
-      idle(() => {
-        while (true) {
-          const skia = this.queue.pop()
-          if (!skia?.isDeleted()) {
-            skia?.delete()
-          }
-
-          if (this.queue.length === 0) {
-            break
-          }
-        }
-      })
-    }
+    this._ref = null
   }
 }

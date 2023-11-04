@@ -5,15 +5,15 @@ export default defineConfig({
     lib: {
       entry: './lib/index.ts',
       name: 'index',
-      fileName: 'index'
+      fileName: 'index',
+      formats: ['cjs', 'es']
+    },
+    sourcemap: true,
+    rollupOptions: {
+      external: [
+        '@at/basic',
+        'canvaskit-wasm'
+      ],
     }
   },
-  rollupOptions: {
-    external: ['@at/basic'],
-    output: {
-      globals: {
-        "@at/basic": "@at/basic",
-      },
-    },
-  }
 })

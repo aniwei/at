@@ -8,7 +8,9 @@ export class App<T extends string> extends AtInstance<T> {
     rootDir: string
   ) {
     
-
-    super(At.env('BASE_URI', baseURI), At.env('ROOT_DIR', rootDir))
+    super(
+      At.env('BASE_URI', baseURI), 
+      At.env('ROOT_DIR', rootDir)
+    )
   }
 }

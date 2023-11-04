@@ -84,6 +84,9 @@ importers:
       '@at/basic':
         specifier: workspace:^
         version: link:../basic
+      '@at/engine':
+        specifier: workspace:^
+        version: link:../engine
       bytes:
         specifier: ^3.1.2
         version: 3.1.2
@@ -201,6 +204,18 @@ importers:
 
   packages/engine:
     dependencies:
+      '@at/basic':
+        specifier: workspace:^
+        version: link:../basic
+      '@at/core':
+        specifier: workspace:^
+        version: link:../at
+      '@at/geometry':
+        specifier: workspace:^
+        version: link:../geometry
+      canvaskit-wasm:
+        specifier: ^0.38.0
+        version: 0.38.0
       ts-invariant:
         specifier: ^0.10.3
         version: 0.10.3
@@ -1197,6 +1212,7 @@ packages:
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
     requiresBuild: true
     dev: true
     optional: true
@@ -1206,6 +1222,7 @@ packages:
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
     requiresBuild: true
     dev: true
     optional: true
@@ -1215,6 +1232,7 @@ packages:
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
     requiresBuild: true
     dev: true
     optional: true
@@ -1224,6 +1242,7 @@ packages:
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
     requiresBuild: true
     dev: true
     optional: true
@@ -1315,6 +1334,7 @@ packages:
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
+    libc: [glibc]
     requiresBuild: true
     dev: true
     optional: true
@@ -1324,6 +1344,7 @@ packages:
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
+    libc: [musl]
     requiresBuild: true
     dev: true
     optional: true
@@ -1333,6 +1354,7 @@ packages:
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
+    libc: [glibc]
     requiresBuild: true
     dev: true
     optional: true
@@ -1342,6 +1364,7 @@ packages:
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
+    libc: [musl]
     requiresBuild: true
     dev: true
     optional: true

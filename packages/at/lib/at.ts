@@ -2,8 +2,8 @@ import { AssetError, AssetsManager } from '@at/asset'
 import { CanvasKit } from 'canvaskit-wasm'
 import { At } from './init'
 
-//// => Assets
-export class Assets<T extends string> extends AssetsManager<T> {
+//// => Manifest
+export class AssetsManifest<T extends string> extends AssetsManager<T> {
   async load (asset: string): Promise<unknown> {
     const uri = this.getAssetURI(asset)
 
@@ -14,11 +14,8 @@ export class Assets<T extends string> extends AssetsManager<T> {
       throw new AssetError(uri, error.status)
     }
   }
-}
 
-//// => Manifest
-export class Manifest<T extends string> extends Assets<T> {
-  start () {
+  start (...rests: unknown[]) {
     return this.prepare()
   }
 
@@ -33,23 +30,17 @@ export interface AtInstanceFactory<T> {
   create <T extends AtInstance<E>, E extends string> (): T
 } 
 
-export abstract class AtInstance<T extends string> extends Manifest<T> {
-  static create <T extends AtInstance<E>, E extends string> (...rests: unknown[]): T
-  static create <T extends AtInstance<E>, E extends string> (...rests: unknown[]): T {
-    const Factory = this as unknown as  AtInstanceFactory<T>
-    return new Factory(...rests)
-  }
-
+export abstract class AtInstance<T extends string> extends AssetsManifest<T> {
   // => skia
   public get skia (): CanvasKit {
     return At.skia
   }
 
-  start () {
+  start (callback: VoidFunction = (() => {})) {
     return Promise.all([
       At.ensure(At.env('SKIA_URI')),
       super.start()
-    ])
+    ]).then(() => callback())
   }
 }
 
