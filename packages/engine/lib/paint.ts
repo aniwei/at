@@ -1,10 +1,58 @@
 import { At } from '@at/core'
-import * as Skia from './skia'
-import invariant from 'ts-invariant'
 import { Color } from '@at/basic'
+import * as Skia from './skia'
+
+export interface PaintRefFactory<T> {
+  new (...rests: unknown[]): T
+  create (...rests: unknown[]): T
+}
+export abstract class PaintRef {
+  static create<T> (...rests: unknown[]): T
+  static create<T> (box: Skia.Paint | Skia.SkiaRefBox<PaintRef, Skia.Paint>): T {
+    const Factory = this as unknown as PaintRefFactory<T>
+    return new Factory(box)
+  }
+
+  /**
+   * 克隆 
+   * @param {Skia.SkiaRefBox<PaintRef, Skia.Paint>} box
+   * @return {PaintRef}
+   */  
+  static cloneOf (box: Skia.SkiaRefBox<PaintRef, Skia.Paint>): PaintRef {
+    const ref = this.create(box) as PaintRef
+    return ref
+  }
+
+  // => skia
+  public get skia () {
+    return this.box.skia
+  }
+
+  public box: Skia.SkiaRefBox<PaintRef, Skia.Paint>
+  public disposed: boolean = false
+
+  constructor (...rests: unknown[])
+  constructor (ref: Skia.Paint)
+  constructor (box: Skia.Paint | Skia.SkiaRefBox<PaintRef, Skia.Paint>) {
+    this.box = box instanceof Skia.SkiaRefBox
+      ? box 
+      : new Skia.SkiaRefBox(box)
+    
+    this.box.ref(this)
+  }
+
+  dispose () {
+    this.disposed = true
+    this.box.unref(this)
+  }
+
+  clone (): PaintRef {
+    return PaintRef.cloneOf(this.box)
+  }
+}
 
 //// => PaintStroke
-export class PaintStroke extends Skia.ManagedSkiaRef<Skia.Paint> {
+export class Stroke extends PaintRef { 
   // => miterLimit
   protected _miterLimit: number = 0
   public get miterLimit () {
@@ -51,7 +99,7 @@ export class PaintStroke extends Skia.ManagedSkiaRef<Skia.Paint> {
       this.skia?.setStrokeJoin(join)
     }
   }
-  private _join: Skia.StrokeJoin = At.skia.StrokeJoin.Miter
+  protected _join: Skia.StrokeJoin = At.skia.StrokeJoin.Miter
 }
 
 //// => PaintFilter
@@ -159,91 +207,32 @@ export class PaintFilter extends Skia.ManagedSkiaRef<Skia.Paint> {
   // public managedImage: ManagedSkiaRef<ImageFilter> | null = null
 }
 
-export class Paint extends Skia.ManagedSkiaRef<Skia.Paint> {
-  static create () {
-    return new Paint()
-  }
-
-  static resurrect (
-    effect: Skia.PathEffect | null,
-    blendMode: Skia.BlendMode,
-    style: Skia.PaintStyle,
-    width: number,
-    cap: Skia.StrokeCap,
-    join: Skia.StrokeJoin,
-    miterLimit: number,
-    isAntiAlias: boolean,
-    color: Color,
-    filterQuality: FilterQuality,
-    shader: Shader | null = null,
-    maskFilter: MaskFilter | null = null,
-    colorFilter: ManagedSkiaColorFilter | null = null,
-    imageFilter: ManagedSkiaObject<ImageFilter> | null = null
-  ): Paint {
-    const paint = new Paint()
-
-    paint.setPathEffect(effect.skia ?? null)
-
-    paint.setBlendMode(blendMode)
-    paint.setStyle(style)
-    paint.setwidth(width)
-    paint.setAntiAlias(isAntiAlias)
-    paint.setColorInt(color.value)
-
-    paint.setShader(shader.withQuality(filterQuality) ?? null) 
-    paint.setMaskFilter(maskFilter.skia ?? null)
-    paint.setColorFilter(colorFilter.skia ?? null)
-    paint.setImageFilter(imageFilter.skia ?? null)
-
-    paint.setStrokeCap(cap)
-    paint.setStrokeJoin(join)
-    paint.setStrokeMiter(miterLimit)
-
-    return paint
+export class Paint extends PaintRef {
+  static create <Paint> (...rests: unknown[]): Paint {
+    return super.create(...rests)
   }
 
   // => stroke
-  protected _stroke: PaintStroke | null = null
+  protected _stroke: Stroke | null = null
   public get stroke () {
     return this._stroke
   }
-  public set stroke (stroke: PaintStroke | null) {
+  public set stroke (stroke: Stroke | null) {
     if (this._stroke !== stroke) {
+      if (this._stroke !== null) {
+        this._stroke.dispose()
+      }
+
       this._stroke = stroke
-      this.skia.setPathEffect(effect.skia ?? null)
     }
   }
 
-  // => filter
-  protected _filter: PaintFilter | null = null
-  public get effect () {
-    return this._effect
-  }
-  public set effect (effect: PathEffect | null) {
-    if (this._effect !== effect) {
-      this._effect = effect
-      this.skia.setPathEffect(effect.skia ?? null)
-    }
-  }
-
-  // => effect
-  protected _effect: PathEffect | null = null
-  public get effect () {
-    return this._effect
-  }
-  public set effect (effect: PathEffect | null) {
-    if (this._effect !== effect) {
-      this._effect = effect
-      this.skia.setPathEffect(effect.skia ?? null)
-    }
-  }
-  
   // => blendMode
-  protected _blendMode: BlendMode = At.BlendMode.SrcOver
+  protected _blendMode: Skia.BlendMode = At.skia.BlendMode.SrcOver
   public get blendMode () {
     return this._blendMode
   }
-  public set blendMode (blendMode: BlendMode) {
+  public set blendMode (blendMode: Skia.BlendMode) {
     if (this.blendMode !== blendMode) {
       this._blendMode = blendMode
       this.skia.setBlendMode(blendMode)
@@ -251,11 +240,12 @@ export class Paint extends Skia.ManagedSkiaRef<Skia.Paint> {
   }
 
   // => style
-  protected _style: PaintStyle = At.PaintStyle.Fill
+  // 画笔样式
+  protected _style: Skia.PaintStyle = At.skia.PaintStyle.Fill
   public get style () {
     return this._style
   }
-  public set style (style: PaintStyle) {
+  public set style (style: Skia.PaintStyle) {
     if (this.style !== style) {
       this._style = style
       this.skia?.setStyle(style)
@@ -275,7 +265,7 @@ export class Paint extends Skia.ManagedSkiaRef<Skia.Paint> {
   }
   
   // => color
-  protected _color: Color = At.kPaintDefaultColor as Color
+  protected _color: Color = Color.BLACK
   public get color () {
     return this._color
   }
@@ -292,10 +282,10 @@ export class Paint extends Skia.ManagedSkiaRef<Skia.Paint> {
    * @return {AtPaint}
    */  
   constructor () {
-    const skia = new At.Paint()
-    super(skia)
+    super(new At.skia.Paint())
 
-    
+    this.stroke = Stroke.create(this.box)
+
     this.skia.setAntiAlias(this.isAntiAlias)
     this.skia.setColorInt(this.color.value)
   }
@@ -305,14 +295,6 @@ export class Paint extends Skia.ManagedSkiaRef<Skia.Paint> {
    * @return {Paint}
    */  
   resurrect (): Paint {
-    return Paint.resurrect(
-      this.effect,
-      this.blendMode,
-      this.style,
-      this.stroke,
-      this.isAntiAlias,
-      this.color,
-      this.filter
-    )
+    throw new Error('')
   }
 }

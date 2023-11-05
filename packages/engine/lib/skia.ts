@@ -188,7 +188,7 @@ export class SkiaRefBox<R, T extends SkiaRef<T>> {
   /**
    * 释放引用对象
    */
-  delete() {
+  delete () {
     this.skia?.delete()
     this._ref = null
   }

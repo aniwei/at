@@ -8,7 +8,8 @@ import * as Skia from './skia'
 
 export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
 
-  // => count
+  // => save count
+  // 保存计数
   public get count () {
     return this.skia?.getSaveCount()
   }
@@ -89,7 +90,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
       startAngle * degree,
       sweepAngle * degree,
       useCenter,
-      paint.skia
+      paint.skia as Skia.Paint
     )
   }
 

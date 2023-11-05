@@ -5,7 +5,18 @@ export default defineConfig({
     lib: {
       entry: './lib/index.ts',
       name: 'index',
-      fileName: 'index'
+      fileName: 'index',
+      formats: [
+        'cjs',
+        'es'
+      ]
+    },
+    sourcemap: true,
+    rollupOptions: {
+      external: [
+        '@at/basic',
+        '@at/geometry'
+      ]
     }
   }
 })

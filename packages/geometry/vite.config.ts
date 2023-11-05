@@ -7,13 +7,9 @@ export default defineConfig({
       name: 'index',
       fileName: 'index'
     },
+    sourcemap: true,
     rollupOptions: {
       external: ['@at/basic'],
-      output: {
-        globals: {
-          "@at/basic": "@at/basic",
-        },
-      },
     }
   },
 })

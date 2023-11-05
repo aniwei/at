@@ -27,6 +27,7 @@
     "@at/basic": "workspace:^",
     "@at/core": "workspace:^",
     "@at/geometry": "workspace:^",
+    "@at/math": "workspace:^",
     "canvaskit-wasm": "^0.38.0",
     "ts-invariant": "^0.10.3"
   }

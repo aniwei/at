@@ -1,17 +1,12 @@
+import { Paint, Canvas } from '@at/engine'
 import { App, At } from './lib'
 const app = App.create() as App<''>
 app.start(() => {
-  const paint = new At.skia.Paint()
-  const surface = At.skia.MakeSurface(400, 400)
-  const canvas = surface?.getCanvas()
-
-  paint.setStyle(At.skia.PaintStyle.Stroke)
-  paint.setStrokeWidth(1)
-  paint.setColor([0, 0, 0])
-
-  canvas?.drawRect([0, 0, 100, 100], paint)
-
-  surface?.flush()
+  const surface = At.skia.MakeWebGLCanvasSurface('webgl')
+  const canvas = Canvas.create(surface?.getCanvas())
+  const paint = Paint.create()
 
   debugger
+  canvas.drawCircle(10, 10, 10, paint)
+  
 })

@@ -1,9 +1,5 @@
 lockfileVersion: '6.0'
 
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
-
 importers:
 
   .:
@@ -84,9 +80,6 @@ importers:
       '@at/basic':
         specifier: workspace:^
         version: link:../basic
-      '@at/engine':
-        specifier: workspace:^
-        version: link:../engine
       bytes:
         specifier: ^3.1.2
         version: 3.1.2
@@ -97,6 +90,9 @@ importers:
         specifier: ^0.11.10
         version: 0.11.10
     devDependencies:
+      '@at/engine':
+        specifier: workspace:^
+        version: link:../engine
       '@rollup/plugin-inject':
         specifier: ^5.0.5
         version: 5.0.5
@@ -213,6 +209,9 @@ importers:
       '@at/geometry':
         specifier: workspace:^
         version: link:../geometry
+      '@at/math':
+        specifier: workspace:^
+        version: link:../math
       canvaskit-wasm:
         specifier: ^0.38.0
         version: 0.38.0
@@ -5239,3 +5238,7 @@ packages:
     resolution: {integrity: sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==}
     engines: {node: '>=12.20'}
     dev: true
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false

@@ -1,4 +1,6 @@
 export * from './canvas'
 export * from './font'
+export * from './image'
+export * from './paint'
 export * from './path-effect'
 export * as Skia from './skia'

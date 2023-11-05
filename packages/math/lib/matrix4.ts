@@ -92,23 +92,23 @@ export class Matrix4 extends Numberic<Matrix4> {
     x[2] = z1
   }
 
-  static solve (A: Matrix4, x: Vector4, b: Vector4) {
-    const a00 = A[0]
-    const a01 = A[1]
-    const a02 = A[2]
-    const a03 = A[3]
-    const a10 = A[4]
-    const a11 = A[5]
-    const a12 = A[6]
-    const a13 = A[7]
-    const a20 = A[8]
-    const a21 = A[9]
-    const a22 = A[10]
-    const a23 = A[11]
-    const a30 = A[12]
-    const a31 = A[13]
-    const a32 = A[14]
-    const a33 = A[15]
+  static solve (a: Matrix4, x: Vector4, b: Vector4) {
+    const a00 = a[0]
+    const a01 = a[1]
+    const a02 = a[2]
+    const a03 = a[3]
+    const a10 = a[4]
+    const a11 = a[5]
+    const a12 = a[6]
+    const a13 = a[7]
+    const a20 = a[8]
+    const a21 = a[9]
+    const a22 = a[10]
+    const a23 = a[11]
+    const a30 = a[12]
+    const a31 = a[13]
+    const a32 = a[14]
+    const a33 = a[15]
     const b00 = a00 * a11 - a01 * a10
     const b01 = a00 * a12 - a02 * a10
     const b02 = a00 * a13 - a03 * a10
@@ -122,10 +122,10 @@ export class Matrix4 extends Numberic<Matrix4> {
     const b10 = a21 * a33 - a23 * a31
     const b11 = a22 * a33 - a23 * a32
 
-    const bX = b.storage[0]
-    const bY = b.storage[1]
-    const bZ = b.storage[2]
-    const bW = b.storage[3]
+    const bX = b[0]
+    const bY = b[1]
+    const bZ = b[2]
+    const bW = b[3]
 
     let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06
 
