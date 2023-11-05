@@ -1,5 +1,5 @@
 import invariant from 'ts-invariant'
-import { nextTick } from 'at/basic'
+import { nextTick } from '@at/basic'
 
 // 手势处置枚举
 export enum GestureDispositionKind {

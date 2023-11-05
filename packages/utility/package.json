@@ -1,17 +1,17 @@
 {
-  "name": "@at/engine",
+  "name": "@at/utility",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "files": [
     "dist",
-    "types/*/**.d.ts"
+    "index.d.ts"
   ],
   "main": "dist/index.cjs",
   "module": "dist/index.js",
-  "types": "types/*/**.d.ts",
+  "types": "index.d.ts",
   "exports": {
-    "types": "./types/*/**.d.ts",
+    "types": "./index.d.ts",
     "import": "./dist/index.js",
     "require": "./dist/index.cjs"
   },
@@ -20,6 +20,7 @@
     "build": "tsc && vite build"
   },
   "devDependencies": {
+    "@types/node": "^20.8.10",
     "typescript": "^5.1.3",
     "vite": "^4.3.9"
   },
@@ -27,9 +28,8 @@
     "@at/basic": "workspace:^",
     "@at/core": "workspace:^",
     "@at/geometry": "workspace:^",
-    "@at/math": "workspace:^",
-    "@at/utility": "workspace:^",
     "canvaskit-wasm": "^0.38.0",
+    "path-browserify": "^1.0.1",
     "ts-invariant": "^0.10.3"
   }
 }

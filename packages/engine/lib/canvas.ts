@@ -1,13 +1,22 @@
 import { invariant } from 'ts-invariant'
 import { Rect, RRect } from '@at/geometry'
+import { rrectIsValid } from '@at/utility'
 import { At } from '@at/core'
+
 import { Path } from './path'
 import { Paint } from './paint'
-import { rrectIsValid } from './utility'
+
 import * as Skia from './skia'
 
 export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
-
+  /**
+   * 
+   * @param skia 
+   * @returns 
+   */
+  static create <M extends Skia.ManagedSkiaRef<T>, T extends Skia.SkiaRef<T>> (skia: Skia.Canvas): M {
+    return super.create(skia) as unknown as M
+  }
   // => save count
   // 保存计数
   public get count () {
@@ -26,8 +35,9 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
   ) {
     invariant(path !== null, `The path cannot be null.`)
     invariant(doAntiAlias !== null, `The doAntiAlias cannot be null.`)
+    invariant(this.skia)
 
-    this.skia?.clipPath(
+    this.skia.clipPath(
       path.skia as Skia.Path, 
       At.skia.ClipOp.Intersect, 
       doAntiAlias
@@ -43,8 +53,9 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
   clipRRect (rrect: RRect, doAntiAlias: boolean = true) {
     invariant(rrectIsValid(rrect), `The argument rrect is invalid.`)
     invariant(doAntiAlias !== null, `The argument doAntiAlias cannot be null.`)
+    invariant(this.skia)
 
-    this.skia?.clipRRect(
+    this.skia.clipRRect(
       rrect as unknown as number[], 
       At.skia.ClipOp.Intersect, 
       doAntiAlias
@@ -61,8 +72,8 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
   clipRect (rect: Rect, clipOp: Skia.ClipOp, doAntiAlias = true) {
     invariant(clipOp !== null, `The argument clipOp cannot be null.`)
     invariant(doAntiAlias !== null, `The argument doAntiAlias cannot be null.`)
-
-    this.skia?.clipRect(
+    invariant(this.skia)
+    this.skia.clipRect(
       rect as unknown as number[], 
       clipOp, 
       doAntiAlias
@@ -84,8 +95,9 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
     useCenter: boolean,
     paint: Paint
   ) {
+    invariant(this.skia)
     const degree = 180.0 / Math.PI
-    this.skia?.drawArc(
+    this.skia.drawArc(
       oval as unknown as number[],
       startAngle * degree,
       sweepAngle * degree,

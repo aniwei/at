@@ -6,19 +6,22 @@ export default defineConfig({
       entry: './lib/index.ts',
       name: 'index',
       fileName: 'index',
-      formats: ['cjs', 'es']
+      formats: ['es', 'cjs']
     },
     sourcemap: true,
     rollupOptions: {
       external: [
-        '@at/core',
         '@at/basic',
+        '@at/core',
         '@at/geometry',
-        '@at/math',
-        '@at/utility',
         'ts-invariant',
-        'canvaskit-wasm'
-      ],
+        'path-browserify'
+      ]
     }
   },
+  resolve: {
+    alias: {
+      path: 'path-browserify'
+    }
+  }
 })

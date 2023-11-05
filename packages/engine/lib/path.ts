@@ -1,37 +1,46 @@
+// @ts-nocheck
 import { invariant } from 'ts-invariant'
 import { Offset, Radius, Rect, RRect } from '@at/geometry'
-import { toPoints, toMatrix } from '@at/basic'
 import { Matrix4 } from '@at/math'
 import { At } from '@at/core'
 
-import { ManagedSkiaRef } from './skia'
 
 import * as Skia from './skia'
+import { toMatrix, toPoints } from '@at/utility'
 
 /**
  * @description: 路径类
  * @return {*}
  */
-export class Path extends ManagedSkiaRef<Skia.Path> {
+export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
   /**
-   * 
-   * @param svg 
-   * @returns 
+   * 创建 Path 对象
+   * @param {Skia.Path} skia
+   * @returns {Skia.Path}
+   */
+  static create <M extends Skia.ManagedSkiaRef<T>, T extends Skia.SkiaRef<T>> (skia: Skia.Path): M {
+    return super.create(skia) as unknown as M
+  }
+
+  /**
+   * 从 svg 创建
+   * @param {string} svg 
+   * @returns {Path}
    */
   static fromSVGString (svg: string) {
     return Path.create(At.skia.Path.MakeFromSVGString(svg) as Skia.Path)
   }
 
   /**
-   * 创建 SkPath 对象
-   * @param cachedCommands 
-   * @param fillType 
-   * @returns 
+   * 创建 Path 对象
+   * @param {number[]} cachedCommands 
+   * @param {Skia.FillType} fillType 
+   * @returns {Skia.Path}
    */
-  static resurrect (cachedCommands: ArrayLike<number>, fillType: Skia.FillType) {
-    const path = At.skia.Path.MakeFromCmds(cachedCommands as Float32Array) as Skia.Path
+  static resurrect <T extends Skia.SkiaRef<T>> (cachedCommands: number[], fillType: Skia.FillType): T {
+    const path = At.skia.Path.MakeFromCmds(cachedCommands) as Skia.Path
     path.setFillType(fillType)
-    return path
+    return path as unknown as  T
   }
   /**
    * 从 Path 创建
@@ -39,7 +48,8 @@ export class Path extends ManagedSkiaRef<Skia.Path> {
    * @return {Path}
    */  
   static from (other: Path) {
-    const path = new Path(other.skia?.copy() as Skia.Path)
+    invariant(other.skia)
+    const path = Path.create<Path, Skia.Path>(other.skia.copy() as Skia.Path)
     path.fillType = other.fillType
     return path
   }
@@ -50,8 +60,8 @@ export class Path extends ManagedSkiaRef<Skia.Path> {
    * @param {FillType} fillType
    * @return {Path}
    */
-  static fromSkia (skia: Path, fillType: Skia.FillType) {
-    const path = new Path(skia)
+  static fromSkia (skia: Skia.Path, fillType: Skia.FillType) {
+    const path = Path.create<Path, Skia.Path>(skia)
     path.fillType = fillType
     return path
   }
@@ -83,7 +93,7 @@ export class Path extends ManagedSkiaRef<Skia.Path> {
     return this._fillType
   }
   
-  public cachedCommands: ArrayLike<number> | null = null
+  public cachedCommands: number[] | null = null
 
   constructor (skia?: Path) {
     super(skia ?? Path.resurrect([], At.skia.FillType.Winding))
@@ -100,7 +110,7 @@ export class Path extends ManagedSkiaRef<Skia.Path> {
     const degrees = 180 / Math.PI
 
     this.skia?.addArc(
-      oval, 
+      oval as unknown as number[], 
       startAngle * degrees, 
       sweepAngle * degrees
     )
@@ -214,7 +224,7 @@ export class Path extends ManagedSkiaRef<Skia.Path> {
    */
   arcToPoint(
     arcEnd: Offset,
-    radius: Radius = Radius.zero,
+    radius: Radius = Radius.ZERO,
     rotation: number = 0,
     largeArc: boolean = false,
     clockwise: boolean = true
@@ -339,7 +349,7 @@ export class Path extends ManagedSkiaRef<Skia.Path> {
    */
   relativeArcToPoint (
     arcEndDelta: Offset,
-    radius: Radius = Radius.zero,
+    radius: Radius = Radius.ZERO,
     rotation: number = 0.0,
     largeArc: boolean = false,
     clockwise: boolean = true
@@ -452,7 +462,8 @@ export class Path extends ManagedSkiaRef<Skia.Path> {
    * @return {*}
    */
   transform (matrix4: Matrix4) {
-    const skia = this.skia?.copy()
+    invariant(this.skia)
+    const skia = this.skia.copy() as Skia.Path
     const m = toMatrix(matrix4)
     
     skia?.transform(
@@ -466,7 +477,7 @@ export class Path extends ManagedSkiaRef<Skia.Path> {
       m[7],
       m[8],
     )
-    return Path.fromSkia(skia!, this.fillType)
+    return Path.fromSkia(skia, this.fillType)
   }
 
   /**
@@ -513,7 +524,7 @@ export class Path extends ManagedSkiaRef<Skia.Path> {
    * @description: 
    * @return {*}
    */
-  resurrect (): Path {
+  resurrect (): Skia.Path {
     return Path.resurrect(this.cachedCommands ?? [], this.fillType)
   }
 }

@@ -1,8 +1,7 @@
 import { Equalable } from './equalable'
 
-export interface Numberic<T extends Numberic<T>> extends  ArrayLike<number>, Iterable<number> {
+export interface Numberic<T extends Numberic<T>> extends Array<number> {
   length: number
-  [Symbol.iterator](): Iterator<number>
   [n: number]: number,
 }
 

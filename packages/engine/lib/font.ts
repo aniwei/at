@@ -1,8 +1,4 @@
-/*
- * @author: aniwei aniwei.studio@gmail.com
- * @date: 2022-10-30 01:51:15
- */
-import invariant from 'ts-invariant'
+import { invariant } from 'ts-invariant'
 import { At } from '@at/core'
 
 import type { 
@@ -22,6 +18,13 @@ export type UnloadedFont = {
  * @return {RegisteredFont}
  */
 export class RegisteredFont {
+  /**
+   * 
+   * @param {string} family 
+   * @param {ArrayBuffer} buffer 
+   * @param {Typeface} typeface 
+   * @returns {RegisteredFont}
+   */
   static create (
     family: string,
     buffer: ArrayBuffer,
@@ -34,6 +37,12 @@ export class RegisteredFont {
   public buffer: ArrayBuffer
   public typeface: Typeface
 
+  /**
+   * 
+   * @param {string} family 
+   * @param {ArrayBuffer} buffer 
+   * @param {Typeface} typeface 
+   */
   constructor (
     family: string,
     buffer: ArrayBuffer,

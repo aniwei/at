@@ -2,24 +2,24 @@ import { At } from '@at/core'
 import { Color } from '@at/basic'
 import * as Skia from './skia'
 
-export interface PaintRefFactory<T> {
+export interface PaintRefBoxFactory<T> {
   new (...rests: unknown[]): T
   create (...rests: unknown[]): T
 }
-export abstract class PaintRef {
+export abstract class PaintRefBox {
   static create<T> (...rests: unknown[]): T
-  static create<T> (box: Skia.Paint | Skia.SkiaRefBox<PaintRef, Skia.Paint>): T {
-    const Factory = this as unknown as PaintRefFactory<T>
+  static create<T> (box: Skia.Paint | Skia.SkiaRefBox<PaintRefBox, Skia.Paint>): T {
+    const Factory = this as unknown as PaintRefBoxFactory<T>
     return new Factory(box)
   }
 
   /**
    * 克隆 
-   * @param {Skia.SkiaRefBox<PaintRef, Skia.Paint>} box
-   * @return {PaintRef}
+   * @param {Skia.SkiaRefBox<PaintRefBox, Skia.Paint>} box
+   * @return {PaintRefBox}
    */  
-  static cloneOf (box: Skia.SkiaRefBox<PaintRef, Skia.Paint>): PaintRef {
-    const ref = this.create(box) as PaintRef
+  static cloneOf (box: Skia.SkiaRefBox<PaintRefBox, Skia.Paint>): PaintRefBox {
+    const ref = this.create(box) as PaintRefBox
     return ref
   }
 
@@ -28,12 +28,12 @@ export abstract class PaintRef {
     return this.box.skia
   }
 
-  public box: Skia.SkiaRefBox<PaintRef, Skia.Paint>
+  public box: Skia.SkiaRefBox<PaintRefBox, Skia.Paint>
   public disposed: boolean = false
 
   constructor (...rests: unknown[])
   constructor (ref: Skia.Paint)
-  constructor (box: Skia.Paint | Skia.SkiaRefBox<PaintRef, Skia.Paint>) {
+  constructor (box: Skia.Paint | Skia.SkiaRefBox<PaintRefBox, Skia.Paint>) {
     this.box = box instanceof Skia.SkiaRefBox
       ? box 
       : new Skia.SkiaRefBox(box)
@@ -46,13 +46,13 @@ export abstract class PaintRef {
     this.box.unref(this)
   }
 
-  clone (): PaintRef {
-    return PaintRef.cloneOf(this.box)
+  clone (): PaintRefBox {
+    return PaintRefBox.cloneOf(this.box)
   }
 }
 
 //// => PaintStroke
-export class Stroke extends PaintRef { 
+export class Stroke extends PaintRefBox { 
   // => miterLimit
   protected _miterLimit: number = 0
   public get miterLimit () {
@@ -207,9 +207,9 @@ export class PaintFilter extends Skia.ManagedSkiaRef<Skia.Paint> {
   // public managedImage: ManagedSkiaRef<ImageFilter> | null = null
 }
 
-export class Paint extends PaintRef {
+export class Paint extends PaintRefBox {
   static create <Paint> (...rests: unknown[]): Paint {
-    return super.create(...rests)
+    return super.create(new At.skia.Paint())
   }
 
   // => stroke

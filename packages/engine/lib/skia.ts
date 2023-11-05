@@ -1,8 +1,8 @@
-import invariant from 'ts-invariant'
+import { invariant } from 'ts-invariant'
 import { Equalable, UnimplementedError } from '@at/basic'
 import { At } from '@at/core'
 
-
+//// => Skia
 export type {
   BlendMode,
   Canvas,
@@ -34,9 +34,9 @@ export abstract class SkiaRef<T extends SkiaRef<T>> {
 
 //// => ManagedSkiaRef
 // WASM 对象管理，对象垃圾回收
-export interface ManagedSkiaRefFactory<T>{
-  new (...rests: unknown[]) : T
-  create (...rests: unknown[]): T
+export interface ManagedSkiaRefFactory<T extends SkiaRef<T>>{
+  new (...rests: unknown[]) : ManagedSkiaRef<T>
+  create (...rests: unknown[]): ManagedSkiaRef<T>
   resurrect (...rests: unknown[]): T
 }
 
@@ -45,10 +45,10 @@ export abstract class ManagedSkiaRef<T extends SkiaRef<T>> extends Equalable<Man
    * 
    * @param skia 
    */
-  static create <T extends SkiaRef<T>> (skia?: T): T
-  static create <T extends SkiaRef<T>> (...rests: unknown[]): T {
+  static create <M extends ManagedSkiaRef<T>, T extends SkiaRef<T>> (...rests: unknown[]): M
+  static create <M extends ManagedSkiaRef<T>, T extends SkiaRef<T>> (skia: T): M {
     const Factory = this as unknown as ManagedSkiaRefFactory<T>
-    return new Factory(...rests)
+    return new Factory(skia) as unknown as M
   }
 
   static resurrect <T extends SkiaRef<T>> (...rests: unknown[]): T {
