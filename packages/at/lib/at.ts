@@ -4,9 +4,17 @@ import { AtInit } from './init'
 
 export const At = AtInit.create()
 
+export enum AssetsStateKind {
+  Unload,
+  ManifestLoaded,
+  FontsLoaded,
+}
+
 //// => Manifest
-export class AssetsManifest<T extends string> extends AssetsManager<T> {
-  async load (asset: string): Promise<unknown> {
+export class AssetsManifest<T extends string> extends AssetsManager<'progress' | T> {
+  public state: AssetsStateKind = AssetsStateKind.Unload
+
+  async load (asset: string): Promise<Response> {
     const uri = this.getAssetURI(asset)
 
     try {
@@ -21,8 +29,13 @@ export class AssetsManifest<T extends string> extends AssetsManager<T> {
     return this.prepare()
   }
 
-  prepare () {
-    return this.load('manifest.json')
+  prepare (): Promise<void> {
+    return new Promise((resolve) => {
+      this.load('manifest.json')
+        .then(res => res.json())
+        .then((res) => {
+        }).then(() => resolve())
+    })
   }
 }
 

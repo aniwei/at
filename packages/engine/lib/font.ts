@@ -7,6 +7,7 @@ import type {
   TypefaceFontProvider 
 } from './skia'
 
+//// => RegisteredFont
 export interface UnloadedFont {
   family: string,
   buffer?: ArrayBuffer,
@@ -58,7 +59,7 @@ export class RegisteredFont {
 }
 
 /**
- * @description: 字体管理
+ * @字体管理
  * @return {Fonts}
  */
 export class Fonts {
@@ -112,8 +113,6 @@ export class Fonts {
       families.push(new At.skia.Font(font.typeface))
     }
   }
-
-  async registerFromAssets () {}
 
   /**
    * @description: 注册字体

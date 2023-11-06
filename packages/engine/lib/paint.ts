@@ -4,6 +4,7 @@ import * as Skia from './skia'
 
 
 //// => PaintBoxRef
+// 引用 Box
 export interface PaintRefBoxFactory<T> {
   new (...rests: unknown[]): T
   create (...rests: unknown[]): T

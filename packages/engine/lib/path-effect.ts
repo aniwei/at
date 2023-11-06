@@ -2,6 +2,8 @@ import { listEquals } from '@at/basic'
 import { At } from '@at/core'
 import * as Skia from './skia'
 
+//// => PathDashEffect
+// 虚线效果
 export class PathDashEffect extends Skia.ManagedSkiaRef<Skia.PathEffect> {
   static create (
     pettern: number[], 
@@ -14,19 +16,19 @@ export class PathDashEffect extends Skia.ManagedSkiaRef<Skia.PathEffect> {
     return At.skia.PathEffect.MakeDash(pettern, phase) as Skia.PathEffect
   }
 
-  // => pettern
-  protected _pettern: number[]
-  public get pettern () {
-    return this._pettern
+  // => pattern
+  protected _pattern: number[]
+  public get pattern () {
+    return this._pattern
   }
-  public set pettern (pettern: number[]) {
+  public set pattern (pattern: number[]) {
     if (
-      this._pettern.length !== pettern.length ||
-      this._pettern.some((value: number, index: number) => {
-        return pettern[index] !== value
+      this._pattern.length !== pattern.length ||
+      this._pattern.some((value: number, index: number) => {
+        return pattern[index] !== value
       })
     ) {
-      this._pettern = pettern
+      this._pattern = pattern
       this.skia = this.resurrect()
     }
   }
@@ -44,17 +46,17 @@ export class PathDashEffect extends Skia.ManagedSkiaRef<Skia.PathEffect> {
   }
 
   constructor (
-    pettern: number[] = [], 
+    pattern: number[] = [], 
     phase: number = 0
   ) {
-    super(PathDashEffect.resurrect(pettern, phase))
+    super(PathDashEffect.resurrect(pattern, phase))
 
-    this._pettern = pettern
+    this._pattern = pattern
     this._phase = phase
   } 
 
   resurrect (): Skia.PathEffect {
-    return PathDashEffect.resurrect(this.pettern, this.phase)
+    return PathDashEffect.resurrect(this.pattern, this.phase)
   }
 
   /**
@@ -66,8 +68,8 @@ export class PathDashEffect extends Skia.ManagedSkiaRef<Skia.PathEffect> {
     return (
       other instanceof PathDashEffect &&
       other.phase === this.phase &&
-      other.pettern.length === this.pettern.length &&
-      listEquals(this.pettern, other.pettern)
+      other.pattern.length === this.pattern.length &&
+      listEquals(this.pattern, other.pattern)
     )
   }
 
@@ -78,5 +80,12 @@ export class PathDashEffect extends Skia.ManagedSkiaRef<Skia.PathEffect> {
    */
   notEqual (other: PathDashEffect | null): boolean {
     return !this.equal(other)
+  }
+
+  toString () {
+    return `PathDashEffect(
+      [pattern]: ${this.pattern},
+      [phase]: ${this.phase}
+    )`
   }
 }
