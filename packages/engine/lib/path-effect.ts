@@ -2,17 +2,16 @@ import { listEquals } from '@at/basic'
 import { At } from '@at/core'
 import * as Skia from './skia'
 
-
 export class PathDashEffect extends Skia.ManagedSkiaRef<Skia.PathEffect> {
-  // static create (
-  //   pettern: number[], 
-  //   phase?: number,
-  // ) {
-  //   return new PathDashEffect(pettern, phase)
-  // }
+  static create (
+    pettern: number[], 
+    phase?: number,
+  ) {
+    return new PathDashEffect(pettern, phase)
+  }
 
-  static resurrect <T extends Skia.PathEffect> (pettern: number[], phase: number): T{
-    return At.skia.PathEffect.MakeDash(pettern, phase) as T
+  static resurrect (pettern: number[], phase: number): Skia.PathEffect {
+    return At.skia.PathEffect.MakeDash(pettern, phase) as Skia.PathEffect
   }
 
   // => pettern

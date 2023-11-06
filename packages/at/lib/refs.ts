@@ -1,5 +1,5 @@
 import invariant from 'ts-invariant'
-import { At } from './init'
+import { At } from './at'
 
 export interface DeletedSkiaRef {
   delete (): void
@@ -16,24 +16,31 @@ export class RefsRegistry {
   }
 
   // => finalization
-  protected _finalization: FinalizationRegistry<DeletedSkiaRef> | null = null
-  protected get finalization () {
-    if (this._finalization === null) {
-      this._finalization = new FinalizationRegistry(this.cleanUp)
+  protected _registry: FinalizationRegistry<DeletedSkiaRef> | null = null
+  protected get registry () {
+    if (this._registry === null) {
+      this._registry = new FinalizationRegistry(this.cleanUp)
     }
 
-    return this._finalization
+    return this._registry
   }
 
   protected queue: DeletedSkiaRef[] = []
   
   /**
    * 监听对象
-   * @param {unknown} object 
+   * @param {object} obj
    * @param {T} skia 
    */
-  register (object: object, skia: DeletedSkiaRef) {
-    this.finalization.register(object, skia)
+  register (obj: object, skia: DeletedSkiaRef) {
+    this.registry.register(obj, skia)
+  }
+
+  /**
+   * @param {obj} object 
+   */
+  unregister (obj: object) {
+    this.registry.unregister(obj)
   }
 
   /**

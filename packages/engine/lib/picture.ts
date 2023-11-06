@@ -1,0 +1,98 @@
+/*
+ * @author: Aniwei
+ * @date: 2022-07-04 12:10:21
+ */
+import { invariant } from 'ts-invariant'
+import { Rect } from '@at/geometry'
+import { At } from '@at/core'
+
+import { Image } from './image'
+import { Snapshot } from './snapshot'
+
+import * as Skia from './skia'
+
+export class Picture extends Skia.ManagedSkiaRef<Skia.Picture> {
+  static create (
+    picture: Skia.Picture,
+    cullRect?: Rect,
+    snapshot?: Snapshot
+  ) {
+    return new Picture(picture, cullRect, snapshot)
+  }
+
+  public disposed: boolean = false
+  public cullRect: Rect | null = null
+  public approximateBytesUsed: number = 0
+  public isResurrectionExpensive: boolean = true
+  public snapshot: Snapshot | null = null
+
+  /**
+   * @description: 
+   * @param {PictureOptions} options
+   * @return {*}
+   */  
+  constructor (
+    picture: Skia.Picture,
+    cullRect: Rect | null = null,
+    snapshot: Snapshot | null = null
+  ) {    
+    invariant(
+      snapshot !== null,
+      'If the browser does not support FinalizationRegistry (WeakRef), then we must have a picture snapshot to be able to resurrect it.',
+    )
+
+    super(picture)
+
+    this.cullRect = cullRect
+    this.snapshot = snapshot
+  }
+
+  /**
+   * @description: 
+   * @return {void}
+   */  
+  dispose () {
+    invariant(!this.disposed, 'AtPicture object has been disposed.')
+    this.snapshot?.dispose()  
+    this.delete()
+    this.disposed = true
+  }
+
+  /**
+   * @param {number} width
+   * @param {number} height
+   * @return {Image}
+   */
+  toImage (width: number, height: number): Image {
+    invariant(!this.disposed, `The AtPicture object cannot be disposed.`)
+    const surface: Skia.Surface = At.skia.MakeSurface(width, height)!
+    const canvas = surface.getCanvas()
+    
+    // canvas.scale(2, 2)
+    invariant(this.skia)
+    canvas.drawPicture(this.skia)
+    
+    const skia: Skia.Image = surface.makeImageSnapshot()
+    surface.dispose()
+    return Image.create(skia)
+  }
+
+  /**
+   * @description: 
+   * @return {IPicture}
+   */  
+  resurrect () {
+    invariant(!this.disposed, `The AtPicture object cannot be disposed.`)
+    return this.snapshot!.toPicture()
+  }
+
+  /**
+   * @description: 
+   * @return {void}
+   */  
+  delete () {
+    if (!this.disposed) {
+      super.delete()
+    }
+  }
+}

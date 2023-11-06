@@ -1,2 +1,5 @@
+export * from './clamp'
 export * from './is'
+export * from './lerp'
+export * from './list-equals'
 export * from './to'

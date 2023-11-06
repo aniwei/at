@@ -1,5 +1,4 @@
-// import { invariant } from 'ts-invariant'
-// import { ManagedSkiaRef } from './skia'
+import * as Skia from './skia'
 // import { matrix4IsValid, offsetIsValid, toColors, toColorStops, toFilterMode, toMatrix, toMipmapMode } from '../basic/helper'
 
 // import type { ArrayLike } from '../at'
@@ -8,11 +7,11 @@
 // import type { Offset } from '../basic/geometry'
 // import type { FilterQuality, Shader, TileMode } from './skia'
 
-// export abstract class AtShader extends ManagedSkiaRef<skia.Shader> {
-//   withQuality (contextualQuality: FilterQuality) {
-//     return this.skia
-//   }
-// }
+export abstract class AtShader extends Skia.ManagedSkiaRef<Skia.Shader> {
+  withQuality (quality: Skia.FilterQuality) {
+    return this.skia
+  }
+}
 
 // export class GradientSweep extends Shader {
 //   /**

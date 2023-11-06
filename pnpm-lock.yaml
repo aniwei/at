@@ -87,6 +87,9 @@ importers:
       '@at/engine':
         specifier: workspace:^
         version: link:../engine
+      '@at/geometry':
+        specifier: workspace:^
+        version: link:../geometry
       bytes:
         specifier: ^3.1.2
         version: 3.1.2

@@ -1,7 +1,16 @@
+// @ts-nocheck
+import CanvasKitInit, { CanvasKit } from 'canvaskit-wasm'
+import { Skia } from '@at/engine'
 import { invariant } from 'ts-invariant'
 import { RefsRegistry } from './refs'
-import CanvasKitInit, { CanvasKit } from 'canvaskit-wasm'
 
+
+// extend CanvasKit
+export interface AtCanvasKit extends CanvasKit {
+  FilterQuality: Skia.FilterQuality
+}
+
+//// => AtInit
 export enum AtStateKind {
   Uninitialized,
   Initializing,
@@ -19,12 +28,13 @@ export class AtInit {
 
   // => skia
   // Skia Runtime 对象
-  public _skia: CanvasKit | null = null
+  public _skia: AtCanvasKit | null = null
   public get skia () {
     invariant(this._skia)
     return this._skia
   }
-  public set skia (skia: CanvasKit) {
+  public set skia (skia: AtCanvasKit) {
+    skia.FilterQuality = Skia.FilterQuality
     this._skia = skia
   }
 
@@ -65,7 +75,7 @@ export class AtInit {
       return CanvasKitInit({
         locateFile: () => uri
       }).then((skia: CanvasKit) => {
-        this.skia = skia
+        this.skia = skia as AtCanvasKit
         this.state = AtStateKind.Initialized
 
         do {
@@ -75,19 +85,26 @@ export class AtInit {
           }
         } while (this.queue.length > 0)
 
-      }).then(() => this.skia as CanvasKit)
+      }).then(() => this.skia)
     }
   }
 
+  /// => basic utility
+  /**
+   * 
+   * @param {VoidFunction} callback 
+   */
   idle (callback: VoidFunction) {
     requestIdleCallback(callback)
   }
 
-  /// => basic utility
+  /**
+   * 
+   * @param {RequestInfo} uri 
+   * @param {RequestInit?} init 
+   * @returns 
+   */
   fetch (uri: RequestInfo, init?: RequestInit) {
     return fetch(uri, init)
   }
-  
 }
-
-export const At = AtInit.create()

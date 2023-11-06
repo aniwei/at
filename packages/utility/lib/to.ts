@@ -1,7 +1,9 @@
+// @ts-nocheck
 import { At } from '@at/core'
 import { Offset } from '@at/geometry'
+// import { TextBox } from '@at/engine'
 
-import type { MallocObj } from 'canvaskit-wasm'
+import type { MallocObj, RectWithDirection, TextDirection } from 'canvaskit-wasm'
 
 const kMatrixIndexToMatrix4Index = [
   0, 4, 12, // Row 1
@@ -45,3 +47,36 @@ export function toPoints (points: ArrayLike<Offset>): MallocObj {
 
   return skia
 }
+
+/**
+ * 半径转 sigma
+ * @param radius 
+ * @returns 
+ */
+export function toSigma (radius: number) {
+  return radius > 0 ? radius * 0.57735 + 0.5 : 0
+}
+
+/**
+ * 转为 TextBox
+ * @param {RectWithDirection[]} rects 
+ * @param {TextDirection} textDirection 
+ * @returns {TextBox[]}
+ */
+// export function toTextBoxes (rects: RectWithDirection[], textDirection: TextDirection) {
+//   const result: TextBox[] = []
+
+//     for (let i = 0; i < rects.length; i++) {
+//       const rect: Float32Array = rects[i].rect
+
+//       result.push(TextBox.fromLTRBD(
+//         rect[0],
+//         rect[1],
+//         rect[2],
+//         rect[3],
+//         textDirection,
+//       ))
+//     }
+
+//     return result
+// }

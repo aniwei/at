@@ -1,6 +1,8 @@
 import { AssetError, AssetsManager } from '@at/asset'
 import { CanvasKit } from 'canvaskit-wasm'
-import { At } from './init'
+import { AtInit } from './init'
+
+export const At = AtInit.create()
 
 //// => Manifest
 export class AssetsManifest<T extends string> extends AssetsManager<T> {

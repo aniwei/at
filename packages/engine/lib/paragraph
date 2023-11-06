@@ -1,0 +1,752 @@
+import { invariant } from 'ts-invariant'
+import { Offset } from '@at/geometry'
+import { At } from '@at/core'
+import { Color } from '@at/basic'
+
+import { Paint } from './paint'
+import { StrutStyle, TextBox, TextHeightBehavior, TextLeadingDistributionKind, TextStyle } from './text'
+import * as Skia from './skia'
+
+//// => ParagraphCommand
+export enum ParagraphCommandType {
+  AddText,
+  Pop,
+  PushStyle,
+  AddPlaceholder,
+}
+
+export interface ParagraphCommandOptions {
+  type: ParagraphCommandType,
+  text?: string | null,
+  style?: TextStyle | null,
+  placeholderStyle?: ParagraphPlaceholder | null,
+}
+
+export class ParagraphCommand {
+  static create (options: ParagraphCommandOptions) {
+    return new ParagraphCommand(
+      options.type,
+      options?.text,
+      options?.style,
+      options?.placeholderStyle,
+    )
+  }
+
+  public type: ParagraphCommandType
+  public text: string | null = null
+  public style: TextStyle | null = null
+  public placeholderStyle: ParagraphPlaceholder | null = null
+
+  /**
+   * @param {ParagraphCommandType} type
+   * @param {string} text
+   * @param {TextStyle} style
+   * @param {ParagraphPlaceholder} placeholderStyle
+   * @return {*}
+   */
+  constructor (
+    type: ParagraphCommandType,
+    text: string | null = null,
+    style: TextStyle | null = null,
+    placeholderStyle: ParagraphPlaceholder | null = null,
+  ) {
+    this.type = type 
+    this.text = text ?? null
+    this.style = style ?? null
+    this.placeholderStyle = placeholderStyle ?? null
+  }
+
+  /**
+   * @description: 
+   * @param {string} text
+   * @return {*}
+   */
+  static addText (text: string) {
+    return new ParagraphCommand(
+      ParagraphCommandType.AddText, 
+      text, 
+      null, 
+      null
+    )
+  }
+
+  /**
+   * @return {*}
+   */
+  static pop () {
+    return ParagraphCommand.create({
+      type: ParagraphCommandType.Pop
+    })
+  }
+
+  /**
+   * @param {TextStyle} style
+   * @return {*}
+   */
+  static pushStyle (style: TextStyle) {
+    return ParagraphCommand.create({
+      type: ParagraphCommandType.PushStyle, 
+      style,
+    })
+  }
+
+  /**
+   * @param {ParagraphPlaceholder} placeholderStyle
+   * @return {*}
+   */
+  static addPlaceholder (placeholderStyle: ParagraphPlaceholder) {
+    return ParagraphCommand.create({
+      type: ParagraphCommandType.AddPlaceholder, 
+      placeholderStyle
+    })
+  }
+}
+
+//// => ParagraphConstraints
+// 段落文本约束
+export class ParagraphConstraints {
+  // 约束宽度
+  public width: number
+
+  /**
+   * @param {number} width
+   * @return {ParagraphConstraints}
+   */
+  constructor (width: number) {
+    this.width = width
+  }
+  
+  /**
+   * 是否相等
+   * @param {ParagraphConstraints} other
+   * @return {boolean}
+   */
+  equal (other: ParagraphConstraints) {
+    return (
+      other instanceof ParagraphConstraints && 
+      other.width === this.width
+    )
+  }
+
+  /**
+   * 是否相等
+   * @param {ParagraphConstraints} other 
+   * @returns {boolean}
+   */
+  notEqual (other: ParagraphConstraints) {
+    return !this.equal(other)
+  }
+  
+  /**
+   * @return {*}
+   */
+  toString () {
+    return `ParagraphConstraints([width]: ${this.width})`
+  }
+}
+
+//// => ParagraphStyle
+export interface ParagraphStyleOptions {
+  textAlign?: Skia.TextAlign | null
+  textDirection?: Skia.TextDirection | null
+  maxLines?: number | null
+  fontFamily?: string | null
+  fontSize?: number | null
+  height?: number | null
+  textHeightBehavior?: TextHeightBehavior | null
+  fontWeight?: Skia.FontWeight | null
+  fontStyle?: Skia.FontSlant | null
+  strutStyle?: StrutStyle | null
+  ellipsis?: string | null
+}
+
+export class ParagraphStyle extends Skia.ManagedSkiaRef<Skia.ParagraphStyle> {
+  /**
+   * 
+   * @param {ParagraphStyleOptions} options 
+   * @returns {ParagraphStyle}
+   */
+  static create (options?: ParagraphStyleOptions): ParagraphStyle {
+    return new ParagraphStyle(
+      options?.textAlign,
+      options?.textDirection,
+      options?.maxLines,
+      options?.fontFamily,
+      options?.fontSize,
+      options?.height,
+      options?.textHeightBehavior,
+      options?.fontWeight,
+      options?.fontStyle,
+      options?.strutStyle,
+      options?.ellipsis,
+    )
+  }
+
+  static resurrect (
+    textAlign: Skia.TextAlign | null = null,
+    textDirection: Skia.TextDirection | null = null,
+    maxLines: number | null = null,
+    fontFamily: string | null = null,
+    fontSize: number | null = null,
+    height: number | null = null,
+    textHeightBehavior: TextHeightBehavior | null = null,
+    fontWeight: Skia.FontWeight | null = null,
+    fontStyle: Skia.FontSlant | null = null,
+    strutStyle: StrutStyle | null = null,
+    ellipsis: string | null = null,
+  ) {
+    const properties: ParagraphStyle = {}
+    
+    if (
+      textAlign !== null && 
+      textAlign !== undefined
+    ) {
+      properties.textAlign = textAlign
+    }
+  
+    if (textDirection !== null) {
+      properties.textDirection = textDirection
+    }
+  
+    if (maxLines !== null) {
+      properties.maxLines = maxLines
+    }
+  
+    if (height !== null) {
+      properties.heightMultiplier = height;
+    }
+  
+    if (textHeightBehavior !== null) {
+      properties.textHeightBehavior = toTextHeightBehavior(textHeightBehavior)
+    }
+  
+    if (ellipsis !== null) {
+      properties.ellipsis = ellipsis
+    }
+  
+    if (strutStyle !== null) {
+      properties.strutStyle = toStrutStyle(
+        strutStyle, 
+        textHeightBehavior
+      )
+    }
+  
+    properties.textStyle = toTextStyle(
+      fontFamily, 
+      fontSize, 
+      height, 
+      fontWeight, 
+      fontStyle
+    )
+  
+    return new At.skia.ParagraphStyle(properties)
+  }
+
+  public textDirection: Skia.TextDirection | null
+  public fontFamily: string | null
+  public fontSize: number | null
+  public height: number | null
+  public fontWeight: Skia.FontWeight | null
+  public fontStyle: Skia.FontSlant | null
+  public leadingDistribution: TextLeadingDistributionKind | null
+
+  /**
+    * @description: 
+    * @return {*}
+    */
+  get textStyle () {
+    return TextStyle.create({
+      fontWeight: this.fontWeight,
+      fontStyle: this.fontStyle,
+      fontFamily: this.fontFamily,
+      fontSize: this.fontSize,
+      height: this.height,
+      leadingDistribution: this.leadingDistribution,
+    })
+  }
+
+  /**
+   * 
+   * @param textAlign 
+   * @param textDirection 
+   * @param maxLines 
+   * @param fontFamily 
+   * @param fontSize 
+   * @param height 
+   * @param textHeightBehavior 
+   * @param fontWeight 
+   * @param fontStyle 
+   * @param strutStyle 
+   * @param ellipsis 
+   */
+  constructor (
+    textAlign: Skia.TextAlign | null = null,
+    textDirection: Skia.TextDirection | null = null,
+    maxLines: number | null = null,
+    fontFamily: string | null = null,
+    fontSize: number | null = null,
+    height: number | null = null,
+    textHeightBehavior: TextHeightBehavior | null = null,
+    fontWeight: Skia.FontWeight | null = null,
+    fontStyle: Skia.FontSlant | null = null, // MAKE SURE?
+    strutStyle: StrutStyle | null = null,
+    ellipsis: string | null = null,
+  ) {
+
+    textDirection ??= At.skia.TextDirection.LTR 
+
+    const skia = ParagraphStyle.resurrect(
+      textAlign,
+      textDirection,
+      maxLines,
+      fontFamily,
+      fontSize,
+      height,
+      textHeightBehavior,
+      fontWeight,
+      fontStyle,
+      strutStyle,
+      ellipsis,
+    )
+
+    super(skia)
+
+    this.textDirection = textDirection ?? null
+    this.fontFamily = fontFamily ?? null
+    this.fontSize = fontSize ?? null
+    this.height = height ?? null
+    this.leadingDistribution = textHeightBehavior?.leadingDistribution ?? null 
+    this.fontWeight = fontWeight ?? null
+    this.fontStyle = fontStyle ?? null
+  } 
+}
+
+//// => Paragraph
+export class Paragraph extends Skia.ManagedSkiaRef<Skia.Paragraph> {
+  // TODO
+  // static SynchronousSkiaObjectCache _paragraphCache =
+  //     SynchronousSkiaObjectCache(500);
+
+  get skia () {
+    return this.ensure(this.lastLayoutConstraints!)
+  }
+
+  get paragraph () {
+    return this.skia
+  }
+
+  public height: number = 0
+  public width: number = 0
+  public longestLine: number = 0
+  public alphabeticBaseline: number = 0
+  public ideographicBaseline: number = 0
+  public maxIntrinsicWidth: number = 0
+  public minIntrinsicWidth: number = 0
+  public didExceedMaxLines: boolean = false
+  public boxesForPlaceholders: TextBox[] | null = null
+  public lastLayoutConstraints: ParagraphConstraints | null = null
+
+  public style: ParagraphStyle | null = null
+  public commands: ParagraphCommand[] = []
+
+  constructor (
+    paragraph: Paragraph,
+    style: ParagraphStyle,
+    commands: ParagraphCommand[],
+  ) {
+    super(paragraph)
+    this.style = style
+    this.commands = commands
+  }
+
+  /**
+   * @param {ParagraphConstraints} constraints
+   * @return {*}
+   */
+  ensure (constraints: ParagraphConstraints) {
+    let paragraph = this.paragraph ?? null
+    let didRebuild = false
+
+    if (paragraph === null) {
+      const builder = new ParagraphBuilder(this.style!)
+      
+      for (const command of this.commands) {
+        if (command.type === ParagraphCommandType.AddText) {
+          builder.addText(command.text!)
+        } else if (command.type === ParagraphCommandType.Pop) {
+          builder.pop()
+        } else if (command.type === ParagraphCommandType.PushStyle) {
+          builder.push(command.style!)
+        } else if (command.type === ParagraphCommandType.AddPlaceholder) {
+          const placeholderStyle = command.placeholderStyle!
+          builder.commands.push(ParagraphCommand.addPlaceholder(placeholderStyle))
+          builder.addPlaceholder(
+            placeholderStyle.width,
+            placeholderStyle.height,
+            placeholderStyle.alignment,
+            1.0,
+            placeholderStyle.offset,
+            placeholderStyle.baseline,
+          )
+        }
+      }
+
+      paragraph = this.paragraph = builder.buildParagraph()
+      didRebuild = true
+    }
+
+    const changed = !(this.lastLayoutConstraints?.equal(constraints))
+    if (didRebuild || changed) {
+      this.lastLayoutConstraints = constraints
+      // TODO(het): CanvasKit throws an exception when laid out with
+      // a font that wasn't registered.
+      try {
+        paragraph.layout(constraints.width)
+
+        this.alphabeticBaseline = paragraph.getAlphabeticBaseline()
+        this.didExceedMaxLines = paragraph.didExceedMaxLines()
+        this.height = paragraph.getHeight()
+        this.ideographicBaseline = paragraph.getIdeographicBaseline()
+        this.longestLine = paragraph.getLongestLine()
+        this.maxIntrinsicWidth = paragraph.getMaxIntrinsicWidth()
+        this.minIntrinsicWidth = paragraph.getMinIntrinsicWidth()
+        this.width = paragraph.getMaxWidth()
+        
+        // @TOCHECK
+        this.boxesForPlaceholders = this.skiaRectsToTextBoxes(paragraph.getRectsForPlaceholders())
+      } catch (error: any) {
+        throw new Error(`At threw an exception while laying out the paragraph. The font was "${this.style?.fontFamily}". `)
+      }
+    }
+
+    return paragraph
+  }
+
+  markUsed () {
+    // TODO
+    // if (!this.paragraphCache.markUsed(this)) {
+    //   this.paragraphCache.add(this);
+    // }
+  }
+
+  /**
+   * 处理
+   * @return {*}
+   */
+  dispose () {
+    this.paragraph?.delete()
+  }
+
+  /**
+   * @return {*}
+   */
+  getBoxesForPlaceholders () {
+    return this.boxesForPlaceholders!
+  }
+  
+  /**
+   * @description: 
+   * @return {*}
+   */
+  getBoxesForRange (
+    start: number,
+    end: number, 
+    boxHeightStyle: Skia.RectHeightStyle = At.skia.RectHeightStyle.Tight,
+    boxWidthStyle: Skia.RectHeightStyle = At.skia.RectWidthStyle.Tight,
+  ): TextBox[] {
+    if (start < 0 || end < 0) {
+      return []
+    }
+
+    invariant(this.lastLayoutConstraints)
+    const paragraph = this.ensure(this.lastLayoutConstraints)
+    const rects: Skia.RectWithDirection[] = paragraph.getRectsForRange(
+      start,
+      end,
+      boxHeightStyle,
+      boxWidthStyle,
+    ) as unknown as Skia.RectWithDirection[]
+
+    return toTextBoxes(rects)
+  }
+
+
+  /**
+   * @description: 
+   * @param {Offset} offset
+   * @return {*}
+   */  
+  getPositionForOffset (offset: Offset): AtTextPosition {
+    const paragraph = this.ensure(this.lastLayoutConstraints!)
+    const positionWithAffinity =
+      paragraph.getGlyphPositionAtCoordinate(
+      offset.dx,
+      offset.dy,
+    )
+    
+    return fromPositionWithAffinity(positionWithAffinity)
+  }
+  /**
+   * @param {TextPosition} position
+   * @return {*}
+   */  
+  getWordBoundary (position: AtTextPosition ): AtTextRange {
+    const paragraph = this.ensure(this.lastLayoutConstraints!)
+    const range = paragraph.getWordBoundary(position.offset)
+    return new TextRange(range.start, range.end)
+  }
+
+  /**
+   * 文本布局
+   * @param {ParagraphConstraints} constraints
+   * @return {void}
+   */  
+  layout (constraints: ParagraphConstraints) {
+    if (this.lastLayoutConstraints?.notEqual(constraints)) {
+      this.ensure(constraints)
+      this.markUsed()
+    }
+  }
+
+  /**
+   * @param {TextPosition} position
+   * @return {*}
+   */  
+  getLineBoundary (position: TextPosition): TextRange {
+    const paragraph = this.ensure(this.lastLayoutConstraints!)
+    const metrics: LineMetrics[] = paragraph.getLineMetrics()
+    const offset: number = position.offset
+
+    for (const metric of metrics) {
+      if (offset >= metric.startIndex && offset <= metric.endIndex) {
+        return new AtTextRange(
+          metric.startIndex, 
+          metric.endIndex
+        )
+      }
+    }
+    return new AtTextRange(-1, -1)
+  }
+
+  /**
+   * @description: 
+   * @return {*}
+   */  
+  computeLineMetrics (): AtLineMetrics[] {
+    const paragraph = this.ensureInitialized(this.lastLayoutConstraints!)
+    const sks: LineMetrics[] = paragraph.getLineMetrics()
+    const result: AtLineMetrics[] = []
+    for (const metric of sks) {
+      result.push(new AtLineMetrics(metric))
+    }
+    return result
+  }
+}
+
+//// => ParagraphBuilder
+export interface ParagraphPlaceholder {
+  width: number, 
+  height: number, 
+  alignment: Skia.PlaceholderAlignment, 
+  baseline: Skia.TextBaseline, 
+  offset: number, 
+}
+
+export class ParagraphBuilder extends Skia.ManagedSkiaRef<Skia.ParagraphBuilder> {
+  static resurrect<T extends Skia.SkiaRef>(style: ParagraphStyle): Skia.ParagraphBuilder {
+    const skia = At.skia.ParagraphBuilder.MakeFromFontProvider(
+      style.skia!,
+      At.fonts.provider as Skia.TypefaceFontProvider,
+    ) 
+
+    return skia
+  }
+
+  // => kDefaultTextForeground
+  static _kDefaultTextForeground: Paint | null = null
+  static get kDefaultTextForeground () {
+    if (this._kDefaultTextForeground === null) {
+      this._kDefaultTextForeground = Paint.create()
+    }
+
+    return this._kDefaultTextForeground
+  }
+
+  // => kDefaultTextBackground
+  static _kDefaultTextBackground: Paint | null = null
+  static get kDefaultTextBackground () {
+    if (this._kDefaultTextBackground === null) {
+      this._kDefaultTextBackground = Paint.create()
+      this._kDefaultTextBackground.color = Color.BLACK
+    } 
+    
+    return this._kDefaultTextBackground
+  }
+
+  // => builder
+  public get builder () {
+    invariant(this.skia)
+    return this.skia
+  }
+
+  public style: ParagraphStyle
+  public styles: TextStyle[] = []
+  public commands: ParagraphCommand[] = []
+  // => placeholder
+  // placeholder 相关成员
+  public count: number = 0
+  public scales: number[] = []
+
+  /**
+   * @param {ParagraphStyle} style
+   * @return {*}
+   */  
+  constructor (style: ParagraphStyle) {
+    const skia = ParagraphBuilder.resurrect(style)
+    super(skia)
+
+    this.style = style
+    this.styles.push(style.textStyle)
+  }
+  
+  /**
+   * @param {number} width
+   * @param {number} height
+   * @param {PlaceholderAlignment} alignment
+   * @param {number} scale
+   * @param {number} baselineOffset
+   * @param {TextBaseline} baseline
+   * @return {*}
+   */
+  addPlaceholder (
+    width: number,
+    height: number,
+    alignment: Skia.PlaceholderAlignment,
+    scale: number = 1.0,
+    baselineOffset: number | null = null,
+    baseline: Skia.TextBaseline | null = null,
+  ) {
+    this.count++
+    this.scales.push(scale)
+
+    const placeholderStyle: ParagraphPlaceholder = toPlaceholderStyle(
+      width * scale,
+      height * scale,
+      alignment,
+      (baselineOffset ?? height) * scale,
+      baseline ?? At.skia.TextBaseline.Alphabetic,
+    )
+
+    this.commands.push(ParagraphCommand.addPlaceholder(placeholderStyle))
+    this.builder.addPlaceholder(
+      placeholderStyle.width,
+      placeholderStyle.height,
+      placeholderStyle.alignment,
+      placeholderStyle.baseline,
+      placeholderStyle.offset,
+    )
+  }
+
+  /**
+   * @param {string} text
+   * @return {*}
+   */
+  addText (text: string) {
+    const fontFamilies: string[] = []
+    const style = this.peek() as TextStyle
+    
+    if (style.fontFamily !== null) {
+      fontFamilies.push(style.fontFamily!)
+    }
+
+    if (style.fontFamilyFallback !== null) {
+      for (const fontFamily of style.fontFamilyFallback) {
+        fontFamilies.push(fontFamily)
+      }
+    }
+
+    // TODO
+    // FontFallbackData.instance.ensureFontsSupportText(text, fontFamilies)
+    
+    this.commands.push(ParagraphCommand.addText(text))
+    this.builder.addText(text)
+  }
+
+  /**
+   * @description: 
+   * @return {*}
+   */
+  build () {
+    const builtParagraph = this.buildParagraph()
+
+    return new Paragraph(
+      builtParagraph, 
+      this.style, 
+      this.commands
+    )
+  }
+
+  /**
+   * @description: 
+   * @return {*}
+   */
+  buildParagraph () {
+    const result = this.builder.build()
+    this.builder.delete()
+    return result
+  }
+
+  /**
+   * @return {*}
+   */
+  pop () {
+    if (this.styles.length > 1) {
+      this.commands.push(ParagraphCommand.pop())
+      this.styles.pop()
+      this.builder.pop()
+    }
+  }
+
+  /**
+   * @description: 
+   * @return {*}
+   */
+  peek () {
+    invariant(this.styles.length > 0, 'The style stack was empty.')
+    return this.styles[this.styles.length - 1]
+  }
+    
+  /**
+   * @description: 
+   * @param {TextStyle} style
+   * @return {*}
+   */
+  push (style: TextStyle) {
+    const base = this.peek() as TextStyle
+    const merged = base.mergeWith(this.peek() as TextStyle)
+    
+    this.styles.push(merged)
+    this.commands.push(ParagraphCommand.pushStyle(style))
+    
+    if (
+      merged.foreground !== null || 
+      merged.background !== null
+    ) {
+      let foreground: Paint | null = merged.foreground?.skia!
+
+      if (foreground === null) {
+        ParagraphBuilder.defaultTextForeground.setColorInt(mergedStyle.color?.value ?? 0xFF0000)
+        foreground = ParagraphBuilder.defaultTextForeground
+      }
+
+      const background: Paint = mergedStyle.background?.skia ?? ParagraphBuilder.defaultTextBackground
+      this.builder.pushPaintStyle(
+        mergedStyle.textStyle, 
+        foreground as Paint, 
+        background
+      )
+    } else {
+      this.builder.pushStyle(mergedStyle.textStyle)
+    }
+  }
+}

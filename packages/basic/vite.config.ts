@@ -11,7 +11,8 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       external: [
-        'bytes'
+        '@at/engine',
+        'bytes',
       ]
     }
   }

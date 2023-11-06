@@ -13,6 +13,7 @@ export default defineConfig({
       external: [
         '@at/basic',
         '@at/core',
+        '@at/engine',
         '@at/geometry',
         'ts-invariant',
         'path-browserify'

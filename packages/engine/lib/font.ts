@@ -7,7 +7,7 @@ import type {
   TypefaceFontProvider 
 } from './skia'
 
-export type UnloadedFont = {
+export interface UnloadedFont {
   family: string,
   buffer?: ArrayBuffer,
   uri?: string
@@ -19,7 +19,7 @@ export type UnloadedFont = {
  */
 export class RegisteredFont {
   /**
-   * 
+   * 创建
    * @param {string} family 
    * @param {ArrayBuffer} buffer 
    * @param {Typeface} typeface 
@@ -67,7 +67,7 @@ export class Fonts {
   }
 
   public provider: TypefaceFontProvider | null = null
-  public unloaded: Promise<RegisteredFont | null>[] = []
+  public unloaded: Array<Promise<RegisteredFont | null>> = []
   
   public registered: RegisteredFont[] = []
   public familyToFont: Map<string, Font[]> = new Map()
@@ -121,11 +121,11 @@ export class Fonts {
    * @param {string} faimily
    * @return {*}
    */
-  register (data: ArrayBuffer, family: string): Promise<null | RegisteredFont>
-  register (url: string, family: string): Promise<null | RegisteredFont>
-  register (url: string | ArrayBuffer, family: string) {
+  register (data: ArrayBuffer, family: string): Promise<RegisteredFont | null>
+  register (url: string, family: string): Promise<RegisteredFont | null>
+  register (url: ArrayBuffer | string, family: string) {
     if (typeof url === 'string') {
-      return window.fetch(url)
+      return At.fetch(url)
         .then(resp => resp.arrayBuffer())
         .then((buffer: ArrayBuffer) => {
           const typeface = At.skia.Typeface.MakeFreeTypeFaceFromData(buffer)

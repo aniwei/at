@@ -1,5 +1,4 @@
-import { At } from './init'
-import { AtInstance } from './at'
+import { At, AtInstance } from './at'
 
 export class App<T extends string> extends AtInstance<T> {
 

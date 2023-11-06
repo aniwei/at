@@ -1,25 +1,24 @@
 // @ts-nocheck
 import { invariant } from 'ts-invariant'
-import { Offset, Radius, Rect, RRect } from '@at/geometry'
-import { Matrix4 } from '@at/math'
 import { At } from '@at/core'
+import { Matrix4 } from '@at/math'
+import { toMatrix, toPoints } from '@at/utility'
+import { Offset, Radius, Rect, RRect } from '@at/geometry'
 
 
 import * as Skia from './skia'
-import { toMatrix, toPoints } from '@at/utility'
 
 /**
- * @description: 路径类
  * @return {*}
  */
 export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
   /**
    * 创建 Path 对象
    * @param {Skia.Path} skia
-   * @returns {Skia.Path}
+   * @returns {Path}
    */
-  static create <M extends Skia.ManagedSkiaRef<T>, T extends Skia.SkiaRef<T>> (skia: Skia.Path): M {
-    return super.create(skia) as unknown as M
+  static create (skia: Skia.Path): Path {
+    return super.create(skia) as Path
   }
 
   /**
@@ -37,10 +36,10 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @param {Skia.FillType} fillType 
    * @returns {Skia.Path}
    */
-  static resurrect <T extends Skia.SkiaRef<T>> (cachedCommands: number[], fillType: Skia.FillType): T {
+  static resurrect (cachedCommands: number[], fillType: Skia.FillType): Skia.Path {
     const path = At.skia.Path.MakeFromCmds(cachedCommands) as Skia.Path
     path.setFillType(fillType)
-    return path as unknown as  T
+    return path as Skia.Path
   }
   /**
    * 从 Path 创建
@@ -49,7 +48,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    */  
   static from (other: Path) {
     invariant(other.skia)
-    const path = Path.create<Path, Skia.Path>(other.skia.copy() as Skia.Path)
+    const path = Path.create(other.skia.copy() as Skia.Path)
     path.fillType = other.fillType
     return path
   }
@@ -61,7 +60,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @return {Path}
    */
   static fromSkia (skia: Skia.Path, fillType: Skia.FillType) {
-    const path = Path.create<Path, Skia.Path>(skia)
+    const path = Path.create(skia)
     path.fillType = fillType
     return path
   }
@@ -80,6 +79,11 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
       op
     )
     return Path.fromSkia(skia as Skia.Path, pathA.fillType)
+  }
+
+  // => skia
+  public get skia () {
+    return super.skia as Skia.Path
   }
   
 
@@ -366,7 +370,6 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
   }
 
   /**
-   * @description: 
    * @param {number} x1
    * @param {number} y1
    * @param {number} x2
@@ -385,7 +388,6 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
   }
 
   /**
-   * @description: 
    * @param {number} x1
    * @param {number} y1
    * @param {number} x2
@@ -406,7 +408,6 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
   }
 
   /**
-   * @description: 
    * @param {number} dx
    * @param {number} dy
    * @param {number} dy
@@ -416,12 +417,16 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
     this.skia?.rLineTo(dx, dy)
   }
 
+  /**
+   * 
+   * @param {number} dx 
+   * @param {number} dy 
+   */
   relativeMoveTo (dx: number, dy: number) {
     this.skia?.rMoveTo(dx, dy)
   }
 
   /**
-   * @description: 
    * @param {number} x1
    * @param {number} y1
    * @param {number} x2
@@ -434,11 +439,11 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
     x2: number, 
     y2: number
   ) {
-    this.skia?.rQuadTo(x1, y1, x2, y2)
+    invariant(this.skia)
+    this.skia.rQuadTo(x1, y1, x2, y2)
   }
 
   /**
-   * @description: 
    * @param {number} x1
    * @param {number} y1
    * @param {number} x2
@@ -453,11 +458,11 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
     y2: number, 
     w: number
   ) {
+    invariant(this.skia)
     this.skia?.conicTo(x1, y1, x2, y2, w)
   }
 
   /**
-   * @description: 
    * @param {Matrix4} matrix4
    * @return {*}
    */
@@ -521,8 +526,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
   }
 
   /**
-   * @description: 
-   * @return {*}
+   * @return {Skia.Path}
    */
   resurrect (): Skia.Path {
     return Path.resurrect(this.cachedCommands ?? [], this.fillType)

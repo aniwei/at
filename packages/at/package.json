@@ -34,6 +34,7 @@
     "@at/asset": "workspace:^",
     "@at/basic": "workspace:^",
     "@at/engine": "workspace:^",
+    "@at/geometry": "workspace:^",
     "bytes": "^3.1.2",
     "canvaskit-wasm": "^0.38.0",
     "process": "^0.11.10"

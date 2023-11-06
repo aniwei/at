@@ -1,10 +1,39 @@
 import { invariant } from 'ts-invariant'
-import { Rect, RRect } from '@at/geometry'
-import { rrectIsValid } from '@at/utility'
 import { At } from '@at/core'
-
+import { ArgumentError, Color } from '@at/basic'
+import { Offset, Rect, RRect } from '@at/geometry'
+import { offsetIsValid, rectIsValid, rrectIsValid, toMatrix } from '@at/utility'
 import { Path } from './path'
 import { Paint } from './paint'
+import { Picture } from './picture'
+import { Image } from './image'
+// import { Paragraph } from './paragraph'
+import { 
+  ClearCommand, 
+  ClipPathCommand, 
+  ClipRectCommand, 
+  ClipRRectCommand, 
+  DrawArcCommand, 
+  DrawCircleCommand, 
+  DrawImageNineCommand, 
+  DrawLineCommand, 
+  DrawOvalCommand, 
+  DrawPaintCommand, 
+  // DrawParagraphCommand, 
+  DrawRectCommand, 
+  DrawRRectCommand, 
+  DrawShadowCommand, 
+  PaintCommand, 
+  RestoreCommand, 
+  RestoreToCountCommand, 
+  RotateCommand, 
+  SaveCommand, 
+  SaveLayerCommand, 
+  SaveLayerWithoutBoundsCommand, 
+  Snapshot, 
+  TransformCommand
+} from './snapshot'
+
 
 import * as Skia from './skia'
 
@@ -14,13 +43,269 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
    * @param skia 
    * @returns 
    */
-  static create <M extends Skia.ManagedSkiaRef<T>, T extends Skia.SkiaRef<T>> (skia: Skia.Canvas): M {
-    return super.create(skia) as unknown as M
+  static create (...rests: unknown[]): Canvas
+  static create (skia: Skia.Canvas): Canvas {
+    return super.create(skia) as Canvas
   }
   // => save count
   // 保存计数
   public get count () {
-    return this.skia?.getSaveCount()
+    return this.skia.getSaveCount()
+  }
+
+  public get skia () {
+    invariant(super.skia)
+    return super.skia as Skia.Canvas
+  }
+
+  /**
+   * 画圆
+   * @param {Point} offset
+   * @param {number} radius
+   * @param {*} paint
+   * @return {*}
+   */
+  drawCircle (point: Offset, radius: number, paint: Paint) {
+    this.skia.drawCircle(
+      point[0],
+      point[1],
+      radius,
+      paint.skia!
+    )
+  }
+
+  /**
+   * 着色
+   * @param {Color} color 
+   * @param {BlendMode} blendMode 
+   */
+  drawColor (color: Color, blendMode: Skia.BlendMode) {
+    this.skia.drawColorInt(color.value, blendMode)
+  }
+
+  /** 
+   * 绘制矩形
+   * @param {Rect} rect
+   * @param {Paint} paint
+   * @return {void}
+   */
+  drawRect (rect: Rect, paint: Paint) {
+    invariant(rectIsValid(rect), 'The "rect" argument was invalid.')
+    this.skia.drawRect(rect, paint.skia!)
+  }
+
+  /**
+   * 绘制圆角矩形
+   * @param {RRect} rrect
+   * @param {Paint} paint
+   * @return {*}
+   */
+  drawRRect (rrect: RRect, paint: Paint) {
+    invariant(rrectIsValid(rrect), 'The "rrect" argument was invalid.')
+    this.skia.drawRRect(rrect, paint.skia)
+  }
+
+  /**
+   * 绘制双 RRect
+   * @param {RRect} outer 
+   * @param {RRect} inner 
+   * @param {Paint} paint 
+   */
+  drawDRRect (outer: RRect, inner: RRect, paint: Paint) {
+    invariant(rrectIsValid(outer), `The outer is invalid.`)
+    invariant(rrectIsValid(inner), `The inner is invalid.`)
+    this.skia.drawDRRect(outer, inner, paint.skia)
+  }
+
+  /**
+   * @param {Image} image
+   * @param {Offset} Offset
+   * @param {Paint} paint
+   * @return {*}
+   */
+  drawImage (image: Image, point: Offset, paint: Paint) {
+    invariant(offsetIsValid(point), `The argument point is invalid.`)
+    const quality = paint.filter?.quality
+    
+    if (quality === At.skia.FilterQuality.High) {
+      this.skia.drawImageCubic(
+        image.skia,
+        point.dx,
+        point.dy,
+        1.0 / 3.0, // CanvasMitchellNetravaliB
+        1.0 / 3.0, // CanvasMitchellNetravaliC
+        paint.skia,
+      )
+    } else {
+      this.skia.drawImageOptions(
+        image.skia,
+        point.dx,
+        point.dy,
+        quality === At.skia.FilterQuality.None 
+          ? At.skia.FilterMode.Nearest 
+          : At.skia.FilterMode.Linear,
+          quality === At.skia.FilterQuality.Medium 
+          ? At.skia.MipmapMode.Linear 
+          : At.skia.MipmapMode.None,
+        paint.skia,
+      )
+    }
+  }
+
+  /**
+   * @param {Image} image
+   * @param {Rect} src
+   * @param {Rect} dst
+   * @param {Paint} paint
+   * @return {*}
+   */
+  drawImageRect (image: Image, src: Rect, dst: Rect, paint: Paint) {
+    invariant(rectIsValid(src), 'The "src" argument was invalid.')
+    invariant(rectIsValid(dst), 'The "dst" argument was invalid.')
+
+    const quality = paint.filter?.quality
+    if (quality === At.skia.FilterQuality.High) {
+      this.skia.drawImageRectCubic(
+        image.skia,
+        src,
+        dst,
+        1.0 / 3.0,
+        1.0 / 3.0,
+        paint.skia,
+      )
+    } else {
+      this.skia.drawImageRectOptions(
+        image.skia,
+        src,
+        dst,
+        quality === At.skia.FilterQuality.None 
+          ? At.skia.FilterMode.Nearest 
+          : At.skia.FilterMode.Linear,
+          quality === At.skia.FilterQuality.Medium 
+          ? At.skia.MipmapMode.Linear 
+          : At.skia.MipmapMode.None,
+        paint.skia,
+      )
+    }
+  }
+
+  /**
+   * @param {Image} image
+   * @param {Rect} center
+   * @param {Rect} dist
+   * @param {Paint} paint
+   * @return {*}
+   */
+  drawImageNine (image: Image, center: Rect, dist: Rect, paint: Paint) {    
+    invariant(rectIsValid(center), `The argument "center" is invalid.`)
+    invariant(rectIsValid(dist), `The argument "dist" is invalid.`)
+
+    this.skia.drawImageNine(
+      image.skia,
+      center,
+      dist,
+      paint.filter?.quality === At.skia.FilterQuality.None 
+        ? At.skia.FilterMode.Nearest 
+        : At.skia.FilterMode.Linear,
+      paint.skia,
+    )
+  }
+
+  /**
+   * 绘制线
+   * @param {Offset} pointA
+   * @param {Offset} pointB
+   * @param {Paint} paint
+   * @return {void}
+   */
+  drawLine (pointA: Offset, pointB: Offset, paint: Paint) {
+    this.skia.drawLine(
+      pointA.dx,
+      pointA.dy,
+      pointB.dx,
+      pointB.dy,
+      paint.skia!,
+    )
+  }
+
+  /**
+   * 绘制椭圆
+   * @param {Paint} paint
+   * @return {void}
+   */
+  drawOval (rect: Rect, paint: Paint) {
+    this.skia.drawOval(rect, paint.skia)
+  }
+
+  /**
+   * 添加画笔
+   * @param {Paint} paint
+   * @return {void}
+   */
+  drawPaint (paint: Paint) {
+    this.skia.drawPaint(paint.skia)
+  }
+
+  /**
+   * 绘制文本
+   * @param {Paragraph} paragraph
+   * @param {Offset} offset
+   * @return {void}
+   */
+  // TODO
+  // drawParagraph (paragraph: Paragraph, offset: Offset) {
+  //   invariant(offsetIsValid(offset), `The offset argument was invalid.`)
+    
+  //   this.skia.drawParagraph(paragraph.skia, offset.dx, offset.dy)
+  //   paragraph.markUsed()
+  // }
+
+  /**
+   * 画圆角
+   * @param {Rect} oval 
+   * @param {number} startAngle 
+   * @param {number} sweepAngle 
+   * @param {boolean} useCenter 
+   * @param {Paint} paint 
+   */
+  drawArc (
+    oval: Rect,
+    startAngle: number,
+    sweepAngle: number,
+    useCenter: boolean,
+    paint: Paint
+  ) {
+    const degree = 180.0 / Math.PI
+    this.skia.drawArc(
+      oval,
+      startAngle * degree,
+      sweepAngle * degree,
+      useCenter,
+      paint.skia
+    )
+  }
+
+  /**
+   * 
+   * @param path 
+   * @param color 
+   * @param elevation 
+   * @param transparentOccluder 
+   */
+  drawShadow (
+    path: Path, 
+    color: Color, 
+    elevation: number, 
+    transparentOccluder: boolean
+  ) {
+    // this.drawSkiaShadow(
+    //   this.skia, 
+    //   path, 
+    //   color, 
+    //   elevation, 
+    //   transparentOccluder,
+    //   At.devicePixelRatio
+    // )
   }
 
   /**
@@ -33,15 +318,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
     path: Path, 
     doAntiAlias: boolean = true
   ) {
-    invariant(path !== null, `The path cannot be null.`)
-    invariant(doAntiAlias !== null, `The doAntiAlias cannot be null.`)
-    invariant(this.skia)
-
-    this.skia.clipPath(
-      path.skia as Skia.Path, 
-      At.skia.ClipOp.Intersect, 
-      doAntiAlias
-    )
+    this.skia.clipPath(path.skia, At.skia.ClipOp.Intersect, doAntiAlias)
   }
 
   /**
@@ -51,15 +328,8 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
    * @return {void}
    */
   clipRRect (rrect: RRect, doAntiAlias: boolean = true) {
-    invariant(rrectIsValid(rrect), `The argument rrect is invalid.`)
-    invariant(doAntiAlias !== null, `The argument doAntiAlias cannot be null.`)
-    invariant(this.skia)
-
-    this.skia.clipRRect(
-      rrect as unknown as number[], 
-      At.skia.ClipOp.Intersect, 
-      doAntiAlias
-    )
+    invariant(rrectIsValid(rrect), 'The argument "rrect" is invalid.')
+    this.skia.clipRRect(rrect, At.skia.ClipOp.Intersect, doAntiAlias)
   }
 
   /**
@@ -70,40 +340,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
    * @return {void}
    */
   clipRect (rect: Rect, clipOp: Skia.ClipOp, doAntiAlias = true) {
-    invariant(clipOp !== null, `The argument clipOp cannot be null.`)
-    invariant(doAntiAlias !== null, `The argument doAntiAlias cannot be null.`)
-    invariant(this.skia)
-    this.skia.clipRect(
-      rect as unknown as number[], 
-      clipOp, 
-      doAntiAlias
-    )
-  }
-
-  /**
-   * 画圆角
-   * @param {Rect} oval 
-   * @param {number} startAngle 
-   * @param {number} sweepAngle 
-   * @param {boolean} useCenter 
-   * @param {AtPaint} paint 
-   */
-  drawArc (
-    oval: Rect,
-    startAngle: number,
-    sweepAngle: number,
-    useCenter: boolean,
-    paint: Paint
-  ) {
-    invariant(this.skia)
-    const degree = 180.0 / Math.PI
-    this.skia.drawArc(
-      oval as unknown as number[],
-      startAngle * degree,
-      sweepAngle * degree,
-      useCenter,
-      paint.skia as Skia.Paint
-    )
+    this.skia.clipRect(rect, clipOp, doAntiAlias)
   }
 
   /**
@@ -123,7 +360,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
   //   colors: Uint32Array,
   //   blendMode: Skia.BlendMode
   // ) {
-  //   this.skia?.drawAtlas(
+  //   this.skia.drawAtlas(
   //     atlas.skia as Skia.Image,
   //     rects,
   //     rstTransforms,
@@ -132,4 +369,387 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
   //     colors
   //   )
   // }
+
+  save () {
+    return this.skia.save()
+  }
+
+  saveLayer (bounds: Rect | null = null, paint: Paint) {
+    this.skia.saveLayer(paint.skia, bounds, null)
+  }
+
+  /**
+   * @param {Rect} bounds
+   * @param {ImageFilter} filter
+   * @param {Paint} paint
+   * @return {*}
+   */
+  // TODO
+  // saveLayerWithFilter (bounds: Rect, filter: AtImageFilter, paint: AtPaint) {
+  //   const convertible: AtManagedSkiaImageFilterConvertible = filter
+
+  //   return this.skia.saveLayer(paint.skia as Paint, bounds, convertible.imageFilter.skia, 0)
+  // }
+
+  restore () {
+    this.skia.restore()
+  }
+
+  restoreToCount (count: number) {
+    this.skia.restoreToCount(count)
+  }
+
+  rotate (radians: number) {
+    this.skia.rotate(radians * 180.0 / Math.PI, 0.0, 0.0)
+  }
+
+  /**
+   * @description: 
+   * @param {number} sx
+   * @param {number} sy
+   * @return {*}
+   */
+  scale (sx: number, sy: number = sx) {
+    this.skia.scale(sx, sy)
+  }
+
+  /**
+   * @param {number} sx
+   * @param {number} sy
+   * @return {*}
+   */
+  skew (sx: number, sy: number) {
+    this.skia.skew(sx, sy)
+  }
+
+  /**
+   * @param {number[]} matrix4
+   * @return {void}
+   */
+  transform (matrix4: number[]) {
+    invariant(matrix4 !== null, 'The "matrix4" cannot be null.')
+
+    if (matrix4.length !== 16) {
+      throw new ArgumentError('"matrix4" must have 16 entries.', 'matrix4')
+    }
+
+    this.skia.concat(toMatrix(matrix4))
+  }
+
+  /**
+   * 坐标变换
+   * @param {number} dx 
+   * @param {number} dy 
+   */
+  translate (dx: number, dy: number) {
+    this.skia.translate(dx, dy)
+  }
+
+  clear (color: Color) {
+    this.skia.clear(color)
+  }
+}
+
+export class Recorder extends Canvas {
+  static create (bounds: Rect | null = null) {
+    return new Recorder(bounds)
+  }
+
+  protected snapshot: Snapshot
+  protected cullRect: Rect | null = null
+  protected prictue: Skia.PictureRecorder | null = null
+
+  /**
+   * 
+   * @param {Rect} bounds 
+   */
+  constructor (bounds: Rect | null = null) {
+    invariant(Rect.LARGEST)
+    const prictue = new At.skia.PictureRecorder()
+    const cullRect = bounds ?? Rect.LARGEST
+    super(prictue.beginRecording(cullRect))
+
+    this.prictue = prictue
+    this.cullRect = cullRect
+    this.snapshot = new Snapshot(cullRect)
+  }
+
+  stop () {
+    invariant(this.prictue, `AtRecorder is not recording`)
+
+    const picture = this.prictue?.finishRecordingAsPicture()
+    this.prictue.delete()
+    this.prictue = null
+
+    return new Picture(picture, this.cullRect, this.snapshot)
+  }
+
+  addCommand (command: PaintCommand) {
+    this.snapshot.commands.push(command)
+  }
+
+  clear (color: Color) {
+    super.clear(color)
+    this.addCommand(ClearCommand.create(color))
+  }
+
+  clipPath (path: Path, doAntiAlias: boolean) {
+    super.clipPath(path, doAntiAlias)
+    this.addCommand(ClipPathCommand.create(path, doAntiAlias))
+  }
+  
+  clipRRect (rrect: RRect, doAntiAlias: boolean) {
+    super.clipRRect(rrect, doAntiAlias);
+    this.addCommand(ClipRRectCommand.create(rrect, doAntiAlias))
+  }
+
+  clipRect (rect: Rect, clipOp: Skia.ClipOp, doAntiAlias: boolean) {
+    super.clipRect(rect, clipOp, doAntiAlias)
+    this.addCommand(ClipRectCommand.create(rect, clipOp, doAntiAlias))
+  }
+
+  /**
+   * 
+   * @param oval 
+   * @param startAngle 
+   * @param sweepAngle 
+   * @param useCenter 
+   * @param paint 
+   */
+  drawArc (
+    oval: Rect,
+    startAngle: number,
+    sweepAngle: number,
+    useCenter: boolean,
+    paint: Paint
+  ) {
+    super.drawArc(oval, startAngle, sweepAngle, useCenter, paint);
+    this.addCommand(DrawArcCommand.create(oval, startAngle, sweepAngle, useCenter, paint))
+  }
+
+  /**
+   * 
+   * @param paint 
+   * @param atlas 
+   * @param rstTransforms 
+   * @param rects 
+   * @param colors 
+   * @param blendMode 
+   */
+  drawAtlasRaw(
+    paint: Paint,
+    atlas: Image,
+    rstTransforms: Float32Array,
+    rects: Float32Array,
+    colors: Uint32Array,
+    blendMode: Skia.BlendMode
+  ) {
+    // super.drawAtlasRaw(paint, atlas, rstTransforms, rects, colors, blendMode)
+    // TODO
+    // this.addCommand(new AtDrawAtlasCommand(paint, atlas, rstTransforms, rects, colors, blendMode))
+  }
+
+  /**
+   * 
+   * @param point 
+   * @param radius 
+   * @param paint 
+   */
+  drawCircle (
+    point: Offset,
+    radius: number,
+    paint: Paint
+  ) {
+    super.drawCircle(point, radius, paint)
+    this.addCommand(DrawCircleCommand.create(point, radius, paint))
+  }
+  
+  /**
+   * 
+   * @param color 
+   * @param blendMode 
+   */
+  drawColor (color: Color, blendMode: Skia.BlendMode) {
+    super.drawColor(color, blendMode)
+    // @TODO
+    // this.addCommand(DrawColorCommand.create(color, blendMode))
+  }
+  
+  drawDRRect (outer: RRect, inner: RRect, paint: Paint) {
+    super.drawDRRect(outer, inner, paint)
+    // @TODO
+    // this.addCommand(DrawDRRectCommand.create(outer, inner, paint))
+  }
+
+  
+  drawImage (image: Image, point: Offset, paint: Paint) {
+    super.drawImage(image, point, paint)
+    // @TODO
+    // this.addCommand(new AtDrawImageCommand(image, point, paint))
+  }
+
+  
+  drawImageRect (
+    image: Image, 
+    src: Rect, 
+    dst: Rect, 
+    paint: Paint
+  ) {
+    super.drawImageRect(image, src, dst, paint)
+    // TODO
+    // this.addCommand(new AtDrawImageRectCommand(image, src, dst, paint))
+  }
+
+  drawImageNine (
+    image: Image, 
+    center: Rect, 
+    dist: Rect, 
+    paint: Paint
+  ) {
+    super.drawImageNine(image, center, dist, paint)
+    this.addCommand(DrawImageNineCommand.create(image, center, dist, paint))
+  }
+  
+  drawLine (pointA: Offset, pointB: Offset, paint: Paint) {
+    super.drawLine(pointA, pointB, paint)
+    this.addCommand(DrawLineCommand.create(pointA, pointB, paint))
+  }
+  
+  drawOval (rect: Rect, paint: Paint) {
+    super.drawOval(rect, paint)
+    this.addCommand(DrawOvalCommand.create(rect, paint))
+  }
+  
+  drawPaint (paint: Paint) {
+    super.drawPaint(paint)
+    this.addCommand(DrawPaintCommand.create(paint))
+  }
+  
+  // @TODO
+  // drawParagraph (
+  //   paragraph: Paragraph,
+  //   point: Offset
+  // ) {
+  //   super.drawParagraph(paragraph, point)
+  //   this.addCommand(DrawParagraphCommand.create(paragraph, point))
+  // }
+  // 
+  // drawPath (path: AtPath, paint: Paint) {
+  //   super.drawPath(path, paint)
+  //   this.addCommand(new AtDrawPathCommand(path, paint))
+  // }
+  //
+  // drawPicture (picture: AtPicture) {
+  //   super.drawPicture(picture)
+  //   this.addCommand(new DrawPictureCommand(picture))
+  // }
+  //
+  //
+  // drawPoints (
+  //   paint: Paint,
+  //   pointMode: PointMode, 
+  //   points: Point[]
+  // ) {
+  //   super.drawPoints(paint, pointMode, points)
+  //   this.addCommand(new AtDrawPointsCommand(pointMode, points, paint))
+  // }
+
+  
+  drawRRect (
+    rrect: RRect, 
+    paint: Paint 
+  ) {
+    super.drawRRect(rrect, paint)
+    this.addCommand(DrawRRectCommand.create(rrect, paint))
+  }
+  
+  drawRect (rect: Rect, paint: Paint) {
+    super.drawRect(rect, paint)
+    this.addCommand(DrawRectCommand.create(rect, paint))
+  }
+  
+  drawShadow (
+    path: Path, 
+    color: Color, 
+    elevation: number, 
+    transparentOccluder: boolean    
+  ) {
+    super.drawShadow(path, color, elevation, transparentOccluder)
+    this.addCommand(DrawShadowCommand.create(path, color, elevation, transparentOccluder))
+  }
+
+  
+  // drawVertices(
+  //     CkVertices vertices, ui.BlendMode blendMode, CkPaint paint) {
+  //   super.drawVertices(vertices, blendMode, paint);
+  //   this.addCommand(CkDrawVerticesCommand(vertices, blendMode, paint));
+  // }  
+  restore() {
+    super.restore()
+    this.addCommand(RestoreCommand.create())
+  }
+
+  restoreToCount (count: number) {
+    super.restoreToCount(count)
+    this.addCommand(RestoreToCountCommand.create(count))
+  }
+
+  rotate (radians: number) {
+    super.rotate(radians)
+    this.addCommand(RotateCommand.create(radians))
+  }
+
+  
+  save (): number {
+    const result =  super.save()
+    this.addCommand(SaveCommand.create())
+    return result
+  }
+
+  
+  saveLayer (
+    bounds: Rect | null = null, 
+    paint: Paint
+  ) {
+    super.saveLayer(bounds, paint)
+
+    if (bounds === null) {
+      this.addCommand(SaveLayerWithoutBoundsCommand.create(paint))
+    } else {
+      this.addCommand(SaveLayerCommand.create(bounds, paint))
+    }
+  }
+  
+  // saveLayerWithFilter (
+  //   bounds: Rect, 
+  //   filter: AtImageFilter, 
+  //   paint: Paint
+  // ) {
+  //   super.saveLayerWithFilter(bounds, filter, paint)
+  //   this.addCommand(new AtSaveLayerWithFilterCommand(bounds, filter, paint))
+  // }
+
+  
+  scale (sx: number, sy: number) {
+    super.scale(sx, sy)
+    // TODO
+    // this.addCommand(ScaleCommand.create(sx, sy))
+  }
+
+  
+  skew (sx: number, sy: number) {
+    super.skew(sx, sy)
+    // this.addCommand(SkewCommand.create(sx, sy))
+  }
+  
+  transform (matrix4: number[]) {
+    super.transform(matrix4)
+    this.addCommand(TransformCommand.create(matrix4))
+  }
+
+  translate (dx: number, dy: number) {
+    super.translate(dx, dy)
+    // @TODO
+    // this.addCommand(TranslateCommand.create(dx, dy))
+  }
 }

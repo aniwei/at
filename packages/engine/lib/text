@@ -1,0 +1,998 @@
+import { invariant } from 'ts-invariant'
+import { Color, Equalable } from '@at/basic'
+import { listEquals } from '@at/utility'
+import { Rect } from '@at/geometry'
+import { At } from '@at/core'
+
+import { Paint } from './paint'
+import { Shadow } from './shadow'
+import * as Skia from './skia'
+
+//// => TextHeightBehavior
+// 文本高度行为
+export enum TextLeadingDistributionKind {
+  Proportional,
+  Even,
+}
+
+export interface TextHeightBehaviorOptions {
+  applyHeightToFirstAscent?: boolean
+  applyHeightToLastDescent?: boolean
+  leadingDistribution?: TextLeadingDistributionKind
+}
+
+export class TextHeightBehavior implements Equalable<TextHeightBehavior> {
+  static create (options?: TextHeightBehaviorOptions) {
+    return new TextHeightBehavior(
+      options?.applyHeightToFirstAscent,
+      options?.applyHeightToLastDescent,
+      options?.leadingDistribution,
+    )
+  }
+
+  public applyHeightToFirstAscent: boolean
+  public applyHeightToLastDescent: boolean
+  public leadingDistribution: TextLeadingDistributionKind
+ 
+  /**
+   * 
+   * @param {boolean} applyHeightToFirstAscent 
+   * @param {boolean} applyHeightToLastDescent 
+   * @param {boolean} leadingDistribution 
+   */
+  constructor (
+    applyHeightToFirstAscent: boolean = true,
+    applyHeightToLastDescent: boolean = true,
+    leadingDistribution: TextLeadingDistributionKind = TextLeadingDistributionKind.Proportional,
+  ) {
+    this.applyHeightToFirstAscent = applyHeightToFirstAscent
+    this.applyHeightToLastDescent = applyHeightToLastDescent
+    this.leadingDistribution = leadingDistribution
+  }
+
+  /**
+   * @param {TextHeightBehavior} other
+   * @returns {boolean}
+   */  
+  equal (other: TextHeightBehavior | null) {
+    
+    return (
+      other instanceof TextHeightBehavior &&
+      other.applyHeightToFirstAscent === this.applyHeightToFirstAscent &&
+      other.applyHeightToLastDescent === this.applyHeightToLastDescent &&
+      other.leadingDistribution === this.leadingDistribution
+    )
+  }
+
+  /**
+   * 
+   * @param {TextHeightBehavior | null} other  
+   * @returns {boolean}
+   */
+  notEqual (other: TextHeightBehavior | null) {
+    return !this.equal(other)
+  }
+
+  toString () {
+    return `TextHeightBehavior(
+      [applyHeightToFirstAscent]: ${this.applyHeightToFirstAscent},
+      [applyHeightToLastDescent]: ${this.applyHeightToLastDescent},
+      [leadingDistribution]: ${this.leadingDistribution},
+    )`
+  }
+}
+
+
+//// => TextBox
+export class TextBox implements Equalable<TextBox> {
+  /**
+   * @param {number} left
+   * @param {number} top
+   * @param {number} right
+   * @param {number} bottom
+   * @param {AtTextDirection} direction
+   * @return {*}
+   */
+  static fromLTRBD (
+    left: number,
+    top: number,
+    right: number,
+    bottom: number,
+    direction: Skia.TextDirection,
+  ) {
+    return new TextBox(
+      left,
+      top,
+      right,
+      bottom,
+      direction,
+    )
+  }
+
+  // => start
+  // 开始位置
+  get start () {
+    return (this.direction === At.skia.TextDirection.LTR) 
+      ? this.left 
+      : this.right
+  }
+
+  // => end
+  // 结束为止
+  get end () {
+    return (this.direction === At.skia.TextDirection.LTR) 
+      ? this.right 
+      : this.left
+  }
+
+  // 位置
+  public left: number
+  public top: number
+  public right: number
+  public bottom: number
+  // 文本方向
+  public direction: Skia.TextDirection
+
+  /**
+   * @description: 
+   * @param {number} left
+   * @param {number} top
+   * @param {number} right
+   * @param {number} bottom
+   * @param {Skia.TextDirection} direction
+   * @return {TextBox}
+   */
+  constructor (
+    left: number,
+    top: number,
+    right: number,
+    bottom: number,
+    direction: Skia.TextDirection,
+  ) {
+    this.left = left
+    this.top = top
+    this.right = right
+    this.bottom = bottom
+    this.direction = direction
+  }
+
+  /**
+   * 导出文本位置
+   * @return {Rect}
+   */
+  toRect (): Rect {
+    return Rect.fromLTRB(
+      this.left, 
+      this.top, 
+      this.right, 
+      this.bottom
+    )
+  }
+  /**
+   * @param {TextBox} other
+   * @return {boolean}
+   */
+  equal (other: TextBox | null) {
+    return (
+      other instanceof TextBox &&
+      other.left === this.left &&
+      other.top === this.top &&
+      other.right === this.right &&
+      other.bottom === this.bottom &&
+      other.direction === this.direction
+    )
+  }
+
+  notEqual (other: TextBox | null) {
+    return !this.equal(other)
+  }
+}
+
+//// => TextDecoration
+export enum TextDecorationKind {
+  None = 0x0,
+  Underline = 0x1,
+  Overline = 0x2,
+  LineThrough = 0x4
+}
+
+export class TextDecoration implements Equalable<TextDecoration> {
+  static NONE: TextDecoration = new TextDecoration(TextDecorationKind.None)
+  static UNDERLINE: TextDecoration = new TextDecoration(TextDecorationKind.Underline)
+  static OVERLINE: TextDecoration = new TextDecoration(TextDecorationKind.Overline)
+  static LINE_THROUGHT: TextDecoration = new TextDecoration(TextDecorationKind.LineThrough)
+
+  static create (mask: TextDecorationKind) {
+    return new TextDecoration(mask)
+  }
+
+  /**
+   * 合并
+   * @param {TextDecoration[]} decorations
+   * @return {TextDecoration}
+   */  
+  static combine (decorations: TextDecoration[]) {
+    let mask = 0
+    for (const decoration of decorations) {
+      mask |= decoration.mask
+    }
+
+    return new TextDecoration(mask)
+  }
+
+  public mask: TextDecorationKind
+
+  /**
+   * 文本装饰
+   * @param {TextDecorationKind} mask
+   * @return {TextDecoration}
+   */
+  constructor (mask: TextDecorationKind) {
+    this.mask = mask
+  }
+
+  /**
+   * @param {TextDecoration} other
+   * @return {*}
+   */
+  contains (other: TextDecoration) {
+    return (this.mask | other.mask) === this.mask
+  }
+  
+  /**
+   * 是否相等
+   * @param {TextDecoration} other
+   * @return {boolean}
+   */
+  equal (other: TextDecoration | null) {
+    return (
+      other instanceof TextDecoration && 
+      other.mask === this.mask
+    )
+  }
+
+  /**
+   * 是否相等
+   * @param {TextDecoration | null} other 
+   * @returns {boolean}
+   */
+  notEqual (other: TextDecoration | null): boolean {
+    return !this.equal(other)
+  }
+
+  /**
+   * @return {*}
+   */
+  toString () {
+    return `TextDecoration([mask]: ${this.mask})`
+  }
+}
+
+//// => TextStyle
+// 文本样式
+export type TextStyleOptions = {
+  color?: Color | null
+  decoration?: TextDecoration | null
+  decorationColor?: Color | null
+  decorationStyle?: Skia.DecorationStyle | null
+  decorationThickness?: number | null
+  fontWeight?: Skia.FontWeight | null
+  fontStyle?: Skia.FontSlant | null
+  textBaseline?: Skia.TextBaseline | null
+  fontFamily?: string | null
+  fontFamilyFallback?: string[] | null
+  fontSize?: number | null
+  letterSpacing?: number | null
+  wordSpacing?: number | null
+  height?: number | null
+  leadingDistribution?: TextLeadingDistributionKind | null
+  background?: Paint | null
+  foreground?: Paint | null
+  shadows?: Shadow[] | null
+  fontFeatures?: FontFeature[] | null
+}
+
+export class TextStyle {
+  static create (options?: TextStyleOptions) {
+    return new TextStyle(
+      options?.color,
+      options?.decoration,
+      options?.decorationColor,
+      options?.decorationStyle,
+      options?.decorationThickness,
+      options?.fontWeight,
+      options?.fontStyle,
+      options?.textBaseline,
+      options?.fontFamily,
+      options?.fontFamilyFallback,
+      options?.fontSize,
+      options?.letterSpacing,
+      options?.wordSpacing,
+      options?.height,
+      options?.leadingDistribution,
+      options?.background,
+      options?.foreground,
+      options?.shadows,
+      options?.fontFeatures
+    )
+  }
+
+  // => effectiveFontFamilies
+  protected _effectiveFontFamilies: string[] | null = null
+  public get effectiveFontFamilies (): string[] {
+    if (this._effectiveFontFamilies === null) {
+      const fontFamilies: string[] = []
+      const fontFamily = this.fontFamily
+      const fontFamilyFallback = this.fontFamilyFallback
+      
+        if (fontFamily !== null) {
+          fontFamilies.push(fontFamily)
+        }
+      
+        if (
+          fontFamilyFallback !== null &&
+          !fontFamilyFallback.every((font: string) => fontFamily === font)
+        ) {
+          for (const font of fontFamilyFallback) {
+            fontFamilies.push(font)
+          }
+        }
+      
+        // TODO
+        // fontFamilies.addAll(FontFallbackData.instance.globalFontFallbacks);
+        this._effectiveFontFamilies = fontFamilies 
+    }
+
+    return this._effectiveFontFamilies
+  }
+
+  private _textStyle: TextStyle | null = null
+  public get textStyle () {
+    if (this._textStyle === null) {
+      const properties: TextStyle = {
+        fontFamilies: this.effectiveFontFamilies
+      }
+
+      if (this.background !== null) {
+        properties.backgroundColor = toFreshColor(this.background.color)
+      }
+  
+      if (this.color !== null) {
+        properties.color = toFreshColor(this.color)
+      }
+
+      if (this.decoration !== null) {
+        let decorationValue = At.NoDecoration
+        if (this.decoration.contains(TextDecoration.underline)) {
+          decorationValue |= At.UnderlineDecoration
+        }
+        if (this.decoration.contains(TextDecoration.overline)) {
+          decorationValue |= At.OverlineDecoration
+        }
+        if (this.decoration.contains(TextDecoration.lineThrough)) {
+          decorationValue |= At.LineThroughDecoration
+        }
+        properties.decoration = decorationValue
+      }
+
+      if (this.decorationThickness !== null) {
+        properties.decorationThickness = this.decorationThickness
+      }
+  
+      if (this.decorationColor !== null) {
+        properties.decorationColor = toFreshColor(this.decorationColor)
+      }
+  
+      if (this.decorationStyle !== null) {
+        properties.decorationStyle = this.decorationStyle
+      }
+  
+      if (this.textBaseline !== null) {
+        properties.textBaseline = this.textBaseline
+      }
+  
+      if (this.fontSize !== null) {
+        properties.fontSize = this.fontSize
+      }
+  
+      if (this.letterSpacing !== null) {
+        properties.letterSpacing = this.letterSpacing
+      }
+  
+      if (this.wordSpacing !== null) {
+        properties.wordSpacing = this.wordSpacing
+      }
+  
+      if (this.height !== null) {
+        properties.heightMultiplier = this.height
+      }
+  
+      switch (this.leadingDistribution) {
+        case null:
+          break
+        case TextLeadingDistribution.Even:
+          properties.halfLeading = true
+          break;
+        case TextLeadingDistribution.Proportional:
+          properties.halfLeading = false
+          break
+      }
+  
+      if (this.fontWeight !== null || this.fontStyle !== null) {
+        properties.fontStyle = toFontStyle(this.fontWeight, this.fontStyle)
+      }
+  
+      if (this.foreground !== null) {
+        properties.foregroundColor = toFreshColor(this.foreground.color)
+      }
+  
+      if (this.shadows !== null) {
+        properties.shadows = this.shadows?.map(shadow => {
+          return {
+            color: toFreshColor(shadow.color),
+            offset: shadow.offset,
+            blurRadius: shadow.blurRadius
+          }
+        })
+      }
+  
+      if (this.fontFeatures !== null) {
+        properties.fontFeatures = this.fontFeatures.map(({ feature, value }) => {
+          return {
+            name: feature,
+            value: value as number
+          }
+        })
+      }
+
+      this._textStyle = new At.skia.TextStyle(properties)
+    }
+
+    return this._textStyle
+  }
+
+  public color: Color | null
+  public decoration: TextDecoration | null
+  public decorationColor: Color | null
+  public decorationStyle: Skia.DecorationStyle | null
+  public decorationThickness: number | null
+  public fontWeight: Skia.FontWeight | null
+  public fontStyle: Skia.FontSlant | null
+  public textBaseline: Skia.TextBaseline | null
+  public fontFamily: string | null
+  public fontFamilyFallback: string[] | null
+  public fontSize: number | null
+  public letterSpacing: number | null
+  public wordSpacing: number | null
+  public height: number | null
+  public leadingDistribution: TextLeadingDistributionKind | null
+  public background: Paint | null
+  public foreground: Paint | null
+  public shadows: Shadow[] | null
+  public fontFeatures: FontFeature[] | null
+
+  constructor (
+    color: Color | null = null,
+    decoration: TextDecoration | null = null,
+    decorationColor: Color | null = null,
+    decorationStyle: Skia.DecorationStyle | null = null,
+    decorationThickness: number | null = null,
+    fontWeight: Skia.FontWeight | null = null,
+    fontStyle: Skia.FontSlant | null = null,
+    textBaseline: Skia.TextBaseline | null = null,
+    fontFamily: string | null = null,
+    fontFamilyFallback: string[] | null = null,
+    fontSize: number | null = null,
+    letterSpacing: number | null = null,
+    wordSpacing: number | null = null,
+    height: number | null = null,
+    leadingDistribution: TextLeadingDistributionKind | null = null,
+    background: Paint | null = null,
+    foreground: Paint | null = null,
+    shadows: Shadow[] | null = null,
+    fontFeatures: FontFeature[] | null = null,
+  ) {
+    this.color = color 
+    this.decoration = decoration 
+    this.decorationColor = decorationColor 
+    this.decorationStyle = decorationStyle 
+    this.decorationThickness = decorationThickness 
+    this.fontWeight = fontWeight 
+    this.fontStyle = fontStyle 
+    this.textBaseline = textBaseline 
+    this.fontFamily = fontFamily 
+    this.fontFamilyFallback = fontFamilyFallback 
+    this.fontSize = fontSize 
+    this.letterSpacing = letterSpacing 
+    this.wordSpacing = wordSpacing 
+    this.height = height 
+    this.leadingDistribution = leadingDistribution 
+    this.background = background 
+    this.foreground = foreground 
+    this.shadows = shadows 
+    this.fontFeatures = fontFeatures 
+  }
+
+  /**
+   * 样式合并
+   * @param {TextStyle} other
+   * @return {*}
+   */
+  mergeWith (other: TextStyle): TextStyle  {
+    return new TextStyle(
+      other.color ?? this.color,
+      other.decoration ?? this.decoration,
+      other.decorationColor ?? this.decorationColor,
+      other.decorationStyle ?? this.decorationStyle,
+      other.decorationThickness ?? this.decorationThickness,
+      other.fontWeight ?? this.fontWeight,
+      other.fontStyle ?? this.fontStyle,
+      other.textBaseline ?? this.textBaseline,
+      other.fontFamily ?? this.fontFamily,
+      other.fontFamilyFallback ?? this.fontFamilyFallback,
+      other.fontSize ?? this.fontSize,
+      other.letterSpacing ?? this.letterSpacing,
+      other.wordSpacing ?? this.wordSpacing,
+      other.height ?? this.height,
+      other.leadingDistribution ?? this.leadingDistribution,
+      other.background ?? this.background,
+      other.foreground ?? this.foreground,
+      other.shadows ?? this.shadows,
+      other.fontFeatures ?? this.fontFeatures,
+    )
+  }
+}
+
+//// => StructStyle
+export interface StructStyleOptions {
+  fontFamily: string | null 
+  fontFamilyFallback: string[] | null 
+  fontSize: number | null 
+  height: number | null 
+  leadingDistribution: TextLeadingDistributionKind | null 
+  leading: number | null 
+  fontWeight: Skia.FontWeight | null 
+  fontStyle: Skia.FontSlant | null 
+  forceStrutHeight: boolean | null 
+}
+
+/**
+ * @description: 
+ * @return {*}
+ */
+export class StrutStyle implements Equalable<StrutStyle> {
+  static create (options?: StructStyleOptions) {
+    return new StrutStyle(
+      options?.fontFamily,
+      options?.fontFamilyFallback,
+      options?.fontSize,
+      options?.height,
+      options?.leadingDistribution,
+      options?.leading,
+      options?.fontWeight,
+      options?.fontStyle,
+      options?.forceStrutHeight,
+    )
+  }
+
+  public fontFamily: string | null
+  public fontFamilyFallback: string[] | null
+  public fontSize: number | null
+  public height: number | null
+  public leading: number | null
+  public fontWeight: Skia.FontWeight | null
+  public fontStyle: Skia.FontSlant | null
+  public forceStrutHeight: boolean | null
+  public leadingDistribution: TextLeadingDistributionKind | null
+  
+  /**
+   * @param {string} fontFamily
+   * @param {string} fontFamilyFallback
+   * @param {number} fontSize
+   * @param {number} height
+   * @param {TextLeadingDistributionKind} leadingDistribution
+   * @param {number} leading
+   * @param {Skia.FontWeight} fontWeight
+   * @param {Skia.FontSlant} fontStyle
+   * @param {boolean} forceStrutHeight
+   * @return {*}
+   */
+  constructor (
+    fontFamily: string | null = null,
+    fontFamilyFallback: string[] | null = null,
+    fontSize: number | null = null,
+    height: number | null = null,
+    leadingDistribution: TextLeadingDistributionKind | null = null,
+    leading: number | null = null,
+    fontWeight: Skia.FontWeight | null = null,
+    fontStyle: Skia.FontSlant | null = null,
+    forceStrutHeight: boolean | null = null,
+  ) {
+    
+    this.fontFamily = fontFamily
+    this.fontFamilyFallback = fontFamilyFallback
+    this.fontSize = fontSize
+    this.height = height
+    this.leadingDistribution = leadingDistribution
+    this.leading = leading
+    this.fontWeight = fontWeight
+    this.fontStyle = fontStyle
+    this.forceStrutHeight = forceStrutHeight
+  }  
+
+  /**
+   * 是否相等
+   * @param {StrutStyle} other
+   * @return {boolean}
+   */
+  equal (other: StrutStyle | null) {
+    return (
+      other instanceof StrutStyle &&
+      other.fontFamily === this.fontFamily &&
+      other.fontSize === this.fontSize &&
+      other.height === this.height &&
+      other.leading === this.leading &&
+      other.leadingDistribution === this.leadingDistribution &&
+      other.fontWeight === this.fontWeight &&
+      other.fontStyle === this.fontStyle &&
+      other.forceStrutHeight === this.forceStrutHeight &&
+      listEquals<string>(other.fontFamilyFallback ?? [], this.fontFamilyFallback ?? [])
+    )
+  }
+
+  /**
+   * 是否相等
+   * @param {StrutStyle | null} other 
+   * @returns {boolean} 
+   */
+  notEqual (other: StrutStyle | null) {
+    return !this.equal(other)
+  }
+}
+
+//// => TextRange
+export class TextRange implements Equalable<TextRange> {
+  static EMPTY: TextRange = new TextRange(-1, -1)
+
+  static create (start: number, end: number) {
+    return new TextRange(start, end)
+  }
+
+  static collapsed (offset: number) {
+    return TextRange.create(offset, offset)
+  }
+
+  // => valid
+  // 是否有效的
+  get valid () {
+    return  this.start >= 0 && this.end >= 0
+  }
+
+  // => collapsed
+  // 折叠的
+  get collapsed () {
+    return this.start === this.end
+  }
+  
+  // => normalized
+  // 正常的
+  get normalized () {
+    return this.end >= this.start
+  }
+
+  public start: number
+  public end: number
+
+  /**
+   * @param {number} start
+   * @param {number} end
+   */
+  constructor (start: number, end: number) {
+    invariant(start >= -1, 'The argument "start" must be gather than -1.')
+    invariant(end >= -1, 'The argument "end" must be gather than -1.')
+
+    this.start = start
+    this.end = end
+  }
+
+  /**
+   * @param {string} text
+   * @return {*}
+   */
+  textBefore (text: string): string {
+    invariant(this.normalized)
+    return text.substring(0, this.start)
+  }
+
+  /**
+   * @description: 
+   * @param {string} text
+   * @return {*}
+   */
+  textAfter (text: string): string {
+    invariant(this.normalized)
+    return text.substring(this.end)
+  }
+
+  /**
+   * @description: 
+   * @param {string} text
+   * @return {*}
+   */
+  textInside (text: string): string {
+    invariant(this.normalized)
+    return text.substring(this.start, this.end)
+  }
+
+  
+  /**
+   * 是否相等
+   * @param {TextRange} other
+   * @return {*}
+   */
+  equal (other: TextRange | null) {
+    return (
+      other instanceof TextRange && 
+      other.start === this.start && 
+      other.end === this.end
+    )
+  }
+
+  /**
+   * 是否相等
+   * @param {TextRange | null} other 
+   * @return {boolean}
+   */
+  notEqual (other: TextRange | null) {
+    return !this.equal(other)
+  }
+
+  /**
+   * @return {string}
+   */
+  toString () {
+    return `TextRange(
+      [start]: ${this.start}, 
+      [end]: ${this.end}
+    )`
+  }
+}
+
+//// => TextPosition
+export interface TextPositionOptions {
+  offset: number
+  affinity?: Skia.Affinity
+}
+
+export class TextPosition implements Equalable<TextPosition> {
+  static create (options: TextPositionOptions) {
+    return new TextPosition(
+      options.offset,
+      options.affinity
+    )
+  }
+
+  public offset: number
+  public affinity: Skia.Affinity
+
+  /**
+   * @param {number} offset
+   * @param {Skia.Affinity} affinity
+   * @return {*}
+   */
+  constructor (offset: number, affinity: Skia.Affinity = At.skia.Affinity.Downstream) {
+    invariant(offset !== null, `The argument cannot be null.`) 
+    invariant(affinity !== null, `The argument affinity cannot be null.`)
+
+    this.offset = offset
+    this.affinity = affinity
+  }
+  
+  /**
+   * 是否相等
+   * @param {TextPosition} other
+   * @return {boolean}
+   */
+  equal (other: TextPosition | null) {
+    return (
+      other instanceof TextPosition &&
+      other.offset === this.offset &&
+      other.affinity === this.affinity
+    )
+  }
+
+  /**
+   * 是否相等
+   * @param {TextPosition | null} 
+   * @returns {boolean}
+   */
+  notEqual (other: TextPosition | null) {
+    return !this.equal(other)
+  }
+  
+  toString () {
+    return `TextPosition(
+      [offset]: ${this.offset}, 
+      [affinity]: ${this.affinity}
+    )`
+  }
+}
+
+//// => TextSelection
+export type TextSelectionOptions = {
+  baseOffset: number,
+  extentOffset: number,
+  affinity?: Skia.Affinity,
+  isDirectional?: boolean
+}
+
+export class TextSelection extends TextRange {
+  static create (start: TextSelectionOptions | number, end?: number) {
+    invariant(!end)
+    invariant(start)
+    const options = start as TextSelectionOptions
+
+    return new TextSelection(
+      options.baseOffset,
+      options.extentOffset,
+      options?.affinity,
+      options?.isDirectional
+    )
+  }
+
+  constructor (
+    baseOffset: number,
+    extentOffset: number,
+    affinity = At.skia.Affinity.Downstream,
+    isDirectional: boolean = false,
+  ) {
+    super(
+      baseOffset < extentOffset ? baseOffset : extentOffset,
+      baseOffset < extentOffset ? extentOffset : baseOffset,
+    )
+
+    this.baseOffset = baseOffset
+    this.extentOffset = extentOffset
+    this.affinity = affinity
+    this.isDirectional = isDirectional
+  }
+  
+  static collapsed(
+    offset: number,
+    affinity: Skia.Affinity = At.skia.Affinity.Downstream,
+  ) {
+    return TextSelection.create({
+      baseOffset: offset,
+      extentOffset: offset,
+      isDirectional: false,
+      affinity
+    })
+  }
+
+  static fromPosition (position: TextPosition) {
+    return TextSelection.create({
+      baseOffset: position.offset,
+      extentOffset: position.offset,
+      affinity: position.affinity,
+      isDirectional: false
+    })
+  }
+  
+  public get base (): TextPosition {
+    let affinity: Skia.Affinity
+    
+    if (!this.valid || this.baseOffset === this.extentOffset) {
+      affinity = this.affinity
+    } else if (this.baseOffset < this.extentOffset) {
+      affinity = At.skia.Affinity.Downstream
+    } else {
+      affinity = At.skia.Affinity.Upstream
+    }
+
+    return TextPosition.create({
+      offset: this.baseOffset,
+      affinity
+    })
+  }
+
+  public get extent (): TextPosition {
+    let affinity: Skia.Affinity
+    if (!this.valid || this.baseOffset === this.extentOffset) {
+      affinity = this.affinity
+    } else if (this.baseOffset < this.extentOffset) {
+      affinity = At.skia.Affinity.Upstream
+    } else {
+      affinity = At.skia.Affinity.Downstream
+    }
+    
+    return new TextPosition(this.extentOffset, affinity)
+  }
+
+  public baseOffset: number
+  public extentOffset: number
+  public affinity: Skia.Affinity
+  public isDirectional: boolean
+
+  equal (other: TextSelection | null) {
+    return (
+      other instanceof TextSelection &&
+      other.baseOffset === this.baseOffset &&
+      other.extentOffset === this.extentOffset &&
+      other.isDirectional === this.isDirectional &&
+      (!this.collapsed || other.affinity === this.affinity)
+    )
+  }
+
+  notEqual (other: TextSelection | null) {
+    return !this.equal(other)
+  }
+  
+  copyWith (
+    baseOffset?: number | null,
+    extentOffset?: number | null,
+    affinity?: Skia.Affinity | null,
+    isDirectional?: boolean | null,
+  ) {
+    return TextSelection.create({
+      baseOffset: baseOffset ?? this.baseOffset,
+      extentOffset: extentOffset ?? this.extentOffset,
+      affinity: affinity ?? this.affinity,
+      isDirectional: isDirectional ?? this.isDirectional,
+    })
+  }
+
+  expandTo (position: TextPosition, extentAtIndex: boolean = false): TextSelection {
+    if (position.offset >= this.start && position.offset <= this.end) {
+      return this;
+    }
+
+    const normalized = this.baseOffset <= this.extentOffset
+    if (position.offset <= this.start) {
+      if (extentAtIndex) {
+        return this.copyWith(
+          this.end,
+          position.offset,
+          position.affinity,
+          false
+        )
+      }
+      return this.copyWith(
+        normalized ? position.offset : this.baseOffset,
+        normalized ? this.extentOffset : position.offset,
+        null,
+        false
+      )
+    }
+    if (extentAtIndex) {
+      return this.copyWith(
+        this.start,
+        position.offset,
+        position.affinity,
+        false
+      )
+    }
+    return this.copyWith(
+      normalized ? this.baseOffset : position.offset,
+      normalized ? position.offset : this.extentOffset,
+      null,
+      false
+    )
+  }
+
+  extendTo (position: TextPosition): TextSelection {
+    if (this.extent === position) {
+      return this
+    }
+
+    return this.copyWith(
+      position.offset,
+      null,
+      position.affinity,
+      false
+    )
+  }
+    
+  toStrin () {
+    return ``
+  }
+}

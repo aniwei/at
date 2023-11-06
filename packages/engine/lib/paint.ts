@@ -2,13 +2,15 @@ import { At } from '@at/core'
 import { Color } from '@at/basic'
 import * as Skia from './skia'
 
+
+//// => PaintBoxRef
 export interface PaintRefBoxFactory<T> {
   new (...rests: unknown[]): T
   create (...rests: unknown[]): T
 }
 export abstract class PaintRefBox {
-  static create<T> (...rests: unknown[]): T
-  static create<T> (box: Skia.Paint | Skia.SkiaRefBox<PaintRefBox, Skia.Paint>): T {
+  static create<T extends PaintRefBox> (...rests: unknown[]): PaintRefBox
+  static create<T extends PaintRefBox> (box: Skia.Paint | Skia.SkiaRefBox<PaintRefBox, Skia.Paint>): PaintRefBox {
     const Factory = this as unknown as PaintRefBoxFactory<T>
     return new Factory(box)
   }
@@ -51,8 +53,13 @@ export abstract class PaintRefBox {
   }
 }
 
-//// => PaintStroke
+//// => Stroke
+// 路径类
 export class Stroke extends PaintRefBox { 
+  static create (...rests: unknown[]) {
+    return super.create(...rests) as Stroke
+  }
+
   // => miterLimit
   protected _miterLimit: number = 0
   public get miterLimit () {
@@ -73,7 +80,7 @@ export class Stroke extends PaintRefBox {
   public set width (width: number) {
     if (this.width !== width) {
       this._width = width
-      this.skia?.setStrokeWidth(width)
+      this.skia.setStrokeWidth(width)
     }
   }
 
@@ -85,7 +92,7 @@ export class Stroke extends PaintRefBox {
   public set cap (cap: Skia.StrokeCap) {
     if (this._cap !== cap) {
       this._cap = cap
-      this.skia?.setStrokeCap(cap)
+      this.skia.setStrokeCap(cap)
     }
   }
 
@@ -96,14 +103,18 @@ export class Stroke extends PaintRefBox {
   public set join (join: Skia.StrokeJoin) {
     if (this.join !== join) {
       this._join = join
-      this.skia?.setStrokeJoin(join)
+      this.skia.setStrokeJoin(join)
     }
   }
   protected _join: Skia.StrokeJoin = At.skia.StrokeJoin.Miter
 }
 
-//// => PaintFilter
-export class PaintFilter extends Skia.ManagedSkiaRef<Skia.Paint> {
+//// => Filter
+// 滤镜类
+export class Filter extends PaintRefBox {
+  static create (...rests: unknown[]) {
+    return super.create(...rests) as Filter
+  }
   // => invertColors colors
   // protected _invertColors: boolean = false
   // public get invertColors () {
@@ -191,28 +202,37 @@ export class PaintFilter extends Skia.ManagedSkiaRef<Skia.Paint> {
   // }
 
   // => filter quality
-  // protected _quality: FilterQuality = At.FilterQuality.None
-  // public get quality () {
-  //   return this._quality
-  // }
-  // public set quality (quality: FilterQuality) {
-  //   if (this.quality !== quality) {
-  //     this._quality = quality
-  //     this.skia.setShader((this.shader).withQuality(this.quality))
-  //   }
-  // }
+  protected _quality: Skia.FilterQuality = At.skia.FilterQuality.None
+  public get quality () {
+    return this._quality
+  }
+  public set quality (quality: Skia.FilterQuality) {
+    if (this.quality !== quality) {
+      this._quality = quality
+      // TODO
+      // this.skia.setShader((this.shader).withQuality(this.quality))
+    }
+  }
 
   // public originalColor: ManagedSkiaColorFilter | null = null
   // public effectiveColor: ManagedSkiaColorFilter | null = null
   // public managedImage: ManagedSkiaRef<ImageFilter> | null = null
 }
 
+
+//// => Paint
 export class Paint extends PaintRefBox {
-  static create <Paint> (...rests: unknown[]): Paint {
-    return super.create(new At.skia.Paint())
+  static create (...rests: unknown[]) {
+    return super.create(new At.skia.Paint()) as Paint
+  }
+
+  static resurrect (): Skia.Paint {
+    const paint = new At.skia.Paint()
+    return paint
   }
 
   // => stroke
+  // 线
   protected _stroke: Stroke | null = null
   public get stroke () {
     return this._stroke
@@ -222,10 +242,26 @@ export class Paint extends PaintRefBox {
       if (this._stroke !== null) {
         this._stroke.dispose()
       }
-
+      
       this._stroke = stroke
     }
   }
+
+   // => filter
+   // 滤镜对象
+   protected _filter: Filter | null = null
+   public get filter () {
+     return this._filter
+   }
+   public set filter (filter: Filter | null) {
+     if (this._filter !== filter) {
+       if (this._filter !== null) {
+         this._filter.dispose()
+       }
+       
+       this._filter = filter
+     }
+   }
 
   // => blendMode
   protected _blendMode: Skia.BlendMode = At.skia.BlendMode.SrcOver
@@ -277,7 +313,6 @@ export class Paint extends PaintRefBox {
   }
 
   /**
-   * @description: 
    * @param {Paint} skia
    * @return {AtPaint}
    */  
@@ -285,16 +320,16 @@ export class Paint extends PaintRefBox {
     super(new At.skia.Paint())
 
     this.stroke = Stroke.create(this.box)
+    this.filter = Filter.create(this.box)
 
     this.skia.setAntiAlias(this.isAntiAlias)
     this.skia.setColorInt(this.color.value)
   }
 
   /**
-   * @description: 
-   * @return {Paint}
+   * @return {Skia.Paint}
    */  
-  resurrect (): Paint {
-    throw new Error('')
+  resurrect (): Skia.Paint {
+    return Paint.resurrect()
   }
 }

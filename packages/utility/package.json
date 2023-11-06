@@ -27,6 +27,7 @@
   "dependencies": {
     "@at/basic": "workspace:^",
     "@at/core": "workspace:^",
+    "@at/engine": "workspace:^",
     "@at/geometry": "workspace:^",
     "canvaskit-wasm": "^0.38.0",
     "path-browserify": "^1.0.1",

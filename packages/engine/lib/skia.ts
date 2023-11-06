@@ -4,27 +4,53 @@ import { At } from '@at/core'
 
 //// => Skia
 export type {
+  Affinity,
+  AnimatedImage,
   BlendMode,
   Canvas,
   ClipOp,
+  DecorationStyle,
   FillType,
   FilterOptions,
   Font,
+  FontWeight,
+  FontSlant,
   Image,
   Path,
   Paint,
   PaintStyle,
+  Paragraph,
+  ParagraphStyle,
+  ParagraphBuilder,
   PathEffect,
   PathOp,
+  PlaceholderAlignment,
+  SkPicture as Picture,
+  PictureRecorder,
+  RectHeightStyle,
+  RectWithDirection,
+  Shader,
   StrokeCap,
   StrokeJoin,
+  Surface,
+  TextAlign,
+  TextBaseline,
+  TextDirection,
   Typeface,
   TypefaceFontProvider
 } from 'canvaskit-wasm'
 
+//// => extend Skia
+export enum FilterQuality {
+  None,
+  Low,
+  Medium,
+  High,
+}
+
 //// => SkiaRef
 // WASM 数据结构
-export abstract class SkiaRef<T extends SkiaRef<T>> {
+export abstract class SkiaObj<T extends SkiaObj<T>> {
   abstract clone (): T
   abstract delete (): void
   abstract deleteLater (): void
@@ -32,37 +58,43 @@ export abstract class SkiaRef<T extends SkiaRef<T>> {
   abstract isDeleted (): boolean
 }
 
+export abstract class SkiaRef extends SkiaObj<SkiaRef> {}
+
 //// => ManagedSkiaRef
 // WASM 对象管理，对象垃圾回收
-export interface ManagedSkiaRefFactory<T extends SkiaRef<T>>{
+export interface ManagedSkiaRefFactory<T extends SkiaRef = SkiaRef>{
   new (...rests: unknown[]) : ManagedSkiaRef<T>
   create (...rests: unknown[]): ManagedSkiaRef<T>
   resurrect (...rests: unknown[]): T
 }
 
-export abstract class ManagedSkiaRef<T extends SkiaRef<T>> extends Equalable<ManagedSkiaRef<T>> {
+export abstract class ManagedSkiaRef<T extends SkiaRef = SkiaRef> extends Equalable<ManagedSkiaRef<T>> {
   /**
    * 
    * @param skia 
    */
-  static create <M extends ManagedSkiaRef<T>, T extends SkiaRef<T>> (...rests: unknown[]): M
-  static create <M extends ManagedSkiaRef<T>, T extends SkiaRef<T>> (skia: T): M {
+  static create <T extends SkiaRef = SkiaRef> (...rests: unknown[]): ManagedSkiaRef<SkiaRef>
+  static create <T extends SkiaRef = SkiaRef> (skia: T): ManagedSkiaRef<SkiaRef> {
     const Factory = this as unknown as ManagedSkiaRefFactory<T>
-    return new Factory(skia) as unknown as M
+    return new Factory(skia) as unknown as ManagedSkiaRef<T>
   }
 
-  static resurrect <T extends SkiaRef<T>> (...rests: unknown[]): T {
-    throw new UnimplementedError()
+  static resurrect <T extends SkiaRef> (...rests: unknown[]): SkiaRef {
+    throw new UnimplementedError('The "resurrect" method is not implemented.')
   }
 
   protected ref: T | null
 
   // => skia
   get skia () {
-    invariant(this.ref !== null, `The ref cannot be null.`)
+    invariant(this.ref !== null, `The "ref" cannot be null.`)
     return this.ref as T
   }
   set skia (skia: T | null) {
+    if (this.ref !== null) {
+      At.refs.unregister(this)
+    }
+
     if (skia !== null) {
       At.refs.register(this, skia)
     }
@@ -126,7 +158,7 @@ export abstract class ManagedSkiaRef<T extends SkiaRef<T>> extends Equalable<Man
 
 //// => SkiaRefBox
 // 引用计数箱子
-export class SkiaRefBox<R, T extends SkiaRef<T>> {
+export class SkiaRefBox<R, T extends SkiaRef = SkiaRef> {
   // 引用计数
   protected count: number = 0
   protected referrers: Set<R> = new Set()
