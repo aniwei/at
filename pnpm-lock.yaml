@@ -179,6 +179,9 @@ importers:
 
   packages/basic:
     dependencies:
+      '@at/utility':
+        specifier: workspace:^
+        version: link:../utility
       bytes:
         specifier: ^3.1.2
         version: 3.1.2
@@ -263,6 +266,9 @@ importers:
       '@at/basic':
         specifier: workspace:^
         version: link:../basic
+      '@at/utility':
+        specifier: workspace:^
+        version: link:../utility
       bytes:
         specifier: ^3.1.2
         version: 3.1.2

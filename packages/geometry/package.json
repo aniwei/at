@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@at/basic": "workspace:^",
+    "@at/utility": "workspace:^",
     "bytes": "^3.1.2"
   }
 }

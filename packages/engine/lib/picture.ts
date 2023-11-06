@@ -48,23 +48,13 @@ export class Picture extends Skia.ManagedSkiaRef<Skia.Picture> {
   }
 
   /**
-   * @description: 
-   * @return {void}
-   */  
-  dispose () {
-    invariant(!this.disposed, 'AtPicture object has been disposed.')
-    this.snapshot?.dispose()  
-    this.delete()
-    this.disposed = true
-  }
-
-  /**
+   * 转位图
    * @param {number} width
    * @param {number} height
    * @return {Image}
    */
   toImage (width: number, height: number): Image {
-    invariant(!this.disposed, `The AtPicture object cannot be disposed.`)
+    invariant(!this.disposed, 'The Picture object cannot be disposed when export to image.')
     const surface: Skia.Surface = At.skia.MakeSurface(width, height)!
     const canvas = surface.getCanvas()
     
@@ -78,7 +68,7 @@ export class Picture extends Skia.ManagedSkiaRef<Skia.Picture> {
   }
 
   /**
-   * @description: 
+   * 重新创建
    * @return {IPicture}
    */  
   resurrect () {
@@ -87,12 +77,13 @@ export class Picture extends Skia.ManagedSkiaRef<Skia.Picture> {
   }
 
   /**
-   * @description: 
+   * 释放
    * @return {void}
    */  
-  delete () {
-    if (!this.disposed) {
-      super.delete()
-    }
+  dispose () {
+    invariant(!this.disposed, 'AtPicture object has been disposed.')
+    this.snapshot?.dispose()  
+    this.delete()
+    this.disposed = true
   }
 }

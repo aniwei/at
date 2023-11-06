@@ -1,5 +1,5 @@
 import invariant from 'ts-invariant'
-import { lerp } from '@at/basic'
+import { lerp } from '@at/utility'
 import { Point } from './point'
 import { Offset } from './offset'
 

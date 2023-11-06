@@ -9,7 +9,10 @@ export default defineConfig({
     },
     sourcemap: true,
     rollupOptions: {
-      external: ['@at/basic'],
+      external: [
+        '@at/basic',
+        '@at/utility'
+      ],
     }
   },
 })

@@ -2,7 +2,7 @@
 import CanvasKitInit, { CanvasKit } from 'canvaskit-wasm'
 import { invariant } from 'ts-invariant'
 import { Skia, Fonts } from '@at/engine'
-import { AssetsManager } from '@at/asset'
+import { AssetError, AssetsManager } from '@at/asset'
 import { RefsRegistry } from './refs'
 
 // Manifest
@@ -46,29 +46,45 @@ export class AtInit extends AssetsManager<'progress'> {
     return this._skia
   }
   public set skia (skia: AtCanvasKit) {
+    // 扩展 skia
     skia.FilterQuality = Skia.FilterQuality
     this._skia = skia
   }
 
+  // => fonts
+  // 懒创建
+  protected _fonts: Fonts | null = null
+  public get fonts () {
+    if (this._fonts === null) {
+      this._fonts = Fonts.create()
+    }
+
+    return this._fonts
+  }
+
   // skia 对象加载状态
-  public state: AtStateKind = AtStateKind.Uninitialized
   public refs: RefsRegistry = RefsRegistry.create()
-  public fonts: Fonts = Fonts.create()
+  public state: AtStateKind = AtStateKind.Uninitialized
 
   // skia 队列
   protected queue: VoidFunction[] = []
-  protected envs: Environments
-
+  protected environments: Environments
 
   constructor () {
-    this.envs = process.env as unknown as  Environments
+    const env = process.env
+
+    invariant(env.BASE_URI)
+    invariant(env.ROOT_DIR)
+
+    super(env.BASE_URI, env.ROOT_DIR)
+    this.environments = process.env as  Environments
   }
 
   private async load (asset: string): Promise<Response> {
     const uri = this.getAssetURI(asset)
 
     try {
-      return At.fetch(uri)
+      return this.fetch(uri)
     } catch (error: any) {
       console.warn(`Caught ProgressEvent with target: ${1}`)
       throw new AssetError(uri, error.status)
@@ -77,8 +93,8 @@ export class AtInit extends AssetsManager<'progress'> {
 
   /// => utility
   env (key: string, defaultEnv?: string) {
-    if (Reflect.has(this.envs, key)) {
-      return Reflect.get(this.envs, key)
+    if (Reflect.has(this.environments, key)) {
+      return Reflect.get(this.environments, key)
     }
 
     return defaultEnv
@@ -107,7 +123,7 @@ export class AtInit extends AssetsManager<'progress'> {
    * @param {string} uri 
    * @returns {CanvasKit}
    */
-  ensure (uri: string) {
+  ensure () {
     if (this.state === AtStateKind.Initialized) {
       invariant(this.skia !== null)
       return Promise.resolve(this.skia as CanvasKit)
@@ -116,7 +132,7 @@ export class AtInit extends AssetsManager<'progress'> {
     } else {
       this.state = AtStateKind.Initializing
       return CanvasKitInit({
-        locateFile: () => uri
+        locateFile: () => this.env('SKIA_URI')
       }).then((skia: CanvasKit) => {
         this.skia = skia as AtCanvasKit
         this.state = AtStateKind.Initialized

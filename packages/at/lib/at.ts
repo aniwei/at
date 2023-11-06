@@ -10,9 +10,17 @@ export enum AssetsStateKind {
   FontsLoaded,
 }
 
-//// => Manifest
-export class AssetsManifest<T extends string> extends AssetsManager<'progress' | T> {
-  public state: AssetsStateKind = AssetsStateKind.Unload
+//// => AtInstance
+export interface AtInstanceFactory<T> {
+  new (...rests: unknown[]): T
+  create <T extends AtInstance<E>, E extends string> (): T
+} 
+
+export abstract class AtInstance<T extends string> extends AssetsManager<T> {
+  // => skia
+  public get skia (): CanvasKit {
+    return At.skia
+  }
 
   async load (asset: string): Promise<Response> {
     const uri = this.getAssetURI(asset)
@@ -25,37 +33,16 @@ export class AssetsManifest<T extends string> extends AssetsManager<'progress' |
     }
   }
 
-  start (...rests: unknown[]) {
-    return this.prepare()
-  }
-
   prepare (): Promise<void> {
     return new Promise((resolve) => {
-      this.load('manifest.json')
-        .then(res => res.json())
-        .then((res) => {
-        }).then(() => resolve())
+      resolve()
     })
-  }
-}
-
-//// => AtInstance
-export interface AtInstanceFactory<T> {
-  new (...rests: unknown[]): T
-  create <T extends AtInstance<E>, E extends string> (): T
-} 
-
-export abstract class AtInstance<T extends string> extends AssetsManifest<T> {
-  // => skia
-  public get skia (): CanvasKit {
-    return At.skia
   }
 
   start (callback: VoidFunction = (() => {})) {
-    return Promise.all([
-      At.ensure(At.env('SKIA_URI')),
-      super.start()
-    ]).then(() => callback())
+    return At.ensure()
+      .then(() => this.prepare())
+      .then(() => callback())
   }
 }
 

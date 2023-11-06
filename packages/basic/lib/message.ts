@@ -1,6 +1,6 @@
 import bytes from 'bytes'
 
-import { isBlob, isSupportBlob } from './is'
+import { isBlob, isSupportBlob } from '@at/utility'
 import { EventEmitter } from './events'
 import { UnsupportedError } from './unsupported-error'
 import { MessageContent } from './transport'

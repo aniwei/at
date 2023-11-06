@@ -1,5 +1,6 @@
 import invariant from 'ts-invariant'
-import { Numberic, lerp } from '@at/basic'
+import { Numberic } from '@at/basic'
+import { lerp } from '@at/utility'
 import { Offset } from './offset'
 import { Size } from './size'
 

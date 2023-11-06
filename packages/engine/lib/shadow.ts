@@ -1,10 +1,10 @@
 import { invariant } from 'ts-invariant'
 import { lerp, toSigma } from '@at/utility'
-import { Color } from '@at/basic'
+import { Color, Equalable } from '@at/basic'
 import { Offset } from '@at/geometry'
 import { Paint } from './paint'
 
-export class Shadow {
+export class Shadow extends Equalable<Shadow> {
   /**
    * 
    * @param a 
@@ -90,10 +90,8 @@ export class Shadow {
     offset: Offset,
     blurRadius: number
   ) {
-    invariant(color !== null, 'Text shadow color was null.')
-    invariant(offset !== null, 'Text shadow offset was null.')
     invariant(blurRadius >= 0.0, 'Text shadow blur radius should be non-negative.')
-
+    super()
     this.color = color ?? Color.BLACK
     this.offset = offset ?? Offset.ZERO
     this.blurRadius = blurRadius ?? 0.0
@@ -107,7 +105,6 @@ export class Shadow {
     const paint = new Paint()
     
     paint.color = this.color
-    // @TODO
     // paint.filter = AtMaskFilter.blur(At.skia.BlurStyle.Normal, this.blurSigma)
 
     return paint
@@ -127,17 +124,26 @@ export class Shadow {
   }
 
   /**
-   * 
+   * 是否相等
    * @param other 
    * @returns 
    */
-  equal (other: Shadow) {
+  equal (other: Shadow | null): boolean {
     return (
       other instanceof Shadow &&
       other.color === this.color &&
       other.offset === this.offset &&
       other.blurRadius === this.blurRadius
     )
+  }
+
+  /**
+   * 是否相等
+   * @param {Shadow | null} other 
+   * @returns {boolean}
+   */
+  notEqual (other: Shadow | null): boolean {
+    return !this.equal(other)
   }
 
   toString () {

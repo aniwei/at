@@ -1,11 +1,8 @@
 import { invariant } from 'ts-invariant'
 import { At } from '@at/core'
 
-import type { 
-  Font, 
-  Typeface, 
-  TypefaceFontProvider 
-} from './skia'
+
+import * as Skia from './skia'
 
 //// => RegisteredFont
 export interface UnloadedFont {
@@ -23,31 +20,31 @@ export class RegisteredFont {
    * 创建
    * @param {string} family 
    * @param {ArrayBuffer} buffer 
-   * @param {Typeface} typeface 
+   * @param {Skia.Typeface} typeface 
    * @returns {RegisteredFont}
    */
   static create (
     family: string,
     buffer: ArrayBuffer,
-    typeface: Typeface
+    typeface: Skia.Typeface
   ) {
     return new RegisteredFont(family, buffer, typeface)
   }
 
   public family: string
   public buffer: ArrayBuffer
-  public typeface: Typeface
+  public typeface: Skia.Typeface
 
   /**
    * 
    * @param {string} family 
    * @param {ArrayBuffer} buffer 
-   * @param {Typeface} typeface 
+   * @param {Skia.Typeface} typeface 
    */
   constructor (
     family: string,
     buffer: ArrayBuffer,
-    typeface: Typeface
+    typeface: Skia.Typeface
   ) {
     this.family = family
     this.buffer = buffer
@@ -67,11 +64,11 @@ export class Fonts {
     return new Fonts()
   }
 
-  public provider: TypefaceFontProvider | null = null
+  public provider: Skia.TypefaceFontProvider | null = null
   public unloaded: Array<Promise<RegisteredFont | null>> = []
   
   public registered: RegisteredFont[] = []
-  public familyToFont: Map<string, Font[]> = new Map()
+  public familyToFont: Map<string, Skia.Font[]> = new Map()
 
   /**
    * @description: 加载字体
@@ -122,7 +119,7 @@ export class Fonts {
    */
   register (data: ArrayBuffer, family: string): Promise<RegisteredFont | null>
   register (url: string, family: string): Promise<RegisteredFont | null>
-  register (url: ArrayBuffer | string, family: string) {
+  register (url: ArrayBuffer | string, family: string): Promise<RegisteredFont | null> {
     if (typeof url === 'string') {
       return At.fetch(url)
         .then(resp => resp.arrayBuffer())
@@ -133,11 +130,10 @@ export class Fonts {
           return new RegisteredFont(family, buffer, typeface)
         }).catch((error: any) => {
           throw error
-          return null
         })
     } else {
       const typeface = At.skia.Typeface.MakeFreeTypeFaceFromData(url)
-      return new RegisteredFont(family, url, typeface!)
+      return Promise.resolve(new RegisteredFont(family, url, typeface as Skia.Typeface))
     }
   }
 }

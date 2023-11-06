@@ -4,5 +4,6 @@
     "declarationDir": "types",
     "rootDir": "."
   },
-  "include": ["lib"]
+  "include": ["lib"],
+  "exclude": ["types/**/", "dist/**/*"]
 }

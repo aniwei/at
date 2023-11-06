@@ -1,12 +1,11 @@
 import invariant from 'ts-invariant'
-import { isNative } from './is'
-import { VoidCallback } from './global.d'
+import { isNative } from '@at/utility'
 
 
 //// => MicroTaskQueue
 export type MicroTask<T = unknown> = {
   context: T,
-  handler: VoidCallback,
+  handler: VoidFunction,
   resolve: (value: unknown) => void
 }
 
@@ -14,7 +13,7 @@ export class MicroTaskQueue {
   static isUsingMicroTask = false
 
   // => microTaskExec
-  static _exec: VoidCallback | null = null
+  static _exec: VoidFunction | null = null
   static get exec () {
     invariant(MicroTaskQueue._exec !== null)
     return MicroTaskQueue._exec
@@ -25,7 +24,7 @@ export class MicroTaskQueue {
   protected queue: MicroTask[] = []
   protected pending: boolean = false
 
-  enqueue <T = unknown> (tick: VoidCallback, resolve: (value: unknown) => void, context: T) {
+  enqueue <T = unknown> (tick: VoidFunction, resolve: (value: unknown) => void, context: T) {
     this.queue.push({
       handler: () => resolve(tick),
       context,
@@ -50,7 +49,7 @@ export class MicroTaskQueue {
 }
 
 //// => nextTick
-export const nextTick = (tick: VoidCallback, context?: unknown) => {
+export const nextTick = (tick: VoidFunction, context?: unknown) => {
   return new Promise((resolve) => MicroTaskQueue.q.enqueue(tick, resolve, context))
 }
 

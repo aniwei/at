@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { At } from '@at/core'
 import { Offset } from '@at/geometry'
+import { Skia } from '@at/engine'
 // import { TextBox } from '@at/engine'
 
 import type { MallocObj, RectWithDirection, TextDirection } from 'canvaskit-wasm'
@@ -80,3 +81,33 @@ export function toSigma (radius: number) {
 
 //     return result
 // }
+
+
+/**
+ * @description: 
+ * @param {FilterQuality} filterQuality
+ * @return {*}
+ */
+export function toFilterQuality (filterQuality: Skia.FilterQuality) {
+  if (filterQuality === At.FilterQuality.None) {
+   return {
+     filter: At.FilterMode.Nearest,
+     mipmap: At.MipmapMode.None
+   }
+ } else if (filterQuality === At.FilterQuality.Low) {
+   return {
+     filter: At.FilterMode.Linear,
+     mipmap: At.MipmapMode.None
+   }
+ } else if (filterQuality === At.FilterQuality.Medium) {
+   return {
+     filter: At.FilterMode.Linear,
+     mipmap: At.MipmapMode.Linear
+   }
+ } else if (filterQuality === At.FilterQuality.High) {
+   return {
+     B: 1.0 / 3.0,
+     C: 1.0 / 3.0
+   }
+ } 
+}

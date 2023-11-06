@@ -7,8 +7,10 @@ export type {
   Affinity,
   AnimatedImage,
   BlendMode,
+  BlurStyle,
   Canvas,
   ClipOp,
+  ColorFilter,
   DecorationStyle,
   FillType,
   FilterOptions,
@@ -16,6 +18,8 @@ export type {
   FontWeight,
   FontSlant,
   Image,
+  ImageFilter,
+  MaskFilter,
   Path,
   Paint,
   PaintStyle,
@@ -36,6 +40,7 @@ export type {
   TextAlign,
   TextBaseline,
   TextDirection,
+  TileMode,
   Typeface,
   TypefaceFontProvider
 } from 'canvaskit-wasm'

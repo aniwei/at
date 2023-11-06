@@ -1,6 +1,5 @@
 import { invariant } from 'ts-invariant'
-import { clamp } from './clamp'
-import { lerp } from './lerp'
+import { clamp, lerp } from '@at/utility'
 import { UnsupportedError } from './unsupported-error'
 import { Numberic } from './numberic'
 
@@ -18,7 +17,7 @@ export function scaleAlpha (a: Color, factor: number) {
  * 颜色类
  */
 export class Color extends Numberic<Color> {
-  static BLACK = new Color(0x00000000)
+  static BLACK = new Color(0xff000000)
 
   /**
    * 创建

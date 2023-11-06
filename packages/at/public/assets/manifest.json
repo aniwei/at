@@ -3,11 +3,11 @@
   "fonts": [
     {
       "family": "Roboto",
-      "asset": "fonts/roboto.ttf"
+      "dir": "fonts/roboto.ttf"
     },
     {
       "family": "PingFang",
-      "asset": "fonts/pingfang.otf"
+      "dir": "fonts/pingfang.otf"
     }
   ],
   "theme": {

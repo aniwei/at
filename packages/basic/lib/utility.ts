@@ -1,5 +1,5 @@
 import { invariant } from 'ts-invariant'
-import { isArray, isObject } from './is'
+import { isArray, isObject } from '@at/utility'
 
 // => defineReadOnlyProperty
 export const defineReadAndWriteProperty = <T>(target: {

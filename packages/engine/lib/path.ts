@@ -5,12 +5,11 @@ import { Matrix4 } from '@at/math'
 import { toMatrix, toPoints } from '@at/utility'
 import { Offset, Radius, Rect, RRect } from '@at/geometry'
 
-
 import * as Skia from './skia'
 
-/**
- * @return {*}
- */
+
+//// => Path
+// 路径类
 export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
   /**
    * 创建 Path 对象
@@ -70,12 +69,12 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @param {PathOp} op
    * @param {Path} pathA
    * @param {Path} pathB
-   * @return {*}
+   * @return {Path}
    */
-  static combine(op: Skia.PathOp, pathA: Path, pathB: Path,) {
+  static combine (op: Skia.PathOp, pathA: Path, pathB: Path) {
     const skia = At.skia.Path.MakeFromOp(
-      pathA.skia as Skia.Path, 
-      pathB.skia as Skia.Path, 
+      pathA.skia, 
+      pathB.skia, 
       op
     )
     return Path.fromSkia(skia as Skia.Path, pathA.fillType)
@@ -88,18 +87,22 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
   
 
   // => fillType
+  // 填充方式
   private _fillType: Skia.FillType = At.skia.FillType.Winding 
   public set fillType (fillType: Skia.FillType) {
-    this.skia?.setFillType(fillType)
-    this._fillType = fillType
+    if (this._fillType !== fillType) {
+      this._fillType = fillType
+      this.skia.setFillType(fillType)
+    }
   }
   public get fillType (): Skia.FillType {
     return this._fillType
   }
   
+  // 缓存指令
   public cachedCommands: number[] | null = null
 
-  constructor (skia?: Path) {
+  constructor (skia: Path) {
     super(skia ?? Path.resurrect([], At.skia.FillType.Winding))
   }
 
@@ -113,7 +116,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
   addArc (oval: Rect, startAngle: number, sweepAngle: number): void {
     const degrees = 180 / Math.PI
 
-    this.skia?.addArc(
+    this.skia.addArc(
       oval as unknown as number[], 
       startAngle * degrees, 
       sweepAngle * degrees
@@ -126,7 +129,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @return {*}
    */  
   addOval (oval: Rect) {
-    this.skia?.addOval(oval, false, 1)
+    this.skia.addOval(oval, false, 1)
   }
 
   /**
@@ -150,7 +153,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
       matrix[5] += offset.dy
     }
 
-    this.skia?.addPath(
+    this.skia.addPath(
       path.skia,
       matrix[0],
       matrix[1],
@@ -171,9 +174,8 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @param {boolean} close
    * @return {*}
    */
-  addPolygon (points: ArrayLike<Offset>, close: boolean) {
-    invariant(points !== null, `points cannot be null.`)
-    this.skia?.addPoly(toPoints(points), close)
+  addPolygon (points: Offset[], close: boolean) {
+    this.skia.addPoly(toPoints(points), close)
   }
 
   /**
@@ -182,7 +184,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @return {void}
    */
   addRRect (rrect: RRect) {
-    this.skia?.addRRect(rrect, false)
+    this.skia.addRRect(rrect, false)
   }
 
   /**
@@ -191,7 +193,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @return {void}
    */
   addRect (rect: Rect) {
-    this.skia?.addRect(rect)
+    this.skia.addRect(rect)
   }
 
   /**
@@ -209,7 +211,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
     forceMoveTo: boolean
   ) {
     const degrees = 180 / Math.PI
-    this.skia?.arcToOval(
+    this.skia.arcToOval(
       rect,
       startAngle * degrees,
       sweepAngle * degrees,
@@ -233,7 +235,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
     largeArc: boolean = false,
     clockwise: boolean = true
   ) {
-    this.skia?.arcToRotated(
+    this.skia.arcToRotated(
       radius.x,
       radius.y,
       rotation,
@@ -245,7 +247,6 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
   }
 
   /**
-   * @description: 
    * @param {boolean} forceClosed
    * @return {*}
    */
@@ -261,7 +262,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @return {*}
    */
   contains (point: Offset) {
-    return this.skia?.contains(point.dx, point.dy)
+    return this.skia.contains(point.dx, point.dy)
   }
 
   /**
@@ -281,7 +282,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
       matrix[5] += offset.dy
     }
     
-    this.skia?.addPath(
+    this.skia.addPath(
       path.skia,
       matrix[0],
       matrix[1],
@@ -301,7 +302,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @return {Rect}
    */
   getBounds (): Rect {
-    const sk = this.skia!.getBounds()
+    const sk = this.skia.getBounds()
     return Rect.fromLTRB(sk[0], sk[1], sk[2], sk[3])
   }
 
@@ -312,7 +313,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @return {*}
    */
   lineTo (x: number, y: number) {
-    this.skia?.lineTo(x, y)
+    this.skia.lineTo(x, y)
   }
 
   /**
@@ -322,7 +323,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @return {*}
    */
   moveTo (x: number, y: number) {
-    this.skia?.moveTo(x, y)
+    this.skia.moveTo(x, y)
   }
 
   /**
@@ -339,7 +340,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
     x2: number, 
     y2: number
   ) {
-    this.skia?.quadTo(x1, y1, x2, y2)
+    this.skia.quadTo(x1, y1, x2, y2)
   }
 
   /**
@@ -358,7 +359,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
     largeArc: boolean = false,
     clockwise: boolean = true
   ) {
-    this.skia?.rArcTo(
+    this.skia.rArcTo(
       radius.x,
       radius.y,
       rotation,
@@ -384,7 +385,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
     y2: number, 
     w: number
   ) {
-    this.skia?.rConicTo(x1, y1, x2, y2, w)
+    this.skia.rConicTo(x1, y1, x2, y2, w)
   }
 
   /**
@@ -404,7 +405,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
     x3: number, 
     y3: number
   ) {
-    this.skia?.rCubicTo(x1, y1, x2, y2, x3, y3)
+    this.skia.rCubicTo(x1, y1, x2, y2, x3, y3)
   }
 
   /**
@@ -414,7 +415,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @return {*}
    */
   relativeLineTo (dx: number, dy: number) {
-    this.skia?.rLineTo(dx, dy)
+    this.skia.rLineTo(dx, dy)
   }
 
   /**
@@ -423,7 +424,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @param {number} dy 
    */
   relativeMoveTo (dx: number, dy: number) {
-    this.skia?.rMoveTo(dx, dy)
+    this.skia.rMoveTo(dx, dy)
   }
 
   /**
@@ -459,7 +460,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
     w: number
   ) {
     invariant(this.skia)
-    this.skia?.conicTo(x1, y1, x2, y2, w)
+    this.skia.conicTo(x1, y1, x2, y2, w)
   }
 
   /**
@@ -471,7 +472,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
     const skia = this.skia.copy() as Skia.Path
     const m = toMatrix(matrix4)
     
-    skia?.transform(
+    skia.transform(
       m[0],
       m[1],
       m[2],
@@ -491,8 +492,8 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @return {*}
    */
   shift (offset: Offset) {
-    const skia = this.skia?.copy()
-    skia?.transform(
+    const skia = this.skia.copy()
+    skia.transform(
       1.0, 0.0, offset.dx,
       0.0, 1.0, offset.dy,
       0.0, 0.0, 1.0,
@@ -505,7 +506,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @return {*}
    */
   close () {
-    this.skia?.close()
+    this.skia.close()
   }
 
   /**
@@ -514,7 +515,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    */
   reset () {
     this._fillType = At.skia.FillType.Winding
-    this.skia?.close()
+    this.skia.close()
   }
 
   /**
@@ -522,7 +523,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @return {*}
    */
   toSVGString (): string | null {
-    return this.skia?.toSVGString() ?? null
+    return this.skia.toSVGString() ?? null
   }
 
   /**

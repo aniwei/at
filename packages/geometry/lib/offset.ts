@@ -1,9 +1,11 @@
 import { invariant } from 'ts-invariant'
-import { lerp } from '@at/basic'
+import { lerp } from '@at/utility'
 import { Point } from './point'
 import { Rect } from './rect'
 import { Size } from './size'
 
+//// => offset
+// 偏移
 export class Offset extends Point<Offset> {
   static ZERO = new Offset(0, 0)
   static INFINITE = new Offset(Infinity, Infinity)
@@ -205,6 +207,9 @@ export class Offset extends Point<Offset> {
   }
 
   toString () {
-    return `Offset([dx]:${this.dx.toFixed(1)},[dy]:${this.dy.toFixed(1)})`
+    return `Offset(
+      [dx]:${this.dx.toFixed(1)},
+      [dy]:${this.dy.toFixed(1)}
+    )`
   }
 }

@@ -1,4 +1,4 @@
-import { listEquals } from '@at/basic'
+import { listEquals } from '@at/utility'
 import { At } from '@at/core'
 import * as Skia from './skia'
 

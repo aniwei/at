@@ -12,6 +12,8 @@ export default defineConfig({
     rollupOptions: {
       external: [
         '@at/engine',
+        '@at/utility',
+        'ts-invariant',
         'bytes',
       ]
     }
