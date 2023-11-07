@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Equalable, UnimplementedError } from '@at/basic'
 import { At } from '@at/core'
 
@@ -17,6 +17,7 @@ export type {
   Font,
   FontWeight,
   FontSlant,
+  GrDirectContext,
   Image,
   ImageFilter,
   MaskFilter,
@@ -51,6 +52,13 @@ export enum FilterQuality {
   Low,
   Medium,
   High,
+}
+
+export enum Clip {
+  None,
+  HardEdge,
+  AntiAlias,
+  AntiAliasWithSaveLayer,
 }
 
 //// => SkiaRef
@@ -88,8 +96,6 @@ export abstract class ManagedSkiaRef<T extends SkiaRef = SkiaRef> extends Equala
     throw new UnimplementedError('The "resurrect" method is not implemented.')
   }
 
-  protected ref: T | null
-
   // => skia
   get skia () {
     invariant(this.ref !== null, `The "ref" cannot be null.`)
@@ -107,6 +113,8 @@ export abstract class ManagedSkiaRef<T extends SkiaRef = SkiaRef> extends Equala
     this.delete()
     this.ref = skia
   }
+  protected ref: T | null
+  protected disposed: boolean = false
 
   /**
    * 构造函数
@@ -159,11 +167,24 @@ export abstract class ManagedSkiaRef<T extends SkiaRef = SkiaRef> extends Equala
     this.ref?.delete()
     this.ref = null
   }
+
+  dispose () {
+    this.delete()
+    this.disposed = true
+  }
 }
 
 //// => SkiaRefBox
 // 引用计数箱子
 export class SkiaRefBox<R, T extends SkiaRef = SkiaRef> {
+   // => skia
+   public get skia (): T {
+    return this._ref as T
+  }
+  public set skia (skia: T | null) {
+    this._ref = skia
+  }
+
   // 引用计数
   protected count: number = 0
   protected referrers: Set<R> = new Set()
@@ -171,15 +192,9 @@ export class SkiaRefBox<R, T extends SkiaRef = SkiaRef> {
   
   // skia ref
   protected _ref: T | null = null
+  // disposed
+  protected disposed: boolean = false
 
-  // => skia
-  public get skia (): T {
-    return this._ref as T
-  }
-  public set skia (skia: T | null) {
-    this._ref = skia
-  }
-  
   /**
    * 构造函数
    * @param {T} skia 
@@ -228,5 +243,10 @@ export class SkiaRefBox<R, T extends SkiaRef = SkiaRef> {
   delete () {
     this.skia?.delete()
     this._ref = null
+  }
+
+  dispose () {
+    this.delete()
+    this.disposed = true
   }
 }

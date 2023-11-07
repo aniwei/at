@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { AtLayerScene, AtCanvas, AtImage, AtLayoutCustomPainter, AtPaint, AtPaintingContext, AtTransformLayer, Matrix4, Offset, Rect, Size, AtLayoutCustom } from '@at/framework'
 
 

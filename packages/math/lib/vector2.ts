@@ -1,8 +1,8 @@
-import { clamp, Numberic } from '@at/basic'
+import { clamp, ArrayLike } from '@at/basic'
 import { Matrix2 } from './matrix2'
 
 // 二维向量
-export class Vector2 extends Numberic<Vector2> {
+export class Vector2 extends ArrayLike<Vector2> {
   static get ZERO () {
     return new Vector2()
   }

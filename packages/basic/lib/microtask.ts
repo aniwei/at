@@ -1,5 +1,4 @@
-import invariant from 'ts-invariant'
-import { isNative } from '@at/utility'
+import { isNative, invariant } from '@at/utility'
 
 
 //// => MicroTaskQueue

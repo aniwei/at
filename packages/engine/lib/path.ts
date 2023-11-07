@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { At } from '@at/core'
 import { Matrix4 } from '@at/math'
 import { toMatrix, toPoints } from '@at/utility'

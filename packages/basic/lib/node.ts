@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 
 //// => AbstractNode
 export abstract class AbstractNode<T extends AbstractNode<T>, U extends unknown = unknown> {

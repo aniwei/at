@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Rect } from '../basic/geometry'
 import { BoxFit } from './box-fit'
 import { AtAlignment, AtAlignmentGeometry } from './alignment'

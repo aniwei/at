@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { At, AtCanvas, VoidCallback } from '../at'
 import { Offset, Radius, Rect, RRect, Size } from '../basic/geometry'
 import { AtPaint } from '../engine/paint'

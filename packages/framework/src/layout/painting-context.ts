@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant' 
+import { invariant } from '@at/utility' 
 import { Clip } from '../engine/skia'
 import { AtPath } from '../engine/path'
 import { AtColorFilter } from '../engine/color-filter'

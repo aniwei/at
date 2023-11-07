@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { TextDirection } from '../engine/skia'
 import { Radius, Rect, RRect } from '../basic/geometry'
 import { At } from '../at'

@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { At, AtCanvas, AtPaint, Color, Offset, Rect, Size, AtLayoutCustomPainter } from '@at/framework'
 
 export abstract class AtInteractivePainter extends AtLayoutCustomPainter {}

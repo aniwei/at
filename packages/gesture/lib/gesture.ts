@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Offset, Equalable } from '@at/geometry'
 import { GestureArenaManager } from './arena'
 import { PointerEvent, PointerEventConverter, PointerEventDecomposition } from './events'

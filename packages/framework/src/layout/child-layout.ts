@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Size } from '../basic/geometry'
 import { AtLayoutBox } from './box'
 import { AtBoxConstraints } from './box-constraints'

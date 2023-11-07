@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { AtCanvas } from '../engine/canvas'
 import { Offset, Size } from '../basic/geometry'
 import { Subscribable } from '../basic/subscribable'

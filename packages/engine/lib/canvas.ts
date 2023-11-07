@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { At } from '@at/core'
 import { ArgumentError, Color } from '@at/basic'
 import { Offset, Rect, RRect } from '@at/geometry'
@@ -7,6 +7,7 @@ import { Path } from './path'
 import { Paint } from './paint'
 import { Picture } from './picture'
 import { Image } from './image'
+import { ImageFilter } from './image-filter'
 // import { Paragraph } from './paragraph'
 import { 
   ClearCommand, 
@@ -19,6 +20,8 @@ import {
   DrawLineCommand, 
   DrawOvalCommand, 
   DrawPaintCommand, 
+  DrawPathCommand, 
+  DrawPictureCommand, 
   // DrawParagraphCommand, 
   DrawRectCommand, 
   DrawRRectCommand, 
@@ -29,11 +32,14 @@ import {
   RotateCommand, 
   SaveCommand, 
   SaveLayerCommand, 
+  SaveLayerWithFilterCommand, 
   SaveLayerWithoutBoundsCommand, 
+  ScaleCommand, 
+  SkewCommand, 
   Snapshot, 
-  TransformCommand
+  TransformCommand,
+  TranslateCommand
 } from './snapshot'
-
 
 import * as Skia from './skia'
 
@@ -118,6 +124,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
   }
 
   /**
+   * 绘图位图
    * @param {Image} image
    * @param {Offset} Offset
    * @param {Paint} paint
@@ -209,6 +216,23 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
         : At.skia.FilterMode.Linear,
       paint.skia,
     )
+  }
+
+  /**
+   * 绘制图片
+   * @param {Picture} picture 
+   */
+  drawPicture (picture: Picture) {
+    this.skia.drawPicture(picture.skia)
+  }
+
+  /**
+   * 绘制路径
+   * @param {Path} path 
+   * @param {Paint} paint 
+   */
+  drawPath (path: Path, paint: Paint) {
+    this.skia.drawPath(path.skia, paint.skia)
   }
 
   /**
@@ -382,14 +406,11 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
    * @param {Rect} bounds
    * @param {ImageFilter} filter
    * @param {Paint} paint
-   * @return {*}
+   * @return {number}
    */
-  // TODO
-  // saveLayerWithFilter (bounds: Rect, filter: AtImageFilter, paint: AtPaint) {
-  //   const convertible: AtManagedSkiaImageFilterConvertible = filter
-
-  //   return this.skia.saveLayer(paint.skia as Paint, bounds, convertible.imageFilter.skia, 0)
-  // }
+  saveLayerWithFilter (bounds: Rect, filter: ImageFilter, paint: Paint) {
+    return this.skia.saveLayer(paint.skia, bounds, filter.image.skia, 0)
+  }
 
   restore () {
     this.skia.restore()
@@ -450,13 +471,18 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
   }
 }
 
+//// => Recorder
+// 绘制录制
 export class Recorder extends Canvas {
   static create (bounds: Rect | null = null) {
     return new Recorder(bounds)
   }
 
+  // 快照
   protected snapshot: Snapshot
+  // 绘制范围
   protected cullRect: Rect | null = null
+  // 绘制结果
   protected prictue: Skia.PictureRecorder | null = null
 
   /**
@@ -475,7 +501,7 @@ export class Recorder extends Canvas {
   }
 
   stop () {
-    invariant(this.prictue, `AtRecorder is not recording`)
+    invariant(this.prictue, `Recorder is not recording`)
 
     const picture = this.prictue?.finishRecordingAsPicture()
     this.prictue.delete()
@@ -587,7 +613,6 @@ export class Recorder extends Canvas {
     // @TODO
     // this.addCommand(new AtDrawImageCommand(image, point, paint))
   }
-
   
   drawImageRect (
     image: Image, 
@@ -634,15 +659,15 @@ export class Recorder extends Canvas {
   //   this.addCommand(DrawParagraphCommand.create(paragraph, point))
   // }
   // 
-  // drawPath (path: AtPath, paint: Paint) {
-  //   super.drawPath(path, paint)
-  //   this.addCommand(new AtDrawPathCommand(path, paint))
-  // }
-  //
-  // drawPicture (picture: AtPicture) {
-  //   super.drawPicture(picture)
-  //   this.addCommand(new DrawPictureCommand(picture))
-  // }
+  drawPath (path: Path, paint: Paint) {
+    super.drawPath(path, paint)
+    this.addCommand(DrawPathCommand.create(path, paint))
+  }
+  
+  drawPicture (picture: Picture) {
+    super.drawPicture(picture)
+    this.addCommand(DrawPictureCommand.create(picture))
+  }
   //
   //
   // drawPoints (
@@ -654,7 +679,6 @@ export class Recorder extends Canvas {
   //   this.addCommand(new AtDrawPointsCommand(pointMode, points, paint))
   // }
 
-  
   drawRRect (
     rrect: RRect, 
     paint: Paint 
@@ -706,7 +730,6 @@ export class Recorder extends Canvas {
     return result
   }
 
-  
   saveLayer (
     bounds: Rect | null = null, 
     paint: Paint
@@ -720,26 +743,25 @@ export class Recorder extends Canvas {
     }
   }
   
-  // saveLayerWithFilter (
-  //   bounds: Rect, 
-  //   filter: AtImageFilter, 
-  //   paint: Paint
-  // ) {
-  //   super.saveLayerWithFilter(bounds, filter, paint)
-  //   this.addCommand(new AtSaveLayerWithFilterCommand(bounds, filter, paint))
-  // }
+  saveLayerWithFilter (
+    bounds: Rect, 
+    filter: ImageFilter, 
+    paint: Paint
+  ) {
+    const result = super.saveLayerWithFilter(bounds, filter, paint)
+    this.addCommand(SaveLayerWithFilterCommand.create(bounds, filter, paint))
 
-  
-  scale (sx: number, sy: number) {
-    super.scale(sx, sy)
-    // TODO
-    // this.addCommand(ScaleCommand.create(sx, sy))
+    return result
   }
 
-  
+  scale (sx: number, sy: number) {
+    super.scale(sx, sy)
+    this.addCommand(ScaleCommand.create(sx, sy))
+  }
+
   skew (sx: number, sy: number) {
     super.skew(sx, sy)
-    // this.addCommand(SkewCommand.create(sx, sy))
+    this.addCommand(SkewCommand.create(sx, sy))
   }
   
   transform (matrix4: number[]) {
@@ -749,7 +771,6 @@ export class Recorder extends Canvas {
 
   translate (dx: number, dy: number) {
     super.translate(dx, dy)
-    // @TODO
-    // this.addCommand(TranslateCommand.create(dx, dy))
+    this.addCommand(TranslateCommand.create(dx, dy))
   }
 }

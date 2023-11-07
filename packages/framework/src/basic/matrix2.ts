@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Vector2 } from './vector2'
 
 export class Matrix2 extends Array<number> {

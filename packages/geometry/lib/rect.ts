@@ -1,10 +1,10 @@
-import invariant from 'ts-invariant'
-import { Numberic } from '@at/basic'
+import { invariant } from '@at/utility'
+import { ArrayLike } from '@at/basic'
 import { lerp } from '@at/utility'
 import { Offset } from './offset'
 import { Size } from './size'
 
-export class Rect extends Numberic<Rect> {
+export class Rect extends ArrayLike {
     static ZERO = new Rect(0, 0, 0, 0)
     static LARGEST = new Rect(0, 0, 0, 0)
     
@@ -22,7 +22,7 @@ export class Rect extends Numberic<Rect> {
       right: number, 
       bottom: number
     ): Rect {
-      return Rect.fromLTRB(left, top, right, bottom)
+      return Rect.fromLTRB(left, top, right, bottom) as Rect
     }
   
     /**

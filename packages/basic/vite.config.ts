@@ -13,7 +13,7 @@ export default defineConfig({
       external: [
         '@at/engine',
         '@at/utility',
-        'ts-invariant',
+        '@at/utility',
         'bytes',
       ]
     }

@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { AllowedButtonsFilter, At, Matrix4, Offset } from 'src/at'
 import { AtVelocity, AtVelocityTracker } from './velocity-tracker'
 import { AtOneSequenceGestureRecognizer, DragStartBehavior } from './recognizer'

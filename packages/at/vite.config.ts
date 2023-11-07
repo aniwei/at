@@ -24,7 +24,7 @@ export default defineConfig({
       external: [
         '@at/engine',
         '@at/geometry',
-        'ts-invariant',
+        '@at/utility',
         'canvaskit-wasm',
       ]
     }

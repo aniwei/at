@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { nextTick } from '@at/basic'
 
 // 手势处置枚举

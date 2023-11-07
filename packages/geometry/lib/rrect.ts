@@ -1,14 +1,10 @@
-import invariant from 'ts-invariant'
-import { Numberic } from '@at/basic'
+import { invariant } from '@at/utility'
+import { ArrayLike } from '@at/basic'
 import { Rect } from './rect'
 import { Radius } from './radius'
 import { Offset } from './offset'
 
-export class RRect extends Numberic<RRect> {
-    /**
-     * 0
-     * @return {RRect}
-     */  
+export class RRect extends ArrayLike {
     static ZERO = RRect.raw()
   
     /**
@@ -41,7 +37,6 @@ export class RRect extends Numberic<RRect> {
     }
   
     /**
-     * @description: 
      * @return {RRect}
      */  
     static fromLTRBR (
@@ -245,19 +240,6 @@ export class RRect extends Numberic<RRect> {
       brRadiusY: number = 0.0,
       uniformRadii: boolean = false,
     ) {
-      invariant(left !== null, 'The "left" argument cannot be null.')
-      invariant(top !== null, 'The "top" argument cannot be null.')
-      invariant(right !== null, 'The "right" argument cannot be null.')
-      invariant(bottom !== null, 'The "bottom" argument cannot be null.')
-      invariant(tlRadiusX !== null, 'The "tlRadiusX" argument cannot be null.')
-      invariant(tlRadiusY !== null, 'The "tlRadiusY" argument cannot be null.')
-      invariant(trRadiusX !== null, 'The "trRadiusX" argument cannot be null.')
-      invariant(trRadiusY !== null, 'The "trRadiusY" argument cannot be null.')
-      invariant(brRadiusX !== null, 'The "brRadiusX" argument cannot be null.')
-      invariant(brRadiusY !== null, 'The "brRadiusY" argument cannot be null.')
-      invariant(blRadiusX !== null, 'The "blRadiusX" argument cannot be null.')
-      invariant(blRadiusY !== null, 'The "blRadiusY" argument cannot be null.')
-  
       return new RRect(
         left,
         top,
@@ -402,7 +384,7 @@ export class RRect extends Numberic<RRect> {
     }
   
     // => outerRect
-    public get outerRect () {
+    public get outer () {
       return Rect.fromLTRB(this.left, this.top, this.right, this.bottom)
     }
   

@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Offset } from '../basic/geometry'
 import { AtGestureArenaManager } from './arena'
 import { AtPointerEvent, AtPointerEventConverter, AtPointerEventDecomposition } from './events'

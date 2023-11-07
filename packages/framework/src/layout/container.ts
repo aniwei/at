@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { AtLayoutObject } from './object'
 import type { LayoutObjectVisitor } from './object'
 import type { AtPipelineOwner } from './pipeline-owner'

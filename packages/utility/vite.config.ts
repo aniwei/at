@@ -15,7 +15,7 @@ export default defineConfig({
         '@at/core',
         '@at/engine',
         '@at/geometry',
-        'ts-invariant',
+        '@at/utility',
         'path-browserify'
       ]
     }

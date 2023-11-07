@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { UnimplementedError } from '@at/basic'
 import { clamp, lerp, sign } from '@at/basic'
 import { Offset } from '@at/geometry'

@@ -1,8 +1,8 @@
-import { invariant } from 'ts-invariant'
-import { Numberic } from '@at/basic'
+import { invariant } from '@at/utility'
+import { ArrayLike } from '@at/basic'
 import { Vector2 } from './vector2'
 
-export class Matrix2 extends Numberic<Matrix2> {
+export class Matrix2 extends ArrayLike<Matrix2> {
   static get ZERO () {
     return new Matrix2(4)
   } 

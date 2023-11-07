@@ -1,16 +1,17 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { lerp } from '@at/utility'
+
 import { Point } from './point'
 import { Rect } from './rect'
 import { Size } from './size'
 
 //// => offset
 // 偏移
-export class Offset extends Point<Offset> {
+export class Offset extends Point {
   static ZERO = new Offset(0, 0)
   static INFINITE = new Offset(Infinity, Infinity)
 
-  static create <T> (...rests: unknown[]): Offset
+  static create (...rests: unknown[]): Offset
   /**
    * 
    * @param {number} dx 

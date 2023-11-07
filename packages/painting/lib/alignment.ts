@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { lerp } from '@at/basic'
 import { TextDirection } from '../engine/skia'
 import { Offset, Rect, Size } from '@at/geometry'

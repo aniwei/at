@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { RenderComparison } from '../at'
 import { AtTextPaintingStyle } from './text-style'
 import { AtPlaceholderDimensions } from './text-painter'

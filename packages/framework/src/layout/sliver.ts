@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { clamp } from '../basic/helper'
 import { AtPointerEvent } from '../gestures/events'
 import { Matrix4 } from '../basic/matrix4';

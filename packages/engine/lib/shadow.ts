@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { lerp, toSigma } from '@at/utility'
 import { Color, Equalable } from '@at/basic'
 import { Offset } from '@at/geometry'

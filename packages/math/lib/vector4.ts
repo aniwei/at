@@ -1,7 +1,7 @@
-import { clamp, Numberic } from '@at/basic'
+import { clamp, ArrayLike } from '@at/basic'
 import { Matrix4 } from './matrix4'
 
-export class Vector4 extends Numberic<Vector4> {
+export class Vector4 extends ArrayLike<Vector4> {
   static get ZERO () {
     return new Vector4(4)
   } 

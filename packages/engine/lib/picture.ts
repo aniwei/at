@@ -2,7 +2,7 @@
  * @author: Aniwei
  * @date: 2022-07-04 12:10:21
  */
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Rect } from '@at/geometry'
 import { At } from '@at/core'
 
@@ -18,6 +18,12 @@ export class Picture extends Skia.ManagedSkiaRef<Skia.Picture> {
     snapshot?: Snapshot
   ) {
     return new Picture(picture, cullRect, snapshot)
+  }
+
+  // => skia
+  public get skia () {
+    invariant(super.skia)
+    return super.skia
   }
 
   public disposed: boolean = false

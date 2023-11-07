@@ -6,9 +6,11 @@ import { Offset, RRect, Rect } from '@at/geometry'
 import { Path } from './path'
 import { Paint } from './paint'
 import { Image } from './image'
+import { ImageFilter } from './image-filter'
 // import { Paragraph } from './paragraph'
 
 import * as Skia from './skia'
+import { Picture } from '.'
 
 //// => PaintCommand
 // 绘制指令
@@ -29,7 +31,7 @@ export abstract class PaintCommand {
 }
 
 //// => ClearCommand
-// 清楚指令
+// 清除指令
 export class ClearCommand extends PaintCommand {
   static create (color: Color) {
     return super.create(color)
@@ -65,12 +67,13 @@ export class ClipPathCommand extends PaintCommand {
 
   apply (canvas: Skia.Canvas) {
     canvas.clipPath(
-      this.path.skia!,
+      this.path.skia,
       At.skia.ClipOp.Intersect,
       this.doAntiAlias,
     )
   }
 }
+
 //// => ClipRRectCommand
 export class ClipRRectCommand extends PaintCommand {
   static create (rrect: RRect, doAntiAlias: boolean) {
@@ -95,6 +98,8 @@ export class ClipRRectCommand extends PaintCommand {
   }
 }
 
+//// => ClipRectCommand
+// 裁剪矩形
 export class ClipRectCommand extends PaintCommand {
   static create (rect: Rect, clipOp: Skia.ClipOp, doAntiAlias: boolean) {
     return super.create(rect, clipOp, doAntiAlias)
@@ -120,10 +125,13 @@ export class ClipRectCommand extends PaintCommand {
   }
 }
 
+//// => DrawOvalCommand
+// 绘制椭圆
 export class DrawOvalCommand extends PaintCommand {
   static create (rect: Rect, paint: Paint) {
     return super.create(rect, paint)
   }
+
   protected rect: Rect
   protected paint: Paint
 
@@ -139,6 +147,8 @@ export class DrawOvalCommand extends PaintCommand {
   }
 }
 
+//// => DrawPaintCommand
+// 绘制画笔
 export class DrawPaintCommand extends PaintCommand {
   static create (paint: Paint) {
     return super.create(paint)
@@ -153,7 +163,27 @@ export class DrawPaintCommand extends PaintCommand {
   }
 
   apply (canvas: Skia.Canvas): void {
-    canvas.drawPaint(this.paint.skia!)
+    canvas.drawPaint(this.paint.skia)
+  }
+}
+
+//// => DrawPictureCommand
+// 绘制 Picture 对象
+export class DrawPictureCommand extends PaintCommand {
+  static create (picture: Picture) {
+    return super.create(picture)
+  }
+
+  protected picture: Picture
+
+  constructor (picture: Picture) {
+    super()
+
+    this.picture = picture
+  }
+
+  apply (canvas: Skia.Canvas): void {
+    canvas.drawPicture(this.picture.skia)
   }
 }
 
@@ -180,6 +210,8 @@ export class DrawPaintCommand extends PaintCommand {
 //   }
 // }
 
+//// => DrawLineCommand
+// 绘制线段
 export class DrawLineCommand extends PaintCommand {
   static create (pointA: Offset, pointB: Offset, paint: Paint) {
     return super.create(pointA, pointB, paint)
@@ -203,36 +235,38 @@ export class DrawLineCommand extends PaintCommand {
       this.pointA.dy, 
       this.pointB.dx, 
       this.pointB.dy,
-      this.paint.skia!
+      this.paint.skia
     )
   }
 }
 
+//// => DrawImageNineCommand
+// 绘制位图
 export class DrawImageNineCommand extends PaintCommand {
   static create (
     image: Image, 
     center: Rect, 
-    dist: Rect, 
+    dest: Rect, 
     paint: Paint
   ) {
-    return super.create(image, center, dist, paint)
+    return super.create(image, center, dest, paint)
   }
   protected image: Image 
   protected center: Rect 
-  protected dist: Rect
+  protected dest: Rect
   protected paint: Paint
 
   constructor (
     image: Image, 
     center: Rect, 
-    dist: Rect, 
+    dest: Rect, 
     paint: Paint
   ) {
     super()
 
     this.image = image
     this.center = center
-    this.dist = dist
+    this.dest = dest
     this.paint = paint
   }
 
@@ -240,17 +274,42 @@ export class DrawImageNineCommand extends PaintCommand {
     canvas.drawImageNine(
       this.image.skia,
       this.center,
-      this.dist,
-      // @TODO
-      At.skia.FilterMode.Nearest
-      // this.paint.filterQuality === At.FilterQuality.None 
-      //   ? At.FilterMode.Nearest 
-      //   : At.FilterMode.Linear,
-      // this.paint.skia
+      this.dest,
+      this.paint.filter?.quality === At.skia.FilterQuality.None 
+        ? At.skia.FilterMode.Nearest 
+        : At.skia.FilterMode.Linear,
+      this.paint.skia
     )
   }
 }
 
+//// => DrawPathCommand
+// 绘制路径
+export class DrawPathCommand extends PaintCommand {
+  static create (path: Path, paint: Paint) {
+    return super.create(paint)
+  }
+
+  protected path: Path
+  protected paint: Paint
+
+  constructor (path: Path, paint: Paint) {
+    super()
+
+    this.path = path
+    this.paint = paint
+  }
+
+  apply (canvas: Skia.Canvas): void {
+    canvas.drawPath(
+      this.path.skia,
+      this.paint.skia
+    )
+  }
+}
+
+//// => DrawRRectCommand
+// 绘制圆角矩形
 export class DrawRRectCommand extends PaintCommand {
   static create (rrect: RRect, paint: Paint) {
     return super.create(rrect, paint)
@@ -266,10 +325,12 @@ export class DrawRRectCommand extends PaintCommand {
   }
 
   apply (canvas: Skia.Canvas): void {
-    canvas.drawRRect(this.rrect, this.paint.skia!)
+    canvas.drawRRect(this.rrect, this.paint.skia)
   }
 }
 
+//// => DrawRectCommand
+// 绘制矩形
 export class DrawRectCommand extends PaintCommand {
   static create (rect: Rect, paint: Paint) {
     return super.create(rect, paint)
@@ -286,10 +347,11 @@ export class DrawRectCommand extends PaintCommand {
   }
 
   apply (canvas: Skia.Canvas): void {
-    canvas.drawRect(this.rect, this.paint.skia!)
+    canvas.drawRect(this.rect, this.paint.skia)
   }
 }
 
+/// => DrawArcCommand
 export class DrawArcCommand extends PaintCommand {
   static create (
     oval: Rect,
@@ -335,11 +397,13 @@ export class DrawArcCommand extends PaintCommand {
       this.startAngle * degrees,
       this.sweepAngle * degrees,
       this.useCenter,
-      this.paint.skia!
+      this.paint.skia
     )
   }
 }
 
+//// => DrawCircleCommand
+// 绘制圆
 export class DrawCircleCommand extends PaintCommand {
   static create (
     point: Offset,
@@ -370,11 +434,13 @@ export class DrawCircleCommand extends PaintCommand {
       this.point.dx,
       this.point.dy,
       this.radius,
-      this.paint.skia!
+      this.paint.skia
     )
   }
 }
 
+//// => DrawShadowCommand
+// 绘制阴影
 export class DrawShadowCommand extends PaintCommand {
   static create (
     path: Path, 
@@ -407,7 +473,7 @@ export class DrawShadowCommand extends PaintCommand {
   apply (canvas: Skia.Canvas): void {
     // TODO
     // canvas.drawShadow(
-    //   this.path.skia!,
+    //   this.path.skia,
     //   this.color,
     //   this.elevation,
     //   this.transparentOccluder
@@ -415,27 +481,35 @@ export class DrawShadowCommand extends PaintCommand {
   }
 }
 
-// export class DrawColorCommand extends PaintCommand {
-//   static create (
-//     color: Path, 
-//     color: Color, 
-//     elevation: number, 
-//     transparentOccluder: boolean 
-//   ) {
-//     return super.create(path, color, elevation, transparentOccluder)
-//   }
+//// => DrawColorCommand
+// 绘制颜色
+export class DrawColorCommand extends PaintCommand {
+  static create (
+    color: Color, 
+    blendMode: Skia.BlendMode
+  ) {
+    return super.create(color, blendMode)
+  }
 
-//   apply (canvas: Skia.Canvas): void {
-//     // TODO
-//     // canvas.drawShadow(
-//     //   this.path.skia!,
-//     //   this.color,
-//     //   this.elevation,
-//     //   this.transparentOccluder
-//     // )
-//   }
-// }
+  protected color: Color
+  protected blendMode: Skia.BlendMode
 
+  constructor (
+    color: Color, 
+    blendMode: Skia.BlendMode
+  ) {
+    super()
+    this.color = color
+    this.blendMode = blendMode
+  }
+
+  apply (canvas: Skia.Canvas): void {
+    canvas.drawColor(this.color, this.blendMode)
+  }
+}
+
+//// => SaveLayerCommand
+// 保存绘制层
 export class SaveLayerCommand extends PaintCommand {
   protected bounds: Rect | null = null
   protected paint: Paint
@@ -448,10 +522,12 @@ export class SaveLayerCommand extends PaintCommand {
   }
 
   apply (canvas: Skia.Canvas): void {
-    canvas.saveLayer(this.paint.skia!, this.bounds)
+    canvas.saveLayer(this.paint.skia, this.bounds)
   }
 }
 
+//// => RestoreToCountCommand
+// 恢复绘制上下文
 export class RestoreToCountCommand extends PaintCommand {
   protected count: number
   constructor (count: number) {
@@ -465,12 +541,16 @@ export class RestoreToCountCommand extends PaintCommand {
   }
 }
 
+//// => RestoreCommand
+// 恢复上下文
 export class RestoreCommand extends PaintCommand {
   apply (canvas: Skia.Canvas): void {
     canvas.restore()
   }
 }
 
+//// => ScaleCommand
+// 放大
 export class ScaleCommand extends PaintCommand {
   protected sx: number
   protected sy: number
@@ -487,6 +567,8 @@ export class ScaleCommand extends PaintCommand {
   }
 }
 
+//// => RotateCommand
+// 旋转
 export class RotateCommand extends PaintCommand {
   protected radians: number
 
@@ -501,6 +583,8 @@ export class RotateCommand extends PaintCommand {
   }
 }
 
+//// => SkewCommand
+// 倾斜
 export class SkewCommand extends PaintCommand {
   protected sx: number
   protected sy: number
@@ -517,12 +601,15 @@ export class SkewCommand extends PaintCommand {
   }
 }
 
+//// => SaveCommand
+// => 保存
 export class SaveCommand extends PaintCommand {
   apply (canvas: Skia.Canvas): void {
     canvas.save()
   }
 }
 
+//// => SaveLayerWithoutBoundsCommand
 export class SaveLayerWithoutBoundsCommand extends PaintCommand {
   protected paint: Paint
 
@@ -533,10 +620,31 @@ export class SaveLayerWithoutBoundsCommand extends PaintCommand {
   }
 
   apply (canvas: Skia.Canvas): void {
-    canvas.saveLayer(this.paint.skia!, null)
+    canvas.saveLayer(this.paint.skia, null)
   }
 }
 
+//// => SaveLayerWithFilterCommand
+export class SaveLayerWithFilterCommand extends PaintCommand {
+  protected paint: Paint
+  protected bounds: Rect
+  protected filter: ImageFilter
+
+  constructor (bounds: Rect, filter: ImageFilter, paint: Paint) {
+    super()
+
+    this.bounds = bounds
+    this.filter = filter
+    this.paint = paint
+  }
+
+  apply (canvas: Skia.Canvas): void {
+    canvas.saveLayer(this.paint.skia, this.bounds, this.filter.image.skia)
+  }
+}
+
+//// => TransformCommand
+// 形变操作
 export class TransformCommand extends PaintCommand {
   protected matrix4: ArrayLike<number>
   constructor (matrix4: ArrayLike<number>) {
@@ -550,6 +658,8 @@ export class TransformCommand extends PaintCommand {
   }
 }
 
+//// => TranslateCommand
+// 位移操作
 export class TranslateCommand extends PaintCommand {
   protected dx: number 
   protected dy: number

@@ -1,9 +1,9 @@
-import invariant from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { lerp } from '@at/utility'
 import { Point } from './point'
 import { Offset } from './offset'
 
-export class Size extends Point<Size> {
+export class Size extends Point {
     static ZERO = new Size(0.0, 0.0)
     static INFINITE = new Size(Infinity, Infinity)
   

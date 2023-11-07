@@ -2,7 +2,7 @@
  * @author: aniwei aniwei.studio@gmail.com
  * @date: 2022-10-30 20:10:43
  */
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { Matrix4, Vector4, Vector3 } from '@at/math'
 import { Offset } from '@at/geometry'
 

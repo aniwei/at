@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { AtLayoutCustom, Color, Offset, Rect, Size } from '@at/framework'
 import { AtInteractiveCompositePainter, AtInteractiveCompositePainterOptions } from './Interactive-painter'
 

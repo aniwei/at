@@ -16,7 +16,7 @@ export default defineConfig({
         '@at/geometry',
         '@at/math',
         '@at/utility',
-        'ts-invariant',
+        '@at/utility',
         'canvaskit-wasm'
       ],
     }

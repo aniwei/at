@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Color, subscribable } from '@at/basic'
 import { Rect, Size } from '@at/geometry'
 import { AnimationStatus, Animation } from './animation'

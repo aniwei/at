@@ -1,11 +1,11 @@
-import { invariant } from 'ts-invariant'
-import { Numberic } from '@at/basic'
+import { invariant } from '@at/utility'
+import { ArrayLike } from '@at/basic'
 import { Matrix3 } from './matrix3'
 import { Vector3 } from './vector3'
 import { Vector4 } from './vector4'
 
 //// => Quaternion
-export class Quaternion extends Numberic<Quaternion> {
+export class Quaternion extends ArrayLike<Quaternion> {
   // => x
   get x () {
     return this[0]

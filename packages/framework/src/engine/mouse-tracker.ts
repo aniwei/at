@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { AtPointerEvent } from '../gestures/events'
 import { AtHitTestResult } from '../gestures/hit-test'
 import { Offset, Subscribable, VoidCallback } from '../at'

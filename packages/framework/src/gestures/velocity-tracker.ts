@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Offset } from '../basic/geometry'
 import { AtLeastSquaresSolver } from './lsq-solver'
 import { PointerDeviceKind } from './pointer'

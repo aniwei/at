@@ -1,44 +1,46 @@
 import { Matrix4 } from '@at/math'
 import { Color } from '@at/basic'
 import { Rect, Size } from '@at/geometry'
-import { AtPaintContext, AtPrerollContext, AtRootLayer } from './layer'
+
 import { Recorder } from './canvas'
+import { NWayCanvas } from './n-way-canvas'
+import { RootLayer } from './layer'
+import { PrerollContext } from './preroll-context'
+import { PaintContext } from './paint-context'
+import { SurfaceFrame } from './surface'
 
-import { AtNWCanvas } from './n-way-canvas'
-
-import type { SurfaceFrame } from './surface'
-import type { Picture } from './picture'
+import * as Skia from './skia'
 
 
 /**
  * 绘制层树
  */
 export class LayerTree {
-  static create (root: AtRootLayer) {
+  static create (root: RootLayer) {
     return new LayerTree(root)
   }
 
-  public root: AtRootLayer
-  public devicePixelRatio: number | null = null
+  public root: RootLayer
   public frame: Size = new Size(600, 600)
+  public devicePixelRatio: number | null = null
 
   /**
    * 构造函数
-   * @param {AtRootLayer} rootLayer
+   * @param {RootLayer} rootLayer
    * @return {*}
    */  
-  constructor (root: AtRootLayer) {
+  constructor (root: RootLayer) {
     this.root = root
   }
   
   /**
-   * @description: 
+   * 预处理
    * @param {Frame} frame
    * @param {boolean} ignoreCache
    * @return {void}
    */
   preroll (frame: SurfaceFrame, ignoreCache: boolean = false) {
-    const context: AtPrerollContext = new AtPrerollContext(ignoreCache ? null : frame.caches)
+    const context = PrerollContext.create(ignoreCache ? null : frame.caches)
     this.root.preroll(context, Matrix4.identity())
   }
 
@@ -49,13 +51,13 @@ export class LayerTree {
    * @return {void}
    */
   paint (frame: SurfaceFrame, ignoreCache: boolean = false): void {
-    const nw = AtNWCanvas.create()
+    const nw = NWayCanvas.create()
     nw.push(frame.canvas)
-    nw.clear(new Color(0x00000000))
+    nw.clear(Color.CLEAR)
 
-    const context = AtPaintContext.create(nw, frame.canvas, ignoreCache ? null : frame.caches)
+    const context = PaintContext.create(nw, frame.canvas, ignoreCache ? null : frame.caches)
     
-    if (this.root.paintable) {
+    if (!this.root.ignored) {
       this.root.paint(context)
     }
   }
@@ -65,18 +67,18 @@ export class LayerTree {
    * 
    * @return {Picture}
    */
-  flatten (): Picture {
+  flatten (): Skia.Picture {
     const recorder = Recorder.create(Rect.LARGEST)
-    const prerollContext: AtPrerollContext = new AtPrerollContext(null)
+    const prerollContext: PrerollContext = new PrerollContext(null)
     
     this.root.preroll(prerollContext, Matrix4.identity())
 
-    const nw: AtNWCanvas = new AtNWCanvas()
+    const nw: NWayCanvas = NWayCanvas.create()
     nw.push(recorder)
 
-    const paintContext = new AtPaintContext(nw, recorder, null)
+    const paintContext = new PaintContext(nw, recorder, null)
 
-    if (this.root.paintable) {
+    if (!this.root.ignored) {
       this.root.paint(paintContext)
     }
 

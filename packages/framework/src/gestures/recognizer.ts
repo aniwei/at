@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { AllowedButtonsFilter, At } from '../at'
 import { Offset } from '../basic/geometry'
 import { Matrix4 } from '../basic/matrix4'

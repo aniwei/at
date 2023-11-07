@@ -1,7 +1,7 @@
+import { defineReadOnly } from '@at/utility'
 import { EventEmitter } from './events'
 import { SubscribeHandle } from './subscribable'
 import { Subscribable } from './subscribable'
-import { defineReadOnlyProperty } from './utility'
 import { MessageContent, MessageOwner, MessageTransport } from './transport'
 
 // Api 参数
@@ -212,7 +212,7 @@ export abstract class BaseApi<T extends string> extends EventEmitter<T | string>
           return result?.payload
         }
 
-        defineReadOnlyProperty(
+        defineReadOnly(
           proxy, 
           action.name, 
           func
@@ -222,7 +222,7 @@ export abstract class BaseApi<T extends string> extends EventEmitter<T | string>
       return proxy
     }
 
-    defineReadOnlyProperty(this, domain.name, {
+    defineReadOnly(this, domain.name, {
       commands: defineApiImpl('Command', domain.commands),
       events: defineApiImpl('Event', domain.events)
     })

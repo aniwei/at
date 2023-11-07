@@ -1,5 +1,5 @@
-import { invariant } from 'ts-invariant'
-import { UnimplementedError, ArgumentError, Numberic } from '@at/basic'
+import { invariant } from '@at/utility'
+import { UnimplementedError, ArgumentError, ArrayLike } from '@at/basic'
 import { Matrix2 } from './matrix2'
 import { Matrix3 } from './matrix3'
 import { Vector2 } from './vector2'
@@ -8,7 +8,7 @@ import { Vector3 } from './vector3'
 import { Quaternion } from './quaternion'
 
 
-export class Matrix4 extends Numberic<Matrix4> {
+export class Matrix4 extends ArrayLike<Matrix4> {
   static DECOMPOSE_V: Vector3 | null = null
   static DECOMPOSE_M: Matrix4 | null = null
   static DECOMPOSE_R: Matrix3 | null =null

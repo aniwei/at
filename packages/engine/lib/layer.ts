@@ -1,110 +1,66 @@
 
 
-import { invariant } from 'ts-invariant'
-import { AbstractNode } from '../basic/node'
-import { Matrix4 } from '../basic/matrix4'
-import { Offset, Rect, RRect, Size } from '../basic/geometry'
-import { At, AtCanvas, AtPaint } from '../at'
-import { MutatorType, Mutators } from '../engine/embedded-views'
+import { invariant } from '@at/utility'
+import { At } from '@at/core'
+import { AbstractNode } from '@at/basic'
+import { Matrix4 } from '@at/math'
+import { Offset, Rect, RRect } from '@at/geometry'
+import { Paint } from './paint'
 import { transformRect } from '../basic/helper'
-import { AtNWCanvas } from './n-way-canvas'
+import { PrerollContext } from './preroll-context'
+import { PaintContext } from './paint-context'
+import { ColorFilter } from './color-filter'
+import { Picture } from './picture'
+import { Path } from './path'
 
-import type { AtImageFilter } from '../engine/image-filter'
-import type { AtPicture } from '../engine/picture'
-import type { BlendMode, Clip } from '../engine/skia'
-import type { AtPath } from '../engine/path'
-import type { AtColorFilter } from '../engine/color-filter'
-import type { AtRasterCache } from '../engine/rasterizer'
+import * as Skia from './skia'
 
-export class AtPrerollContext {
-  static create (cache: AtRasterCache | null) {
-    return new AtPrerollContext(cache)
-  }
-
-  public get cullRect () {
-    invariant(Rect.largest)
-    let cullRect = Rect.largest
-    for (const mutator of this.mutators) {
-      let rect: Rect
-
-      if (mutator.type === MutatorType.ClipRect) {
-        invariant(mutator.rect)
-        rect = mutator.rect
-      } else if (mutator.type === MutatorType.ClipRRect) {
-        invariant(mutator.rrect)
-        rect = mutator.rrect.outerRect
-      } else if (mutator.type === MutatorType.ClipPath) {
-        invariant(mutator.path)
-        rect = mutator.path.getBounds()
-      } else {
-        continue
-      }
-      cullRect = cullRect.intersect(rect)
-    }
-      
-    return cullRect
-  }
-
-  public cache: AtRasterCache | null
-  public mutators: Mutators = new Mutators()
-
-  constructor (cache: AtRasterCache | null) {
-    this.cache = cache 
-  }
-}
-
-export class AtPaintContext {
-  static create (internal: AtNWCanvas, leaf: AtCanvas, rasterCache: AtRasterCache | null) {
-    return new AtPaintContext(internal, leaf, rasterCache)
-  }
-
-  public internal: AtNWCanvas
-  public leaf: AtCanvas
-  public rasterCache: AtRasterCache | null
-
-  constructor (internal: AtNWCanvas, leaf: AtCanvas, rasterCache: AtRasterCache | null) {
-    this.internal = internal
-    this.leaf = leaf
-    this.rasterCache = rasterCache
-  }
-}
-
-export abstract class AtLayer extends AbstractNode<AtLayer> {
+//// => Layer
+// 抽象层
+export abstract class Layer extends AbstractNode<Layer> {
   // => attached
+  // 是否挂载
   public get attached () {
     return this.owner !== null
   }
 
-  // => paintable
-  public get paintable () {
+  // => isShoudPaint
+  public get ignored () {
     return !this.bounds.isEmpty
   }
 
+  // 引用计数
+  public count: number = 0
+  // 挂载对象
   public owner: unknown | null = null
+  // 节点深度
   public depth: number = 0
-  public refCount: number = 0
-  public parent: AtContainerLayer | null = null
-  public bounds: Rect = Rect.zero
-  public parentHandle: AtLayerHandle<AtLayer> = new AtLayerHandle<AtLayer>()
-  public nextSibling: AtLayer | null = null
-  public previousSibling: AtLayer | null = null
+  // 节点边界
+  public bounds: Rect = Rect.ZERO
+  public parentHandle: LayerHandle<Layer> = new LayerHandle<Layer>()
+  
+  // 父节点
+  public parent: ContainerLayer | null = null
+  // 下一个兄弟节点
+  public next: Layer | null = null
+  // 上一个兄弟节点
+  public previous: Layer | null = null
 
-  abstract preroll (context: AtPrerollContext, matrix: Matrix4): void
-  abstract paint (context: AtPaintContext): void
+  // 处理绘制边界
+  abstract preroll (context: PrerollContext, matrix: Matrix4): void
+  // 处理绘制
+  abstract paint (context: PaintContext): void
 
   attach (owner: unknown) {
-    invariant(owner !== null, `The argument "owner" cannot be null.`)
-    invariant(this.owner === null, `The "this.owner" cannot be null.`)
     this.owner = owner
   }
 
   detach () {
-    invariant(this.owner !== null, `The "this.owner" cannot be null.`)
     this.owner = null
     this.dispose()
   }
 
-  redepthChild (child: AtLayer) {
+  redepthChild (child: Layer) {
     invariant(child.owner === this.owner)
     if (child.depth <= this.depth) {
       child.depth = this.depth + 1
@@ -114,7 +70,7 @@ export abstract class AtLayer extends AbstractNode<AtLayer> {
 
   redepthChildren () {}
 
-  adoptChild (child: AbstractNode<AtLayer>) {
+  adoptChild (child: AbstractNode<Layer>) {
     super.adoptChild(child)
   }
 
@@ -122,21 +78,28 @@ export abstract class AtLayer extends AbstractNode<AtLayer> {
     this.parent?.removeChild(this)
   }
 
+  ref () {
+    this.count += 1
+  }
+
   unref () {
-    invariant(this.refCount > 0)
-    this.refCount -= 1
-    if (this.refCount === 0) {
+    invariant(this.count > 0)
+    this.count -= 1
+    if (this.count === 0) {
       this.dispose()
     }
   }
 
   dispose () {
+    
   }
 }
 
-export class AtLayerHandle<T extends AtLayer> {
-  static create <T extends AtLayer> () {
-    return new AtLayerHandle<T>()
+//// => LayerHandle
+// 层引用
+export class LayerHandle<T extends Layer> {
+  static create <T extends Layer> () {
+    return new LayerHandle<T>()
   }
 
   private _layer: T | null = null
@@ -147,54 +110,76 @@ export class AtLayerHandle<T extends AtLayer> {
     if (layer !== this.layer) {
       this._layer?.unref()
       this._layer = layer
-      if (this.layer !== null) {
-        this.layer.refCount += 1
+
+      if (this._layer !== null) {
+        this._layer?.ref()
       }
     }
   }
 }
 
-export abstract class AtContainerLayer extends AtLayer {
-  public firstChild: AtLayer | null = null 
-  public lastChild: AtLayer | null = null 
+
+//// => ContainerLayer
+// 容器层
+export interface ContainerLayerFactory<T> {
+  new (...rests: unknown[]): T
+  create (...rests: unknown[]): T
+}
+export abstract class ContainerLayer extends Layer {
+  static create <T extends ContainerLayer> (...rests: unknown[]): ContainerLayer {
+    const Factory = this as unknown as ContainerLayerFactory<T>
+    return new Factory(...rests)
+  }
+
+  public firstChild: Layer | null = null 
+  public lastChild: Layer | null = null 
 
   public get hasChildren () {
     return this.firstChild !== null
   }
 
+  /**
+   * 挂载
+   * @param {unknown} owner 
+   */
   attach (owner: unknown) {
     super.attach(owner)
-    let child: AtLayer | null = this.firstChild
+    let child: Layer | null = this.firstChild
     while (child !== null) {
       child.attach(owner)
-      child = child.nextSibling
+      child = child.next
     }
   }
 
-  
+  /**
+   * 卸载
+   */
   detach() {
     super.detach()
-    let child: AtLayer | null = this.firstChild
+    let child: Layer | null = this.firstChild
+
     while (child !== null) {
       child.detach()
-      child = child.nextSibling
+      child = child.next ?? null
     }
   }
 
-  append (child: AtLayer) {
-    invariant(child !== this as unknown as AtLayer)
+  /**
+   * 插入层
+   * @param {Layer} child 
+   */
+  append (child: Layer) {
+    invariant(child !== this as unknown as Layer)
     invariant(child !== this.firstChild)
     invariant(child !== this.lastChild)
     invariant(child.parent === null)
     invariant(!child.attached)
-    invariant(child.nextSibling === null)
-    invariant(child.previousSibling === null)
     invariant(child.parentHandle.layer === null)
       
     this.adoptChild(child)
-    child.previousSibling = this.lastChild
+    child.previous = this.lastChild
     if (this.lastChild !== null) {
-      this.lastChild.nextSibling = child
+      this.lastChild.next = child
     }
 
     this.lastChild = child
@@ -203,22 +188,25 @@ export abstract class AtContainerLayer extends AtLayer {
     invariant(child.attached === this.attached)
   }
 
-  
-  removeChild (child: AtLayer) {
-    invariant(child.parent === this as unknown as AtLayer)
+  /**
+   * 删除层
+   * @param {Layer} child 
+   */
+  removeChild (child: Layer) {
+    invariant(child.parent === this as unknown as Layer)
     invariant(child.attached === this.attached)
     invariant(child.parentHandle.layer !== null)
-    if (child.previousSibling === null) {
+    if (child.previous === null) {
       invariant(this.firstChild === child)
-      this.firstChild = child.nextSibling
+      this.firstChild = child.next
     } else {
-      child.previousSibling.nextSibling = child.nextSibling;
+      child.previous.next = child.next
     }
-    if (child.nextSibling === null) {
+    if (child.next === null) {
       invariant(this.lastChild === child)
-      this.lastChild = child.previousSibling
+      this.lastChild = child.previous
     } else {
-      child.nextSibling.previousSibling = child.previousSibling
+      child.next.previous = child.previous
     }
     invariant((this.firstChild === null) === (this.lastChild === null))
     invariant(
@@ -230,21 +218,22 @@ export abstract class AtContainerLayer extends AtLayer {
       this.lastChild.attached === this.attached
     )
     
-    child.previousSibling = null
-    child.nextSibling = null
+    child.previous = null
+    child.next = null
     this.dropChild(child)
     child.parentHandle.layer = null
     invariant(!child.attached)
   }
 
   removeAllChildren () {
-    let child: AtLayer | null = this.firstChild
+    let child: Layer | null = this.firstChild
     while (child !== null) {
-      const next: AtLayer | null = child.nextSibling
-      child.previousSibling = null
-      child.nextSibling = null
-      // invariant(child.attached === this.attached)
+      const next: Layer | null = child.next
+      child.previous = null
+      child.next = null
+
       this.dropChild(child)
+
       invariant(child.parentHandle !== null)
       child.parentHandle.layer = null
       child = next
@@ -254,39 +243,39 @@ export abstract class AtContainerLayer extends AtLayer {
   }
 
   applyTransform (
-    child: AtLayer | null, 
+    child: Layer | null, 
     transform: Matrix4
   ) {
     invariant(child !== null)
     invariant(transform !== null)
   }
   
-  depthFirstIterateChildren (): AtLayer[] {
+  depthFirstIterateChildren (): Layer[] {
     if (this.firstChild === null) {
       return []
     }
 
-    let children: AtLayer[] = []
-    let child: AtLayer | null = this.firstChild
+    let children: Layer[] = []
+    let child: Layer | null = this.firstChild
     while (child !== null) {
       children.push(child)
-      if (child instanceof AtContainerLayer) {
+      if (child instanceof ContainerLayer) {
         children = children.concat(child.depthFirstIterateChildren())
       }
-      child = child.nextSibling
+      child = child.next
     }
     return children
   }
 
   /**
    * 合并子节点绘制边界
-   * @param {AtPrerollContext} context
+   * @param {PrerollContext} context
    * @param {Matrix4} childMatrix
    * @return {Rect}
    */  
-  prerollChildren (context: AtPrerollContext, childMatrix: Matrix4): Rect {
-    let childPaintBounds: Rect = Rect.zero
-    let child: AtLayer | null = this.firstChild
+  prerollChildren (context: PrerollContext, childMatrix: Matrix4): Rect {
+    let childPaintBounds: Rect = Rect.ZERO
+    let child: Layer | null = this.firstChild
 
     while (child !== null) {
       child.preroll(context, childMatrix)
@@ -297,39 +286,36 @@ export abstract class AtContainerLayer extends AtLayer {
         childPaintBounds = childPaintBounds.expandToInclude(child.bounds)
       }
 
-      child = child.nextSibling
+      child = child.next
     }
 
     return childPaintBounds
   }
 
   /**
-   * @description: 绘制子节点
-   * @param {AtPaintContext} context
+   * @param {PaintContext} context
    * @return {*}
    */  
-  paintChildren (context: AtPaintContext) {
-    invariant(this.paintable, `The layer bound cannot be empty.`)
+  paintChildren (context: PaintContext) {
+    invariant(this.ignored, `The layer bound cannot be empty.`)
 
-    let child: AtLayer | null = this.firstChild
+    let child: Layer | null = this.firstChild
     
     while (child !== null) {
-
-      if (child.paintable) {
+      if (child.ignored) {
         child.paint(context)
       }
 
-      child = child.nextSibling
+      child = child.next
     }
   }
 
   /**
-   * @description: 
-   * @param {AtPrerollContext} prerollContext
+   * @param {PrerollContext} prerollContext
    * @param {Matrix4} matrix
    * @return {*}
    */  
-  preroll (prerollContext: AtPrerollContext,  matrix: Matrix4) {
+  preroll (prerollContext: PrerollContext,  matrix: Matrix4) {
     this.bounds = this.prerollChildren(prerollContext, matrix)
   }
 
@@ -339,28 +325,31 @@ export abstract class AtContainerLayer extends AtLayer {
   }
 }
 
-export class AtRootLayer extends AtContainerLayer {
-  static create () {
-    return new AtRootLayer()
+//// => RootLayer
+export class RootLayer extends ContainerLayer {
+  static create (): RootLayer {
+    return super.create()
   }
 
   /**
-   * @description: 
-   * @param {AtPaintContext} context
+   * 绘制
+   * @param {PaintContext} context
    * @return {*}
    */  
-  paint (context: AtPaintContext) {
+  paint (context: PaintContext) {
     this.paintChildren(context)
   }
 }
 
-export class AtTransformLayer extends AtContainerLayer {
+//// => TransformLayer
+// 变换层
+export class TransformLayer extends ContainerLayer {
   static create (
-    offset: Offset = Offset.zero,
+    offset: Offset = Offset.ZERO,
     transform: Matrix4, 
-  ) {
+  ): TransformLayer {
     transform.multiply(Matrix4.translationValues(offset.dx, offset.dy, 0.0))
-    return new AtTransformLayer(offset, transform)
+    return super.create(offset, transform) as TransformLayer
   }
 
    // => offset
@@ -390,7 +379,7 @@ export class AtTransformLayer extends AtContainerLayer {
   public inverseDirty: boolean = true
   
   constructor(
-    offset: Offset = Offset.zero,
+    offset: Offset = Offset.ZERO,
     transform: Matrix4,
   ) {
     super()
@@ -399,7 +388,7 @@ export class AtTransformLayer extends AtContainerLayer {
   }
 
   applyTransform (
-    child: AtLayer | null, 
+    child: Layer | null, 
     transform: Matrix4
   ) {
     invariant(child !== null)
@@ -408,23 +397,24 @@ export class AtTransformLayer extends AtContainerLayer {
     transform.multiply(this.transform)
   }
 
-  preroll (context: AtPrerollContext, matrix: Matrix4) {
+  preroll (context: PrerollContext, matrix: Matrix4) {
     invariant(this.transform !== null)
 
     const childMatrix: Matrix4 = matrix.multiplied(this.transform)
-    context.mutators.pushTransform(this.transform)
+    context.pushTransform(this.transform)
+
     const childPaintBounds: Rect = this.prerollChildren(context, childMatrix)
     this.bounds = transformRect(this.transform, childPaintBounds)
-    context.mutators.pop()
+
+    context.pop()
   }
 
   /**
-   * @description: 
-   * @param {AtPaintContext} paintContext
+   * @param {PaintContext} paintContext
    * @return {*}
    */  
-  paint (context: AtPaintContext) {
-    invariant(this.paintable, `The layer must be paintable.`)
+  paint (context: PaintContext) {
+    invariant(this.ignored, `The layer must be ignored.`)
     invariant(this.transform !== null)
 
     context.internal.save()
@@ -434,18 +424,20 @@ export class AtTransformLayer extends AtContainerLayer {
   }
 }
 
-export class AtOffsetLayer extends AtTransformLayer {
-  static create (...rests: unknown[]) {
-    const offset = rests[0] as Offset
-    return new AtOffsetLayer(offset)
+//// => OffsetLayer
+// 位移层
+export class OffsetLayer extends TransformLayer {
+  static create (...rests: unknown[]): OffsetLayer
+  static create (offset: Offset): OffsetLayer {
+    return new OffsetLayer(offset)
   }
 
-  constructor (offset: Offset = Offset.zero) {
+  constructor (offset: Offset = Offset.ZERO) {
     super(offset, Matrix4.translationValues(offset.dx, offset.dy, 0.0))
   }
 
   applyTransform (
-    child: AtLayer | null, 
+    child: Layer | null, 
     transform: Matrix4 
   ) {
     invariant(child !== null)
@@ -459,27 +451,25 @@ export class AtOffsetLayer extends AtTransformLayer {
     )
   }
 
-  preroll (context: AtPrerollContext, matrix: Matrix4) {
+  preroll (context: PrerollContext, matrix: Matrix4) {
     invariant(this.transform !== null)
 
-    // console.log(this.transform)
-
     const childMatrix: Matrix4 = matrix.multiplied(this.transform)
-    context.mutators.pushTransform(this.transform)
+    context.pushTransform(this.transform)
     
     const childPaintBounds: Rect = this.prerollChildren(context, childMatrix)
     this.bounds = transformRect(this.transform, childPaintBounds)
     
-    context.mutators.pop()
+    context.pop()
   }
 
   /**
    * @description: 
-   * @param {AtPaintContext} paintContext
+   * @param {PaintContext} paintContext
    * @return {*}
    */  
-  paint (context: AtPaintContext) {
-    invariant(this.paintable, `The layer must be paintable.`)
+  paint (context: PaintContext) {
+    invariant(this.ignored, `The layer must be ignored.`)
     invariant(this.transform !== null)
 
     context.internal.save()
@@ -489,17 +479,19 @@ export class AtOffsetLayer extends AtTransformLayer {
   }
 }
 
-export class AtPictureLayer extends AtLayer {
+//// => 
+// 位图层
+export class PictureLayer extends Layer {
   static create () {
-    return new AtPictureLayer()
+    return new PictureLayer()
   }
 
   // => picture
-  private _picture: AtPicture | null = null
+  private _picture: Picture | null = null
   public get picture () {
     return this._picture
   }
-  public set picture (picture: AtPicture | null) {
+  public set picture (picture: Picture | null) {
     this._picture?.dispose()
     this._picture = picture
   }
@@ -508,32 +500,22 @@ export class AtPictureLayer extends AtLayer {
   public isComplexHint: boolean = false
   public willChangeHint: boolean = false
   
-  public offset: Offset = Offset.zero
+  public offset: Offset = Offset.ZERO
 
-  preroll (context: AtPrerollContext, matrix: Matrix4) {
+  preroll (context: PrerollContext, matrix: Matrix4) {
     invariant(this.picture !== null)
     invariant(this.picture.cullRect)
     this.bounds = this.picture.cullRect.shift(this.offset)
   }
 
-  paint (context: AtPaintContext) {
+  paint (context: PaintContext) {
     invariant(this.picture !== null, `The this.picture cannot be null.`) 
-    invariant(this.paintable, ``)
-
-    // invariant((() => {
-    //   console.time(`picture.paint`)
-    //   return true
-    // })())
+    invariant(this.ignored, ``)
 
     context.leaf.save()
     context.leaf.translate(this.offset.dx, this.offset.dy)
     context.leaf.drawPicture(this.picture)
     context.leaf.restore()
-
-    // invariant((() => {
-    //   console.timeEnd(`picture.paint`)
-    //   return true
-    // })())
   }
 
   detach (): void {
@@ -549,31 +531,32 @@ export class AtPictureLayer extends AtLayer {
   }
 }
 
-
-export class AtClipRectLayer extends AtContainerLayer {
+//// => ClipRectLayer
+// 矩形裁剪层
+export class ClipRectLayer extends ContainerLayer {
   static create (
     clipRect: Rect,
-    clipBehavior?: Clip,
+    clipBehavior?: Skia.Clip,
   ) {
-    return new AtClipRectLayer(clipRect, clipBehavior)
+    return super.create(clipRect, clipBehavior) as  ClipRectLayer
   }
 
   public clipRect: Rect
-  public clipBehavior: Clip
+  public clipBehavior: Skia.Clip
 
   constructor (
     clipRect: Rect,
-    clipBehavior: Clip = At.Clip.HardEdge,
+    clipBehavior: Skia.Clip = At.skia.Clip.HardEdge,
   ) {
     super()
+    invariant(clipBehavior !== At.skia.Clip.None)
+
     this.clipRect = clipRect ?? null
     this.clipBehavior = clipBehavior
-    invariant(clipBehavior !== null)
-    invariant(clipBehavior !== At.Clip.None)
   }
 
-  preroll (context: AtPrerollContext, matrix: Matrix4) {
-    context.mutators.pushClipRect(this.clipRect)
+  preroll (context: PrerollContext, matrix: Matrix4) {
+    context.pushClipRect(this.clipRect)
 
     const childPaintBounds: Rect = this.prerollChildren(context, matrix)
 
@@ -581,22 +564,22 @@ export class AtClipRectLayer extends AtContainerLayer {
       this.bounds = childPaintBounds.intersect(this.clipRect)
     }
 
-    context.mutators.pop()
+    context.pop()
   }
 
-  paint (context: AtPaintContext): void {
-    invariant(this.paintable, `The layer must be painting.`)
+  paint (context: PaintContext): void {
+    invariant(this.ignored, `The layer must be ignored.`)
 
     context.internal.save()
-    context.internal.clipRect(this.clipRect, At.ClipOp.Intersect, this.clipBehavior !== At.Clip.HardEdge)
+    context.internal.clipRect(this.clipRect, At.skia.ClipOp.Intersect, this.clipBehavior !== At.skia.Clip.HardEdge)
 
-    if (this.clipBehavior === At.Clip.AntiAliasWithSaveLayer) {
+    if (this.clipBehavior === At.skia.Clip.AntiAliasWithSaveLayer) {
       context.internal.saveLayer(this.clipRect, null)
     }
 
     this.paintChildren(context)
 
-    if (this.clipBehavior === At.Clip.AntiAliasWithSaveLayer) {
+    if (this.clipBehavior === At.skia.Clip.AntiAliasWithSaveLayer) {
       context.internal.restore()
     }
 
@@ -604,52 +587,55 @@ export class AtClipRectLayer extends AtContainerLayer {
   }
 }
 
-export class AtClipRRectLayer extends AtContainerLayer {
+//// => ClipRRectLayer
+// 裁减圆角层
+export class ClipRRectLayer extends ContainerLayer {
   static create (
     clipRRect: RRect,
-    clipBehavior?: Clip,
+    clipBehavior?: Skia.Clip,
   ) {
-    return new AtClipRRectLayer(clipRRect, clipBehavior)
+    return super.create(clipRRect, clipBehavior) as ClipRRectLayer
   }
 
   public clipRRect: RRect
-  public clipBehavior: Clip
+  public clipBehavior: Skia.Clip
 
   constructor(
     clipRRect: RRect,
-    clipBehavior: Clip = At.Clip.AntiAlias,
+    clipBehavior: Skia.Clip = At.skia.Clip.AntiAlias,
   ) {
     super()
 
-    invariant(clipBehavior !== null)
-    invariant(clipBehavior !== At.Clip.None)
+    invariant(clipBehavior !== At.skia.Clip.None)
     
     this.clipRRect = clipRRect ?? null
     this.clipBehavior = clipBehavior
   }
 
-  preroll (context: AtPrerollContext, matrix: Matrix4) {
-    context.mutators.pushClipRRect(this.clipRRect)
+  preroll (context: PrerollContext, matrix: Matrix4) {
+    context.pushClipRRect(this.clipRRect)
+
     const childPaintBounds: Rect = this.prerollChildren(context, matrix)
-    if (childPaintBounds.overlaps(this.clipRRect.outerRect)) {
-      this.bounds = childPaintBounds.intersect(this.clipRRect.outerRect)
+    if (childPaintBounds.overlaps(this.clipRRect.outer)) {
+      this.bounds = childPaintBounds.intersect(this.clipRRect.outer)
     }
-    context.mutators.pop()
+
+    context.pop()
   }
 
-  paint (context: AtPaintContext) {
-    invariant(this.paintable, ``)
+  paint (context: PaintContext) {
+    invariant(this.ignored, ``)
 
     context.internal.save()
-    context.internal.clipRRect(this.clipRRect, this.clipBehavior !== At.Clip.HardEdge)
+    context.internal.clipRRect(this.clipRRect, this.clipBehavior !== At.skia.Clip.HardEdge)
 
-    if (this.clipBehavior === At.Clip.AntiAliasWithSaveLayer) {
+    if (this.clipBehavior === At.skia.Clip.AntiAliasWithSaveLayer) {
       context.internal.saveLayer(this.bounds, null)
     }
 
     this.paintChildren(context)
 
-    if (this.clipBehavior === At.Clip.AntiAliasWithSaveLayer) {
+    if (this.clipBehavior === At.skia.Clip.AntiAliasWithSaveLayer) {
       context.internal.restore()
     }
 
@@ -657,31 +643,32 @@ export class AtClipRRectLayer extends AtContainerLayer {
   }
 }
 
-export class AtClipPathLayer extends AtContainerLayer {
+//// => ClipPathLayer
+// 路径裁剪层
+export class ClipPathLayer extends ContainerLayer {
   static create (
-    clipPath: AtPath,
-    clipBehavior?: Clip,
+    clipPath: Path,
+    clipBehavior?: Skia.Clip,
   ) {
-    return new AtClipPathLayer(clipPath, clipBehavior)
+    return super.create(clipPath, clipBehavior) as ClipPathLayer
   }
 
-  public clipPath: AtPath
-  public clipBehavior: Clip
+  public clipPath: Path
+  public clipBehavior: Skia.Clip
 
   constructor (
-    clipPath: AtPath,
-    clipBehavior: Clip = At.Clip.AntiAlias,
+    clipPath: Path,
+    clipBehavior: Skia.Clip = At.skia.Clip.AntiAlias,
   ) {
     super()
-    invariant(clipBehavior !== null)
-    invariant(clipBehavior !== At.Clip.None)
+    invariant(clipBehavior !== At.skia.Clip.None)
 
     this.clipPath = clipPath
     this.clipBehavior = clipBehavior
   }
 
-  preroll (context: AtPrerollContext, matrix: Matrix4) {
-    context.mutators.pushClipPath(this.clipPath)
+  preroll (context: PrerollContext, matrix: Matrix4) {
+    context.pushClipPath(this.clipPath)
     const childPaintBounds: Rect = this.prerollChildren(context, matrix)
     const clipBounds: Rect = this.clipPath.getBounds()
 
@@ -689,25 +676,25 @@ export class AtClipPathLayer extends AtContainerLayer {
       this.bounds = childPaintBounds.intersect(clipBounds)
     }
 
-    context.mutators.pop()
+    context.pop()
   }
 
   /**
    * 
-   * @param {AtPaintContext} context
+   * @param {PaintContext} context
    */  
-  paint (context: AtPaintContext) {
-    invariant(this.paintable, `The "this.paintable" must be true.`)
+  paint (context: PaintContext) {
+    invariant(this.ignored, `The layer must be ignored.`)
 
     context.internal.save()
-    context.internal.clipPath(this.clipPath, this.clipBehavior !== At.Clip.HardEdge)
+    context.internal.clipPath(this.clipPath, this.clipBehavior !== At.skia.Clip.HardEdge)
 
-    if (this.clipBehavior === At.Clip.AntiAliasWithSaveLayer) {
+    if (this.clipBehavior === At.skia.Clip.AntiAliasWithSaveLayer) {
       context.internal.saveLayer(this.bounds, null)
     }
 
     this.paintChildren(context)
-    if (this.clipBehavior === At.Clip.AntiAliasWithSaveLayer) {
+    if (this.clipBehavior === At.skia.Clip.AntiAliasWithSaveLayer) {
       context.internal.restore()
     }
 
@@ -715,23 +702,25 @@ export class AtClipPathLayer extends AtContainerLayer {
   }
 }
 
-export class AtColorFilterLayer extends AtContainerLayer {
-  static create (filter: AtColorFilter) {
-    return new AtColorFilterLayer(filter)
+//// => ColorFilterLayer
+// 滤镜层
+export class ColorFilterLayer extends ContainerLayer {
+  static create (filter: ColorFilter) {
+    return super.create(filter) as ColorFilterLayer
   }
 
-  public filter: AtColorFilter
+  public filter: ColorFilter
 
-  constructor (filter: AtColorFilter) {
+  constructor (filter: ColorFilter) {
     super()
     this.filter = filter
   }
 
-  paint (context: AtPaintContext) {
-    invariant(this.paintable, `The layer must be paintable.`)
+  paint (context: PaintContext) {
+    invariant(this.ignored, `The layer must be ignore.`)
 
-    const paint: AtPaint = AtPaint.create()
-    paint.colorFilter = this.filter
+    const paint: Paint = Paint.create()
+    paint.filter.color = this.filter
 
     context.internal.saveLayer(this.bounds, paint)
     this.paintChildren(context)
@@ -739,22 +728,28 @@ export class AtColorFilterLayer extends AtContainerLayer {
   }
 }
 
-export class AtImageFilterLayer extends AtContainerLayer {
-  static create (filter: AtImageFilter) {
-    return new AtImageFilterLayer(filter)
+//// => ImageFilterLayer
+// 图片滤镜层
+export class ImageFilterLayer extends ContainerLayer {
+  static create (filter: Skia.ImageFilter) {
+    return super.create(filter) as ImageFilterLayer
   }
 
-  public filter: AtImageFilter | null = null
+  public filter: Skia.ImageFilter | null = null
 
-  constructor (filter: AtImageFilter | null) {
+  constructor (filter: Skia.ImageFilter | null) {
     super()
     this.filter = filter
   }
   
-  paint (context: AtPaintContext) {
-    invariant(this.paintable, `The layer must be paintable.`)
-    const paint: AtPaint = new AtPaint()
-    paint.imageFilter = this.filter
+  /**
+   * 绘制
+   * @param {PaintContext} context 
+   */
+  paint (context: PaintContext) {
+    invariant(this.ignored, `The layer must be paintable.`)
+    const paint: Paint = new Paint()
+    // paint.filter.image = this.filter
     
     context.internal.saveLayer(this.bounds, paint)
     this.paintChildren(context)
@@ -762,76 +757,74 @@ export class AtImageFilterLayer extends AtContainerLayer {
   }
 }
 
-export class AtOpacityLayer extends AtOffsetLayer {
+export class OpacityLayer extends OffsetLayer {
   static create (
     alpha: number,
-    offset: Offset  = Offset.zero,
+    offset: Offset  = Offset.ZERO,
   ) {
-    return new AtOpacityLayer(alpha, offset)
+    return new OpacityLayer(alpha, offset)
   }
 
   public alpha: number
   
   constructor (
     alpha: number,
-    offset: Offset  = Offset.zero,
+    offset: Offset  = Offset.ZERO,
   ) {
     super(offset)
     
     this.alpha = alpha
   }
   
-  preroll (context: AtPrerollContext, matrix: Matrix4) {
+  preroll (context: PrerollContext, matrix: Matrix4) {
     const childMatrix: Matrix4 = Matrix4.copy(matrix)
     childMatrix.translate(this.offset.dx, this.offset.dy)
 
-    context.mutators.pushTransform(Matrix4.translationValues(this.offset.dx, this.offset.dy, 0.0))
-    context.mutators.pushOpacity(this.alpha)
+    context.pushTransform(Matrix4.translationValues(this.offset.dx, this.offset.dy, 0.0))
+    context.pushOpacity(this.alpha)
 
     super.preroll(context, childMatrix)
     
-    context.mutators.pop()
-    context.mutators.pop()
+    context.pop()
+    context.pop()
 
-    this.bounds = this.bounds.translate(this.offset.dx, this.offset.dy)
+    this.bounds = this.bounds.translate(this.offset)
   }
 }
 
-
-export class AtBackdropFilterLayer extends AtContainerLayer {
+//// => BackdropFilterLayer
+// 背景滤镜层
+export class BackdropFilterLayer extends ContainerLayer {
   static create (
-    filter: AtImageFilter,
-    blendMode: BlendMode = At.BlendMode.SrcOver,
+    filter: Skia.ImageFilter,
+    blendMode: Skia.BlendMode = At.skia.BlendMode.SrcOver,
   ) {
-    return new AtBackdropFilterLayer(
-      filter, 
-      blendMode
-    )
+    return super.create(filter, blendMode) as BackdropFilterLayer
   }
   
-  public filter: AtImageFilter
-  public blendMode: BlendMode
+  public filter: Skia.ImageFilter
+  public blendMode: Skia.BlendMode
 
   constructor (
-    filter: AtImageFilter,
-    blendMode: BlendMode = At.BlendMode.SrcOver,
+    filter: Skia.ImageFilter,
+    blendMode: Skia.BlendMode = At.skia.BlendMode.SrcOver,
   ) {
     super()
     this.filter = filter
     this.blendMode = blendMode
   }
   
-  preroll (context: AtPrerollContext, matrix: Matrix4) {
+  preroll (context: PrerollContext, matrix: Matrix4) {
     const childBounds: Rect = this.prerollChildren(context, matrix)
     this.bounds = childBounds.expandToInclude(context.cullRect)
   }
 
   /**
    * 绘制
-   * @param {AtPaintContext} context
+   * @param {PaintContext} context
    */  
-  paint (context: AtPaintContext) {
-    const paint = new AtPaint()
+  paint (context: PaintContext) {
+    const paint = new Paint()
     paint.blendMode = this.blendMode
 
     context.internal.saveLayerWithFilter(

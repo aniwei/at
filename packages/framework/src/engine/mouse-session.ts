@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { UnimplementedError } from '..c/basic/error'
 import { AtPointerEvent } from '../gestures/events'
 

@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { clamp, lerp, scaleAlpha } from './helper'
 
 export class Color extends Array<number> {

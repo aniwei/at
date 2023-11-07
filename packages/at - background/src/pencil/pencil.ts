@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { App, AppConfiguration, InitialCallback, Size, WorkerApp } from '@at/framework'
 import { AtInspector } from './inspector'
 import { AtDocument } from './element/document'

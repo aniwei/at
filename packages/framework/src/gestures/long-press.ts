@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { At } from '../at'
 import { Offset } from '../basic/geometry'
 import { GestureDisposition } from './arena'

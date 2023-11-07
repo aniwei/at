@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { nearZero } from '../basic/helper'
 import { At } from '../at'
 

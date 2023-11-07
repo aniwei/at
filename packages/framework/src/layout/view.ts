@@ -3,7 +3,7 @@
  * @date: 2022-12-01 23:33:36
  */
 
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Matrix4 } from '../basic/matrix4'
 import { Offset, Rect, Size } from '../basic/geometry'
 import { AtLayoutObject } from './object'

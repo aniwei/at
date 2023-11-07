@@ -2,7 +2,7 @@
  * @author: aniwei aniwei.studio@gmail.com
  * @date: 2022-10-30 01:51:15
  */
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { At } from '../at'
 
 import type { Font, Typeface, TypefaceFontProvider } from './skia'

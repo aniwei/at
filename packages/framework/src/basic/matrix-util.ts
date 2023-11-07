@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Offset, Rect } from './geometry'
 import { Matrix4 } from './matrix4'
 import { Vector4 } from './vector4'

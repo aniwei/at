@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Color, Equalable } from '@at/basic'
 import { listEquals } from '@at/utility'
 import { Rect } from '@at/geometry'

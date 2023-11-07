@@ -1,5 +1,5 @@
 
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { At, Color, Size, AtView, Subscribable } from '@at/framework'
 import { AtPage } from './page'
 import { AtStage } from './stage'

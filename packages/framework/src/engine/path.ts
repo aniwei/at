@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { AtManagedSkiaObject } from './skia'
 import { Offset, Radius, Rect, RRect } from '../basic/geometry'
 import { toPoints, toMatrix } from '../basic/helper'

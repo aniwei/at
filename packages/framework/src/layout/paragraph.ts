@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { At, Axis, RenderComparison } from '../at'
 import { AtClipRectLayer, AtLayerHandle } from '../engine/layer'
 import { AtViewportOffset } from './viewport-offset'

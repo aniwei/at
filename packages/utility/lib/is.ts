@@ -1,5 +1,5 @@
-import { invariant } from 'ts-invariant'
 import { Offset, RRect, Rect } from '@at/geometry'
+import { invariant } from './invariant'
 
 //// => type
 // 类型判断

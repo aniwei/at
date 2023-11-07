@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { At, AtTextSpan, AtLayoutParagraph, Rect } from '@at/framework'
 import { AtShape, AtShapePainter } from './shape'
 

@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant' 
+import { invariant } from '@at/utility' 
 import { AtLayoutObject, VoidCallback } from '../at'
 import { AtPaintingContext } from './painting-context'
 import { AtViewConfiguration } from './view'

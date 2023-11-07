@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 
 import { At } from '../at'
 import { Offset, Rect } from '../basic/geometry'

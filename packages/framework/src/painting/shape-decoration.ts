@@ -2,7 +2,7 @@
  * @author: Aniwei
  * @date: 2022-07-04 12:10:21
  */
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { Color } from '../basic/color'
 import { AtGradient } from './gradient'
 import { AtBorderRadius } from './border-radius'

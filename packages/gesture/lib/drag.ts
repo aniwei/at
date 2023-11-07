@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { At, Timer } from '../at'
 import { Matrix4 } from '../basic/matrix4'
 import { Offset } from '../basic/geometry'

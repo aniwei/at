@@ -1,18 +1,18 @@
-import { invariant } from 'ts-invariant'
-import { Numberic } from '@at/basic'
+import { invariant } from '@at/utility'
+import { ArrayLike } from '@at/basic'
 
 /**
  * 坐标类
  */
-export interface CreateFactory {
+export interface PointFactory {
   new (...rests: unknown[]): unknown,
   create (...rests: unknown[]): unknown
 }
-export abstract class Point<T extends Point<T>> extends Numberic<T> {
-  static create (...rests: unknown[]): unknown
-  static create  (dx: number, dy: number) {
-    const CreateFactory = this as CreateFactory
-    return new CreateFactory(dx, dy)
+export abstract class Point extends ArrayLike {
+  static create (...rests: unknown[]): Point
+  static create  (dx: number, dy: number): Point {
+    const PointFactory = this as PointFactory
+    return new PointFactory(dx, dy) as Point
   }
 
   // => dx

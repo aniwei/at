@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Size } from '../basic/geometry'
 import { AtImage } from '../engine/image'
 import { EventEmitter } from '../basic/events'

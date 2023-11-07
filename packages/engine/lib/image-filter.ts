@@ -1,5 +1,6 @@
 import { At } from '@at/core'
 import { listEquals, toFilterQuality, toMatrix } from '@at/utility'
+import { ColorFilter } from './color-filter'
 
 import * as Skia from './skia'
 
@@ -12,10 +13,12 @@ export abstract class ImageFilter extends Skia.ManagedSkiaRef<Skia.ImageFilter> 
     return new BlurImageFilter(sigmaX, sigmaY, tileMode)
   }
 
+  // 颜色
   static color (filter: Skia.ColorFilter) {
-    return new AtColorFilterImageFilter(filter)
+    return ColorFilterImageFilter.create(filter)
   }
   
+  // 矩阵
   static matrix (matrix: number[], filterQuality: Skia.FilterQuality) {
     return new MatrixImageFilter(matrix, filterQuality)
   }
@@ -184,6 +187,10 @@ export class MatrixImageFilter extends ImageFilter {
 
 
 export class ColorFilterImageFilter extends ImageFilter {
+  static create (...rests: unknown[]): ColorFilterImageFilter {
+    return super.create(...rests) as ColorFilterImageFilter
+  }
+
   protected color: ColorFilter
   
   /**
@@ -192,7 +199,7 @@ export class ColorFilterImageFilter extends ImageFilter {
    * @return {ColorFilterImageFilter}
    */  
   constructor (color: ColorFilter) {
-    super(color.initRawImageFilter())
+    super(color.createRawImageFilter())
     this.color = color
   }
 
@@ -200,7 +207,7 @@ export class ColorFilterImageFilter extends ImageFilter {
    * @return {ImageFilter}
    */  
   resurrect (): Skia.ImageFilter {
-    return this.color.initRawImageFilter()
+    return this.color.createRawImageFilter()
   }
 
   /**

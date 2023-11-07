@@ -43,6 +43,6 @@ export class MaskFilter extends Skia.ManagedSkiaRef<Skia.MaskFilter> {
    * @return {void}
    */  
   dispose () {
-    this.skia?.delete();
+    this.skia?.delete()
   }
 }

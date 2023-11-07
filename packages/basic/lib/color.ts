@@ -1,7 +1,7 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { clamp, lerp } from '@at/utility'
 import { UnsupportedError } from './unsupported-error'
-import { Numberic } from './numberic'
+import { ArrayLike } from './array-like'
 
 /**
  * 放大颜色 Alpha
@@ -16,8 +16,9 @@ export function scaleAlpha (a: Color, factor: number) {
 /**
  * 颜色类
  */
-export class Color extends Numberic<Color> {
+export class Color extends ArrayLike {
   static BLACK = new Color(0xff000000)
+  static CLEAR = new Color(0x00000000)
 
   /**
    * 创建

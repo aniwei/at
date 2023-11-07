@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Matrix3 } from './matrix3'
 import { Vector3 } from './vector3'
 import { Vector4 } from './vector4'

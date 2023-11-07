@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { Offset, At, Radius, Rect, AtBoxHitTestResult, AtBoxHitTestEntry, AtPaintingContext } from '@at/framework'
 import { AtShape, AtShapePainter } from './shape'
 

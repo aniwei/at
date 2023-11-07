@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { Color } from '../basic/color'
 import { Offset } from '../basic/geometry'
 import { BlurStyle } from '../engine/skia'

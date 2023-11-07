@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { AtManagedSkiaObject } from './skia'
 import { AtImage } from './image'
 

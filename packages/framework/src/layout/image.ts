@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 
 import { ImageRepeat } from '../painting/decoration-image'
 import { Offset, Rect, Size } from '../basic/geometry'

@@ -1,6 +1,6 @@
 
 
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { AbstractNode } from '../basic/node'
 import { Matrix4 } from '../basic/matrix4'
 import { Offset, Rect, RRect, Size } from '../basic/geometry'

@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { Offset, Rect, Size } from '@at/framework'
 import { AtElement } from './element'
 

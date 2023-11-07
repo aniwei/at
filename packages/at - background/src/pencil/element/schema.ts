@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { AtDocument, AtDocumentConfiguration, ElementType } from './document'
 import { AtElement } from './element'
 import { AtPage } from './page'

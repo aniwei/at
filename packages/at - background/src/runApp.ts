@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { App, AtTextPaintingStyle, AtTextSpan } from '@at/framework'
 import { AtFixedViewportOffset } from '@at/framework/dist/layout/viewport-offset'
 import { At, AtLayoutBox, Image } from '@at/framework'

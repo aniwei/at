@@ -1,8 +1,8 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { lerp } from '@at/utility'
 import { Point } from './point'
 
-export class Radius extends Point<Radius> {
+export class Radius extends Point {
     static ZERO = Radius.circular(0)
     /**
      * 
@@ -11,7 +11,7 @@ export class Radius extends Point<Radius> {
      * @returns 
      */
     static create (dx: number, dy: number) {
-      return new Radius(dx, dy)
+      return new Radius(dx, dy) as Radius
     }
   
     /**
@@ -53,7 +53,6 @@ export class Radius extends Point<Radius> {
     }
   
     /**
-     * @description: 
      * @param {number} radius
      * @return {*}
      */  

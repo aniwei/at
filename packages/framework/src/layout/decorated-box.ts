@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { Offset, Size } from '../basic/geometry'
 import { AtImageConfiguration } from '../painting/image-provider'
 import { AtLayoutBox } from './box'

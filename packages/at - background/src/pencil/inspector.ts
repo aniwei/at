@@ -1,4 +1,4 @@
-import invariant from 'ts-invariant'
+import invariant from '@at/utility'
 import { AppProtocol, EventEmitter } from '@at/framework'
 import type * as Protocol from './protocol'
 

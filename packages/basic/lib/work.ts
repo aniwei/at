@@ -1,5 +1,5 @@
 import debug from 'debug'
-import { invariant } from 'ts-invariant'
+import { paddingLeft, invariant } from '@at/utility'
 import { EventEmitter } from './events'
 import { 
   MessageContent, 
@@ -15,7 +15,7 @@ import {
   MessageReceivers, 
   MessageSender 
 } from './message'
-import { paddingLeft } from './utility'
+
 
 const transport_debug = debug('work')
 

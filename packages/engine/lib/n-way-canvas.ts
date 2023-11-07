@@ -8,9 +8,9 @@ import type { Paint } from './paint'
 import type { Canvas } from './canvas'
 import type { ImageFilter } from './image-filter'
 
-export class AtNWCanvas extends Array<Canvas> {
+export class NWayCanvas extends Array<Canvas> {
   static create () {
-    return new AtNWCanvas()
+    return new NWayCanvas()
   }
 
   /**
@@ -27,7 +27,7 @@ export class AtNWCanvas extends Array<Canvas> {
    * @param {Paint} paint
    * @return {*}
    */
-  saveLayer (bounds: Rect, paint: Paint | null) {
+  saveLayer (bounds: Rect, paint: Paint) {
     for (const canvas of this) {
       canvas.saveLayer(bounds, paint)
     }

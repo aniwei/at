@@ -1,4 +1,4 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { At, AtPainting } from '../at'
 import { Color } from '../basic/color'
 import { AtCanvas } from '../engine/canvas'

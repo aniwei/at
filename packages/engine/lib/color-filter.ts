@@ -1,18 +1,20 @@
-import { invariant } from 'ts-invariant'
+import { invariant } from '@at/utility'
 import { At } from '@at/core'
-import { ColorFilterImageFilter } from './image-filter'
-import { UnimplementedError } from '@at/basic'
 import { listEquals } from '@at/utility'
+import { Color, Equalable, UnimplementedError } from '@at/basic'
+import { ColorFilterImageFilter } from './image-filter'
 
 import * as Skia from './skia'
 
-import { Color, Equalable } from '@at/basic'
 
+//// => ColorFilter
+// 颜色滤镜
+// 滤镜类型
 export enum ColorFilterKind {
   Mode,
   Matrix,
-  LinearToSrgbGamma,
-  SrgbToLinearGamma,
+  LinearToSRGBGamma,
+  SRGBToLinearGamma,
 }
 
 export abstract class ColorFilter implements Equalable<ColorFilter> {
@@ -26,86 +28,101 @@ export abstract class ColorFilter implements Equalable<ColorFilter> {
     return 
   }
 
-
   // => image
   // 位图滤镜
   get image () {
     return new ColorFilterImageFilter(this)
   }
 
-  initRawColorFilter (): ColorFilter {
-    throw new UnimplementedError(`ColorFilter initRowColorFilter is not unimplmented yet.`)
+  createRawColorFilter (): Skia.ColorFilter {
+    throw new UnimplementedError(`ColorFilter createRawColorFilter is not unimplmented yet.`)
   }
 
-  initRawImageFilter (): Skia.ImageFilter {
+  createRawImageFilter (): Skia.ImageFilter {
     return At.skia.ImageFilter.MakeColorFilter(
-      this.initRawColorFilter(), 
+      this.createRawColorFilter(), 
       null
     )
   }
 
+  /**
+   * 是否相等
+   * @param {ColorFilter | null} other 
+   * @returns {boolean}
+   */
   equal (other: ColorFilter | null): boolean {
     return other instanceof ColorFilter
   }
 
+  /**
+   * 是否相等
+   * @param {ColorFilter | null} other 
+   * @returns {boolean}
+   */
   notEqual (other: ColorFilter | null): boolean {
     return !this.equal(other)
   }
 }
 
 export class ManagedSkiaColorFilter extends Skia.ManagedSkiaRef<Skia.ColorFilter> {
-  public colorFilter: AtColorFilter
+  // => skia
+  public get skia () {
+    invariant(super.skia)
+    return super.skia
+  }
+
+  public filter: ColorFilter
 
   /**
    * 构造函数
-   * @param {ColorFilter} colorFilter 
+   * @param {ColorFilter} filter 
    */
-  constructor (colorFilter: AtColorFilter) {
-    super(colorFilter.initRawColorFilter())
-    this.colorFilter = colorFilter
+  constructor (filter: ColorFilter) {
+    super(filter.createRawColorFilter())
+    this.filter = filter
   }
 
   /**
-   * 获取
+   * 创建
    * @return {ColorFilter}
    */  
   resurrect () {
-    return this.colorFilter.initRawColorFilter()
+    return this.filter.createRawColorFilter()
   }
   
   /**
-   * 
-   * @param other 
-   * @returns 
+   * 是否相等
+   * @param {ManagedSkiaColorFilter | null} other 
+   * @returns {boolean}
    */  
-  equal (other: AtManagedSkiaColorFilter | null) {
+  equal (other: ManagedSkiaColorFilter | null) {
     return (
-      other instanceof AtManagedSkiaColorFilter &&
-      this.colorFilter === other.colorFilter
+      other instanceof ManagedSkiaColorFilter &&
+      this.filter === other.filter
     )
   }
 
-  notEqual (other: AtManagedSkiaColorFilter | null) {
+  /**
+   * 是否相等
+   * @param {ManagedSkiaColorFilter | null} other 
+   * @returns {boolean}
+   */
+  notEqual (other: ManagedSkiaColorFilter | null) {
     return !this.equal(other)
   }
 
-  /**
-   * @description: 
-   * @return {string}
-   */  
   toString () {
-    return this.colorFilter.toString()
+    return this.filter.toString()
   }
 }
 
+//// => BlendModeColorFilter
 export class BlendModeColorFilter extends ColorFilter {
   protected color: Color
   protected blendMode: Skia.BlendMode
 
-  
-  
-  initRawColorFilter () {
-    return At.ColorFilter.MakeBlend(
+  createRawColorFilter () {
+    return At.skia.ColorFilter.MakeBlend(
       this.color,
       this.blendMode
     )
@@ -115,7 +132,6 @@ export class BlendModeColorFilter extends ColorFilter {
    * 构造函数
    * @param {Color} color
    * @param {BlendMode} blendMode
-   * @return {AtBlendModeColorFilter}
    */  
   constructor (color: Color, blendMode: Skia.BlendMode) {
     super()
@@ -125,7 +141,7 @@ export class BlendModeColorFilter extends ColorFilter {
   }
 
   /**
-   * 
+   * 是否相等
    * @param {BlendModeColorFilter} other
    * @return {boolean}
    */  
@@ -137,30 +153,35 @@ export class BlendModeColorFilter extends ColorFilter {
     )
   }
 
+  /**
+   * 是否相等
+   * @param {BlendModeColorFilter} other
+   * @return {boolean}
+   */  
   notEqual (other: BlendModeColorFilter | null) {
     return !this.equal(other)
   }
 
   /**
-   * @description: 
    * @return {string}
    */  
   toString () {
-    return `ColorFilter.mode(
+    return `BlendModeColorFilter(
       [color]: ${this.color}, 
       [blendMode]: ${this.blendMode}
     )`
   }
 }
 
+//// => MatrixColorFilter
 export class MatrixColorFilter extends ColorFilter {
-  protected matrix: ArrayLike<number>
+  protected matrix: number[]
 
   /**
-   * @param {ArrayLike<number>} matrix
+   * @param {number[]} matrix
    * @return {*}
    */  
-  constructor (matrix: ArrayLike<number>) {
+  constructor (matrix: number[]) {
     super()
 
     this.matrix = matrix
@@ -185,116 +206,123 @@ export class MatrixColorFilter extends ColorFilter {
   }
 
   /**
-   * 
-   * @param {AtMatrixColorFilter} other
+   * 是否相等
+   * @param {MatrixColorFilter} other
    * @return {boolean}
    */  
-  equal (other: AtMatrixColorFilter | null) {
+  equal (other: MatrixColorFilter | null) {
     return (
-      other instanceof AtMatrixColorFilter &&
+      other instanceof MatrixColorFilter &&
       listEquals<number>(this.matrix, other.matrix)
     )
   }
 
-  notEqual (other: AtMatrixColorFilter | null) {
+  /**
+   * 是否相等
+   * @param {MatrixColorFilter} other 
+   * @returns {boolean}
+   */
+  notEqual (other: MatrixColorFilter | null) {
     return !this.equal(other)
   }
 
   /**
-   * @description: 
    * @return {string}
    */  
   toString () {
-    return `ColorFilter.matrix(${this.matrix})`
+    return `MatrixColorFilter(${this.matrix})`
   }
 }
 
 
-export class AtLinearToSRGBGammaColorFilter extends AtColorFilter {
+export class LinearToSRGBGammaColorFilter extends ColorFilter {
   /**
    * @description: 
    * @return {ColorFilterSkiaObject}
    */  
-  initRawColorFilter () {
-    return At.ColorFilter.MakeLinearToSRGBGamma()
+  createRawColorFilter () {
+    return At.skia.ColorFilter.MakeLinearToSRGBGamma()
   }
 
   /**
-   * 
-   * @param other 
+   * 是否相等
+   * @param {LinearToSRGBGammaColorFilter | null} other 
    * @returns 
    */
-  equal (other: AtLinearToSRGBGammaColorFilter | null) {
+  equal (other: LinearToSRGBGammaColorFilter | null) {
     return (
-      other instanceof AtLinearToSRGBGammaColorFilter &&
+      other instanceof LinearToSRGBGammaColorFilter &&
       other === this
     )
   }
 
-  notEqual (other: AtLinearToSRGBGammaColorFilter | null) {
+  notEqual (other: LinearToSRGBGammaColorFilter | null) {
     return !this.equal(other)
   }
 
   /**
-   * @description: 
    * @return {string}
    */  
   toString () {
-    return `ColorFilter.AtLinearToSRGBGamma()`
+    return `LinearToSRGBGammaColorFilter()`
   }
 }
 
-export class AtSRGBToLinearGammaColorFilter extends AtColorFilter {
-  initRawColorFilter () {
-    return At.ColorFilter.MakeSRGBToLinearGamma()
+export class SRGBToLinearGammaColorFilter extends ColorFilter {
+  createRawColorFilter () {
+    return At.skia.ColorFilter.MakeSRGBToLinearGamma()
   }
 
   /**
-   * 
-   * @param other 
+   * 是否相等
+   * @param {SRGBToLinearGammaColorFilter | null} other 
    * @returns 
    */
-  equal (other: AtSRGBToLinearGammaColorFilter | null) {
+  equal (other: SRGBToLinearGammaColorFilter | null) {
     return (
-      other instanceof AtSRGBToLinearGammaColorFilter &&
+      other instanceof SRGBToLinearGammaColorFilter &&
       other === this
     )
   }
 
-  notEqual (other: AtSRGBToLinearGammaColorFilter | null) {
+  /**
+   * 是否相等
+   * @param {SRGBToLinearGammaColorFilter | null} other 
+   * @returns 
+   */
+  notEqual (other: SRGBToLinearGammaColorFilter | null) {
     return !this.equal(other)
   }
   
   toString () {
-    return 'ColorFilter.AtSRGBToLinearGamma()'
+    return 'SRGBToLinearGammaColorFilter()'
   }
 }
 
-export class AtComposeColorFilter extends AtColorFilter {
-  protected innerFilter: AtManagedSkiaColorFilter
-  protected outerFilter: AtManagedSkiaColorFilter
+export class ComposeColorFilter extends ColorFilter {
+  protected inner: ManagedSkiaColorFilter
+  protected outer: ManagedSkiaColorFilter
 
    /**
-   * @description: 
    * @return {ColorFilterSkiaObject}
    */
-  initRawColorFilter () {
-    return At.ColorFilter.MakeCompose(
-      this.outerFilter.skia!,
-      this.innerFilter.skia!
+  createRawColorFilter () {
+    return At.skia.ColorFilter.MakeCompose(
+      this.outer.skia,
+      this.inner.skia
     )
   }
 
   /**
    * 构造函数
-   * @param {AtManagedSkiaColorFilter} innerFilter 
-   * @param {AtManagedSkiaColorFilter} outerFilter 
+   * @param {ManagedSkiaColorFilter} inner
+   * @param {ManagedSkiaColorFilter} outer
    */
-  constructor (innerFilter: AtManagedSkiaColorFilter, outerFilter: AtManagedSkiaColorFilter) {
+  constructor (inner: ManagedSkiaColorFilter, outer: ManagedSkiaColorFilter) {
     super()
 
-    this.innerFilter = innerFilter
-    this.outerFilter = outerFilter
+    this.inner = inner
+    this.outer = outer
   }
 
   /**
@@ -302,15 +330,15 @@ export class AtComposeColorFilter extends AtColorFilter {
    * @param {ComposeColorFilter} other
    * @return {boolean}
    */
-  equal (other: AtComposeColorFilter | null) {
+  equal (other: ComposeColorFilter | null) {
     return (
-      other instanceof AtComposeColorFilter &&
-      this.innerFilter.equal(other.innerFilter) &&
-      this.outerFilter.equal(other.outerFilter)
+      other instanceof ComposeColorFilter &&
+      this.inner.equal(other.inner) &&
+      this.outer.equal(other.outer)
     )  
   }
 
-  notEqual (other: AtComposeColorFilter | null) {
+  notEqual (other: ComposeColorFilter | null) {
     return !this.equal(other)
   }
 
@@ -319,6 +347,6 @@ export class AtComposeColorFilter extends AtColorFilter {
    * @return {*}
    */  
   toString () {
-    return `ColorFilter.compose(${this.innerFilter}, ${this.outerFilter})`
+    return `ComposeColorFilter(${this.inner}, ${this.outer})`
   }
 }

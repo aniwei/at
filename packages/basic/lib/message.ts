@@ -1,11 +1,11 @@
 import bytes from 'bytes'
 
-import { isBlob, isSupportBlob } from '@at/utility'
+import { isBlob, isSupportBlob, paddingLeft } from '@at/utility'
 import { EventEmitter } from './events'
 import { UnsupportedError } from './unsupported-error'
 import { MessageContent } from './transport'
 import type { WorkPort } from './work'
-import { paddingLeft } from '.'
+
 
 export class MessageConv {
   static conv = new MessageConv()
