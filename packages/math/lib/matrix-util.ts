@@ -1,19 +1,16 @@
 import { invariant } from '@at/utility'
 import { Offset, Rect } from '@at/geometry'
+
 import { Matrix4 } from './matrix4'
-import { Vector4 } from './vector4'
 
 //// => MatrixUtils
 export class MatrixUtils {
   /**
    * 将 Matrix4 转成 Offset
-   * @param {Matrix4} transform 
+   * @param {Matrix4} values 
    * @returns {Offset | null}
    */
-  static getAsTranslation (transform: Matrix4): Offset | null {
-    invariant(transform !== null, `The argument "transform" cannot be null.`)
-    const values = transform
-
+  static getAsTranslation (values: Matrix4): Offset | null {
     if (
       values[0] === 1.0 && // col 1
       values[1] === 0.0 &&
@@ -41,9 +38,7 @@ export class MatrixUtils {
   * @param {Matrix4} transform 
   * @returns {number | null}
   */
-  static getAsScale (transform: Matrix4): number | null {
-    invariant(transform !== null)
-    const values = transform
+  static getAsScale (values: Matrix4): number | null {
     if (
       values[1] === 0.0 && // col 1 (value 0 is the scale)
       values[2] === 0.0 &&
@@ -119,7 +114,6 @@ export class MatrixUtils {
    * @returns {boolean}
    */
   static isIdentity (a: Matrix4): boolean {
-    invariant(a !== null, 'The argument "a" cannot be null.')
     return (
       a[0] === 1.0 && // col 1
       a[1] === 0.0 &&
@@ -170,17 +164,16 @@ export class MatrixUtils {
     transform: Matrix4, 
     rect: Rect
   ) {
-    const storage = transform
     const isAffine = (
-      storage[3] === 0.0 &&
-      storage[7] === 0.0 &&
-      storage[15] === 1.0
+      transform[3] === 0.0 &&
+      transform[7] === 0.0 &&
+      transform[15] === 1.0
     )
 
-    this.accumulate(storage, rect.left,  rect.top,    true,  isAffine)
-    this.accumulate(storage, rect.right, rect.top,    false, isAffine)
-    this.accumulate(storage, rect.left,  rect.bottom, false, isAffine)
-    this.accumulate(storage, rect.right, rect.bottom, false, isAffine)
+    this.accumulate(transform as unknown as  number[], rect.left,  rect.top,    true,  isAffine)
+    this.accumulate(transform as unknown as  number[], rect.right, rect.top,    false, isAffine)
+    this.accumulate(transform as unknown as  number[], rect.left,  rect.bottom, false, isAffine)
+    this.accumulate(transform as unknown as  number[], rect.right, rect.bottom, false, isAffine)
 
     return Rect.fromLTRB(
       this.minMax[0], 
@@ -201,7 +194,7 @@ export class MatrixUtils {
    * @param isAffine 
    */
   static accumulate (
-    m: ArrayLike<number>, 
+    m: number[], 
     x: number, 
     y: number, 
     first: boolean, 
@@ -361,12 +354,9 @@ export class MatrixUtils {
     angle: number,
     perspective = 0.001,
   ) {
-    invariant(radius !== null)
-    invariant(angle !== null)
     invariant(perspective >= 0 && perspective <= 1.0)
-    invariant(orientation !== null)
-
     const result = Matrix4.identity()
+
     result.entry(3, 2, -perspective)
     result.entry(2, 3, -radius)
     result.entry(3, 3, perspective * radius + 1.0)
@@ -381,8 +371,8 @@ export class MatrixUtils {
    */
   static forceToPoint (offset: Offset) {
     const mat = Matrix4.identity()
-    mat.row(0, new Vector4(0, 0, 0, offset.dx))
-    mat.row(1, new Vector4(0, 0, 0, offset.dy))
+    // mat.row(0, new Vector4(0, 0, 0, offset.dx))
+    // mat.row(1, new Vector4(0, 0, 0, offset.dy))
     return mat
   }
 }

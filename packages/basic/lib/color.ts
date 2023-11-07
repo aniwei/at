@@ -16,7 +16,7 @@ export function scaleAlpha (a: Color, factor: number) {
 /**
  * 颜色类
  */
-export class Color extends ArrayLike {
+export class Color extends ArrayLike<Color> {
   static BLACK = new Color(0xff000000)
   static CLEAR = new Color(0x00000000)
 
@@ -26,7 +26,7 @@ export class Color extends ArrayLike {
    * @returns {Color}
    */
   static create (value: number) {
-    return new Color(value)
+    return new Color(value) as Color
   }
 
   /**
@@ -364,6 +364,6 @@ export class Color extends ArrayLike {
    * @returns {string}
    */
   toString (format?: 'hex' | '') {
-    return `Color(${this.value})`
+    return `Color([value]: ${this.value})`
   }
 }

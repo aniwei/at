@@ -1,20 +1,20 @@
 import { Equalable } from './equalable'
 
-export interface ArrayLike extends Array<number> {
+export interface ArrayLike<T extends ArrayLike<T>> extends Array<number> {
   length: number
   [n: number]: number,
 }
 
 //// => ArrayLike
-export interface CreateFactory {
-  new (...rests: unknown[]): ArrayLike,
-  create (...rests: unknown[]): ArrayLike
+export interface ArrayLikeFactory {
+  new (...rests: unknown[]): unknown,
+  create (...rests: unknown[]): unknown
 }
 
-export abstract class ArrayLike extends Equalable<ArrayLike> {
-  static create (...rests: unknown[]): ArrayLike {
-    const CreateFactory = this as CreateFactory
-    return new CreateFactory(...rests)
+export abstract class ArrayLike<T extends ArrayLike<T>> extends Equalable<T> {
+  static create (...rests: unknown[]): unknown {
+    const ArrayLikeFactory = this as ArrayLikeFactory
+    return new ArrayLikeFactory(...rests)
   }
 
   // => isFinite

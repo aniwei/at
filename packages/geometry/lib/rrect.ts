@@ -4,7 +4,7 @@ import { Rect } from './rect'
 import { Radius } from './radius'
 import { Offset } from './offset'
 
-export class RRect extends ArrayLike {
+export class RRect extends ArrayLike<RRect> {
     static ZERO = RRect.raw()
   
     /**

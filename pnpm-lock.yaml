@@ -322,6 +322,9 @@ importers:
       '@at/geometry':
         specifier: workspace:^
         version: link:../geometry
+      '@at/utility':
+        specifier: workspace:^
+        version: link:../utility
     devDependencies:
       ts-invariant:
         specifier: ^0.10.3

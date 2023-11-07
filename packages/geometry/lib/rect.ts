@@ -4,7 +4,7 @@ import { lerp } from '@at/utility'
 import { Offset } from './offset'
 import { Size } from './size'
 
-export class Rect extends ArrayLike {
+export class Rect extends ArrayLike<Rect> {
     static ZERO = new Rect(0, 0, 0, 0)
     static LARGEST = new Rect(0, 0, 0, 0)
     

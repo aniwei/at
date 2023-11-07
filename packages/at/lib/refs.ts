@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import { invariant } from '@at/utility'
 import { At } from './at'
 
 export interface DeletedSkiaRef {

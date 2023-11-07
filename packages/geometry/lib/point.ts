@@ -8,7 +8,7 @@ export interface PointFactory {
   new (...rests: unknown[]): unknown,
   create (...rests: unknown[]): unknown
 }
-export abstract class Point extends ArrayLike {
+export abstract class Point extends ArrayLike<Point> {
   static create (...rests: unknown[]): Point
   static create  (dx: number, dy: number): Point {
     const PointFactory = this as PointFactory
