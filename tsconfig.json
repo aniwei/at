@@ -6,7 +6,8 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
     "allowJs": false,
-    "rootDir": "lib",
+    "baseUrl": ".",
+    "rootDir": ".",
     "outDir": "dist",
 
     /* Bundler mode */
@@ -23,8 +24,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
-  },
-  "exclude": [
-    "types/**/*"
-  ]
+  }
 }

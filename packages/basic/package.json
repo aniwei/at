@@ -5,14 +5,13 @@
   "type": "module",
   "files": [
     "dist",
-    "./index.d.ts",
-    "./types/index.d.ts"
+    "./index.d.ts"
   ],
   "main": "dist/index.cjs",
   "module": "dist/index.js",
-  "types": "./index.d.ts",
+  "types": "types/lib",
   "exports": {
-    "types": "./index.d.ts",
+    "types": "./types/lib/index.d.ts",
     "import": "./dist/index.js",
     "require": "./dist/index.cjs"
   },

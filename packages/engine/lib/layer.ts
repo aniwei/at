@@ -1,12 +1,11 @@
 
 
-import { invariant } from '@at/utility'
+import { invariant, transformRect } from '@at/utility'
 import { At } from '@at/core'
 import { AbstractNode } from '@at/basic'
 import { Matrix4 } from '@at/math'
 import { Offset, Rect, RRect } from '@at/geometry'
 import { Paint } from './paint'
-import { transformRect } from '../basic/helper'
 import { PrerollContext } from './preroll-context'
 import { PaintContext } from './paint-context'
 import { ColorFilter } from './color-filter'
@@ -14,6 +13,7 @@ import { Picture } from './picture'
 import { Path } from './path'
 
 import * as Skia from './skia'
+import { ImageFilter } from './image-filter'
 
 //// => Layer
 // 抽象层
@@ -720,7 +720,8 @@ export class ColorFilterLayer extends ContainerLayer {
     invariant(this.ignored, `The layer must be ignore.`)
 
     const paint: Paint = Paint.create()
-    paint.filter.color = this.filter
+    // TODO
+    // paint.filter.color = this.filter
 
     context.internal.saveLayer(this.bounds, paint)
     this.paintChildren(context)
@@ -802,11 +803,11 @@ export class BackdropFilterLayer extends ContainerLayer {
     return super.create(filter, blendMode) as BackdropFilterLayer
   }
   
-  public filter: Skia.ImageFilter
+  public filter: ImageFilter
   public blendMode: Skia.BlendMode
 
   constructor (
-    filter: Skia.ImageFilter,
+    filter: ImageFilter,
     blendMode: Skia.BlendMode = At.skia.BlendMode.SrcOver,
   ) {
     super()

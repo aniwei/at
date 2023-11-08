@@ -27,7 +27,7 @@ export class NWayCanvas extends Array<Canvas> {
    * @param {Paint} paint
    * @return {*}
    */
-  saveLayer (bounds: Rect, paint: Paint) {
+  saveLayer (bounds: Rect, paint: Paint | null) {
     for (const canvas of this) {
       canvas.saveLayer(bounds, paint)
     }

@@ -6,7 +6,7 @@ export class MaskFilter extends Skia.ManagedSkiaRef<Skia.MaskFilter> {
     return At.skia.MaskFilter.MakeBlur(blurStyle, sigma, true)
   }
   /**
-   * 
+   * 模糊滤镜
    * @param {BlurStyle} blurStyle 
    * @param {number} sigma 
    * @returns {AtMaskFilter}

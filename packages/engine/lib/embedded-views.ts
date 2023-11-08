@@ -1,7 +1,7 @@
 import { Matrix4 } from '@at/math'
 import { invariant, listEquals } from '@at/utility'
 import { Equalable } from '@at/basic'
-import { Offset, Rect, RRect, Size } from '@at/geometry'
+import { Rect, RRect } from '@at/geometry'
 
 import { Path } from './path'
 

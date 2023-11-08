@@ -1,5 +1,5 @@
-import { ArgumentError, ArrayLike } from '@at/basic'
-import { invariant } from '@at/utility'
+import { ArrayLike } from '@at/basic'
+import { ArgumentError, invariant } from '@at/utility'
 import { Vector3 } from './vector3'
 
 export class Matrix4 extends ArrayLike<Matrix4> {
@@ -38,7 +38,6 @@ export class Matrix4 extends ArrayLike<Matrix4> {
     }
     return r
   }
-
 
   static rotationX (radians: number) {
     const m4 = Matrix4.ZERO
@@ -82,6 +81,9 @@ export class Matrix4 extends ArrayLike<Matrix4> {
     return m4
   }
 
+  static fromList (...values: number[]) {
+    return new Matrix4(...values)
+  }
 
   get dimension () {
     return 4

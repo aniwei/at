@@ -1,5 +1,4 @@
-import { invariant } from '@at/utility'
-import { lerp } from '@at/utility'
+import { lerp, invariant } from '@at/utility'
 
 import { Point } from './point'
 import { Rect } from './rect'

@@ -8,8 +8,7 @@ import { RootLayer } from './layer'
 import { PrerollContext } from './preroll-context'
 import { PaintContext } from './paint-context'
 import { SurfaceFrame } from './surface'
-
-import * as Skia from './skia'
+import { Picture } from './picture'
 
 
 /**
@@ -67,7 +66,7 @@ export class LayerTree {
    * 
    * @return {Picture}
    */
-  flatten (): Skia.Picture {
+  flatten (): Picture {
     const recorder = Recorder.create(Rect.LARGEST)
     const prerollContext: PrerollContext = new PrerollContext(null)
     

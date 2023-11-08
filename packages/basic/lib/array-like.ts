@@ -11,6 +11,8 @@ export interface ArrayLikeFactory {
   create (...rests: unknown[]): unknown
 }
 
+//// => ArrayLike
+// 类数组
 export abstract class ArrayLike<T extends ArrayLike<T>> extends Equalable<T> {
   static create (...rests: unknown[]): unknown {
     const ArrayLikeFactory = this as ArrayLikeFactory

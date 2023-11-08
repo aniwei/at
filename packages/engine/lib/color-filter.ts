@@ -1,7 +1,6 @@
-import { invariant } from '@at/utility'
+import { invariant, UnimplementedError, listEquals } from '@at/utility'
 import { At } from '@at/core'
-import { listEquals } from '@at/utility'
-import { Color, Equalable, UnimplementedError } from '@at/basic'
+import { Color, Equalable } from '@at/basic'
 import { ColorFilterImageFilter } from './image-filter'
 
 import * as Skia from './skia'
@@ -63,6 +62,8 @@ export abstract class ColorFilter implements Equalable<ColorFilter> {
     return !this.equal(other)
   }
 }
+
+//// => ManagedSkiaColorFilter
 
 export class ManagedSkiaColorFilter extends Skia.ManagedSkiaRef<Skia.ColorFilter> {
   // => skia

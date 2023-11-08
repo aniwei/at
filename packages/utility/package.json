@@ -5,13 +5,13 @@
   "type": "module",
   "files": [
     "dist",
-    "index.d.ts"
+    "types"
   ],
   "main": "dist/index.cjs",
   "module": "dist/index.js",
-  "types": "index.d.ts",
+  "types": "types/lib",
   "exports": {
-    "types": "./index.d.ts",
+    "types": "./types/lib/index.d.ts",
     "import": "./dist/index.js",
     "require": "./dist/index.cjs"
   },
@@ -29,6 +29,7 @@
     "@at/core": "workspace:^",
     "@at/engine": "workspace:^",
     "@at/geometry": "workspace:^",
+    "@at/math": "workspace:^",
     "canvaskit-wasm": "^0.38.0",
     "path-browserify": "^1.0.1",
     "ts-invariant": "^0.10.3"

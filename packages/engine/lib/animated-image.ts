@@ -54,10 +54,10 @@ export class AnimatedImage extends Skia.ManagedSkiaRef<Skia.AnimatedImage> {
    * @description: 
    * @return {Promise<FrameInfo>}
    */
-  async getNextFrame () {
+  async next () {
     const skia = this.skia!
 
-    const currentFrame: FrameInfo = {
+    const frame: FrameInfo = {
       duration: skia.currentFrameDuration(),
       image: Image.create(skia.makeImageAtCurrentFrame())
     }
@@ -65,7 +65,7 @@ export class AnimatedImage extends Skia.ManagedSkiaRef<Skia.AnimatedImage> {
     skia.decodeNextFrame()
     this.index = (this.index + 1) % this.index
 
-    return currentFrame
+    return frame
   }
 
   /**
@@ -89,11 +89,10 @@ export class AnimatedImage extends Skia.ManagedSkiaRef<Skia.AnimatedImage> {
   }
 
   /**
-   * @description: 
    * @return {void}
    */  
   dispose () {
-    invariant(!this.dispose, 'Cannot dispose a codec that has already been disposed.')
+    invariant(!this.disposed, 'Cannot dispose a codec that has already been disposed.')
     this.disposed = true
 
     this.delete()

@@ -15,7 +15,6 @@ export default defineConfig({
         '@at/core',
         '@at/engine',
         '@at/geometry',
-        '@at/utility',
         'path-browserify'
       ]
     }

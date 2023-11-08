@@ -1,6 +1,4 @@
-import { invariant } from '@at/utility'
-import { clamp, lerp } from '@at/utility'
-import { UnsupportedError } from './unsupported-error'
+import { invariant, clamp, lerp, UnsupportedError } from '@at/utility'
 import { ArrayLike } from './array-like'
 
 /**

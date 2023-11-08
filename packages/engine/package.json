@@ -5,13 +5,13 @@
   "type": "module",
   "files": [
     "dist",
-    "types/*/**.d.ts"
+    "./index.d.ts"
   ],
   "main": "dist/index.cjs",
   "module": "dist/index.js",
-  "types": "types/*/**.d.ts",
+  "types": "types/lib",
   "exports": {
-    "types": "./types/*/**.d.ts",
+    "types": "./types/lib/index.d.ts",
     "import": "./dist/index.js",
     "require": "./dist/index.cjs"
   },
@@ -24,6 +24,7 @@
     "vite": "^4.3.9"
   },
   "dependencies": {
+    "@at/asset": "workspace:^",
     "@at/basic": "workspace:^",
     "@at/core": "workspace:^",
     "@at/geometry": "workspace:^",

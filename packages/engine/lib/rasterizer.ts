@@ -8,8 +8,8 @@ import { LayerTree } from './layer-tree'
 export abstract class Rasterizer extends Surface {
   protected devicePixelRatio: number
 
-  public cacheBytes: number | null = null 
   public callbacks: VoidFunction[] = []
+  public cacheBytes: number | null = null 
   public forceNewContext: boolean = true
   
   public contextLost: boolean = false
@@ -45,7 +45,8 @@ export abstract class Rasterizer extends Surface {
       try {
         const frame = this.acquireFrame()
         frame.raster(layerTree, true)
-        frame.flush()
+        // TODO
+        // frame.flush()
       } catch (error) {
         throw error
       } finally {

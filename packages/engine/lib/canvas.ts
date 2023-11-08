@@ -1,8 +1,9 @@
-import { invariant } from '@at/utility'
-import { At } from '@at/core'
-import { ArgumentError, Color } from '@at/basic'
+import { invariant, ArgumentError } from '@at/utility'
+import { Color } from '@at/basic'
 import { Offset, Rect, RRect } from '@at/geometry'
-import { offsetIsValid, rectIsValid, rrectIsValid, toMatrix } from '@at/utility'
+import { offsetIsValid, rectIsValid, rrectIsValid } from '@at/geometry'
+import { toMatrix } from './to'
+
 import { Path } from './path'
 import { Paint } from './paint'
 import { Picture } from './picture'
@@ -398,8 +399,8 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
     return this.skia.save()
   }
 
-  saveLayer (bounds: Rect | null = null, paint: Paint) {
-    this.skia.saveLayer(paint.skia, bounds, null)
+  saveLayer (bounds: Rect | null = null, paint: Paint | null) {
+    this.skia.saveLayer(paint?.skia, bounds, null)
   }
 
   /**

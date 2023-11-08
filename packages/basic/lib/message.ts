@@ -1,9 +1,9 @@
 import bytes from 'bytes'
 
-import { isBlob, isSupportBlob, paddingLeft } from '@at/utility'
+import { isBlob, isSupportBlob, paddingLeft, UnsupportedError } from '@at/utility'
 import { EventEmitter } from './events'
-import { UnsupportedError } from './unsupported-error'
 import { MessageContent } from './transport'
+
 import type { WorkPort } from './work'
 
 

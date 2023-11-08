@@ -8,11 +8,11 @@ export default defineConfig({
       fileName: 'index',
       formats: ['cjs', 'es']
     },
+    minify: false,
     sourcemap: true,
     rollupOptions: {
       external: [
         '@at/engine',
-        '@at/utility',
         '@at/utility',
         'bytes',
       ]

@@ -1,3 +1,4 @@
+export * from './is'
 export * from './offset'
 export * from './point'
 export * from './radius'

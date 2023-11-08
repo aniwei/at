@@ -18,7 +18,16 @@ export class MicroTaskQueue {
     return MicroTaskQueue._exec
   }
 
-  static q = new MicroTaskQueue()
+  // => q
+  // 微任务队列
+  static _q: MicroTaskQueue | null = null
+  static get q () {
+    if (this._q === null) {
+      this._q = new MicroTaskQueue()
+    }
+
+    return this._q
+  }
 
   protected queue: MicroTask[] = []
   protected pending: boolean = false
