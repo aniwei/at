@@ -9,9 +9,9 @@
   ],
   "main": "dist/index.cjs",
   "module": "dist/index.js",
-  "types": "index.d.ts",
+  "types": "types/lib",
   "exports": {
-    "types": "./index.d.ts",
+    "types": "./types/lib/index.d.ts",
     "import": "./dist/index.js",
     "require": "./dist/index.cjs"
   },

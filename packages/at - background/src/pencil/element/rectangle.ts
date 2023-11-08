@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { Offset, At, Radius, Rect, AtBoxHitTestResult, AtBoxHitTestEntry, AtPaintingContext } from '@at/framework'
 import { AtShape, AtShapePainter } from './shape'
 

@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { AtManagedSkiaObject } from './skia'
 import { AtImage } from './image'
 

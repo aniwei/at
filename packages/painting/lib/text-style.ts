@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility' 
+import { invariant } from '@at/utils' 
 import { At, RenderComparison } from '../at'
 import { Color } from '../basic/color'
 import { AtPaint } from '../engine/paint'

@@ -1,6 +1,6 @@
-import { invariant, UnimplementedError } from '@at/utility'
+import { invariant, UnimplementedError } from '@at/utils'
 import { Equalable } from '@at/basic'
-import { At } from '@at/core'
+import { AtEngine } from './engine'
 
 //// => Skia
 export type {
@@ -13,6 +13,7 @@ export type {
   ColorFilter,
   DecorationStyle,
   FillType,
+  FilterMode,
   FilterOptions,
   Font,
   FontWeight,
@@ -20,7 +21,9 @@ export type {
   GrDirectContext,
   Image,
   ImageFilter,
+  MallocObj,
   MaskFilter,
+  MipmapMode,
   Path,
   Paint,
   PaintStyle,
@@ -103,11 +106,11 @@ export abstract class ManagedSkiaRef<T extends SkiaRef = SkiaRef> extends Equala
   }
   set skia (skia: T | null) {
     if (this.ref !== null) {
-      At.refs.unregister(this)
+      AtEngine.refs.unregister(this)
     }
 
     if (skia !== null) {
-      At.refs.register(this, skia)
+      AtEngine.refs.register(this, skia)
     }
 
     this.delete()
@@ -201,7 +204,7 @@ export class SkiaRefBox<R, T extends SkiaRef = SkiaRef> {
    */
   constructor (skia: T) {
     this.skia = skia
-    At.refs.register(this, skia)
+    AtEngine.refs.register(this, skia)
   }
   
   /**
@@ -229,7 +232,7 @@ export class SkiaRefBox<R, T extends SkiaRef = SkiaRef> {
 
     if (this.count === 0) {
       if (this.skia) {
-        At.refs.cleanUp(this.skia)
+        AtEngine.refs.cleanUp(this.skia)
       }
 
       this.delete()

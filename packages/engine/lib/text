@@ -1,6 +1,6 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Color, Equalable } from '@at/basic'
-import { listEquals } from '@at/utility'
+import { listEquals } from '@at/utils'
 import { Rect } from '@at/geometry'
 import { At } from '@at/core'
 

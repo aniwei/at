@@ -1,5 +1,5 @@
 import { ArrayLike } from '@at/basic'
-import { clamp } from '@at/utility'
+import { clamp } from '@at/utils'
 import { Matrix4 } from './matrix4'
 
 export class Vector3 extends ArrayLike<Vector3> {

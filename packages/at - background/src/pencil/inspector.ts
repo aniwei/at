@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { AppProtocol, EventEmitter } from '@at/framework'
 import type * as Protocol from './protocol'
 

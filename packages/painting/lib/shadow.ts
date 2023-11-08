@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Offset } from '../basic/geometry'
 import { AtPaint } from '../engine/paint'
 import { Color } from '../basic/color'

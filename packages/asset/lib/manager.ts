@@ -7,12 +7,12 @@ export interface AssetsManagerFactory<T> {
   create (...rests: unknown[]): T
   create (baseURI: string, assetsDir: string): T
 }
-export abstract class AssetsManager<T extends string> extends EventEmitter<T> {  
-  static create <T> (...rests: unknown[]): T
-  static create <T> (
+export abstract class AssetsManager extends EventEmitter<string> {  
+  static create <T extends AssetsManager> (...rests: unknown[]): AssetsManager
+  static create <T extends AssetsManager> (
     baseURI: string,
     assetsDir: string
-  ) {
+  ): AssetsManager {
     const Factory = this as unknown as AssetsManagerFactory<T>
     return new Factory(baseURI, assetsDir)
   }

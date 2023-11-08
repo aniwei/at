@@ -2,7 +2,7 @@
  * @author: Aniwei
  * @date: 2022-10-21 10:18:49
  */
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { At } from '../at'
 
 export type { 

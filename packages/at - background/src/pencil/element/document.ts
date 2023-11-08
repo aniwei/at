@@ -1,5 +1,5 @@
 
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { At, Color, Size, AtView, Subscribable } from '@at/framework'
 import { AtPage } from './page'
 import { AtStage } from './stage'

@@ -1,7 +1,7 @@
-import { invariant } from '@at/utility'
-import { lerp, toSigma } from '@at/utility'
+import { invariant, lerp } from '@at/utils'
 import { Color, Equalable } from '@at/basic'
 import { Offset } from '@at/geometry'
+import { toSigma } from './to'
 import { Paint } from './paint'
 
 export class Shadow extends Equalable<Shadow> {
@@ -105,7 +105,7 @@ export class Shadow extends Equalable<Shadow> {
     const paint = new Paint()
     
     paint.color = this.color
-    // paint.filter = AtMaskFilter.blur(At.skia.BlurStyle.Normal, this.blurSigma)
+    // paint.filter = AtMaskFilter.blur(AtEngine.skia.BlurStyle.Normal, this.blurSigma)
 
     return paint
   }

@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { At, Axis, RenderComparison } from '../at'
 import { AtClipRectLayer, AtLayerHandle } from '../engine/layer'
 import { AtViewportOffset } from './viewport-offset'

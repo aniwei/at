@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { Offset, Rect, Size } from '@at/framework'
 import { AtElement } from './element'
 

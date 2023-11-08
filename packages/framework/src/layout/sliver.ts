@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { clamp } from '../basic/helper'
 import { AtPointerEvent } from '../gestures/events'
 import { Matrix4 } from '../basic/matrix4';

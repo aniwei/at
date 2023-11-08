@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Matrix2 } from './matrix2'
 import { Matrix3 } from './matrix3'
 import { Vector2 } from './vector2'

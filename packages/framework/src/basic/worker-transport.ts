@@ -1,5 +1,5 @@
 import debug from 'debug'
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { EventEmitter } from './events'
 import { 
   MessageContent, 

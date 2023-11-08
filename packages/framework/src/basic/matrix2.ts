@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Vector2 } from './vector2'
 
 export class Matrix2 extends Array<number> {

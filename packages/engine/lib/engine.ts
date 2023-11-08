@@ -1,27 +1,19 @@
 import CanvasKitInit, { CanvasKit } from 'canvaskit-wasm'
-import { defineReadOnly, invariant } from '@at/utility'
-import { Skia, Fonts } from '@at/engine'
+import { defineReadOnly, invariant } from '@at/utils'
+import { fetch } from '@at/basic'
 import { Size } from '@at/geometry'
 import { AssetError, AssetsManager } from '@at/asset'
 import { RefsRegistry } from './refs'
 import { WebGLMajorKind } from './basic'
+import { Fonts } from './font'
 
-// Manifest
-export interface Font {
-  family: string,
-  dir: string
-}
+import * as Skia from './skia'
 
-export interface Manifest {
-  protocol: string,
-  fonts: Font[],
-  theme: {}
-}
 
 // extend canvaskit
-export interface AtEngineKit extends CanvasKit {
-  FilterQuality: Skia.FilterQuality,
-  Clip: Skia.Clip
+export interface AtEngineSkia extends CanvasKit {
+  FilterQuality: typeof Skia.FilterQuality,
+  Clip: typeof Skia.Clip
 }
 
 //// => AtInit
@@ -42,22 +34,27 @@ export interface Environments {
   AT_ENV: AtEnvKind
 }
 
-export class AtEngine extends AssetsManager<'progress'> {
+export abstract class AtEngine extends AssetsManager {
+  
   // => engine
   // Skia Runtime 对象
-  public _engine: AtEngineKit | null = null
-  public get engine () {
-    invariant(this._engine)
-    return this._engine
+  static _skia: AtEngineSkia | null = null
+  static get skia () {
+    invariant(this._skia)
+    return this._skia
   }
-  public set engine (engine: AtEngineKit) {
+  static set skia (skia: AtEngineSkia) {
     /// => extending skia
     // 扩展 Skia
-    defineReadOnly(engine, 'FilterQuality', Skia.FilterQuality)
-    defineReadOnly(engine, 'Clip', Skia.Clip)
+    defineReadOnly(skia, 'FilterQuality', Skia.FilterQuality)
+    defineReadOnly(skia, 'Clip', Skia.Clip)
  
-    this._engine = engine
+    this._skia = skia
   }
+
+  // => refs
+  // skia 对象引用管理
+  static refs: RefsRegistry = RefsRegistry.create()
 
   // => fonts
   // 懒创建
@@ -71,22 +68,21 @@ export class AtEngine extends AssetsManager<'progress'> {
   }
 
   // skia 对象加载状态
-  public refs: RefsRegistry = RefsRegistry.create()
   public state: AtEngineStateKind = AtEngineStateKind.Uninitialized
 
   // skia 队列
   protected queue: VoidFunction[] = []
-  protected environments: Environments
+  protected uri: string
 
-  constructor () {
-    const env = process.env
+  constructor (
+    uri: string, 
+    baseURI: string, 
+    rootDir: string
+  ) {
+    super(baseURI, rootDir)
 
-    invariant(env.BASE_URI)
-    invariant(env.ROOT_DIR)
-
-    super(env.BASE_URI, env.ROOT_DIR)
-    this.environments = process.env as unknown as Environments
-  }
+    this.uri = uri
+  } 
 
   /**
    * 加载框架资源
@@ -104,21 +100,6 @@ export class AtEngine extends AssetsManager<'progress'> {
     }
   }
 
-  /// => utility
-  /**
-   * 获取环境变了
-   * @param key 
-   * @param defaultEnv 
-   * @returns 
-   */
-  env (key: string, defaultEnv?: string) {
-    if (Reflect.has(this.environments, key)) {
-      return Reflect.get(this.environments, key)
-    }
-
-    return defaultEnv
-  }
-
   /**
    * 
    * @param size 
@@ -126,7 +107,7 @@ export class AtEngine extends AssetsManager<'progress'> {
    */
   tryCreateSurface (size: Size, canvas: HTMLCanvasElement) {
     try {
-      return this.engine.MakeWebGLCanvasSurface(canvas)
+      return AtEngine.skia.MakeWebGLCanvasSurface(canvas)
     } catch (error: any) {
       console.warn(`Caught ProgressEvent with target: ${error.message}`)
     }
@@ -137,22 +118,22 @@ export class AtEngine extends AssetsManager<'progress'> {
     ]
 
     for (const ver of versions) {
-      const glContext = this.engine.GetWebGLContext(canvas, {
+      const glContext = AtEngine.skia.GetWebGLContext(canvas, {
         antialias: 1,
         majorVersion: ver
       })
 
       if (glContext !== 0) {
-        const grContext = this.engine.MakeWebGLContext(glContext) ?? null
+        const grContext = AtEngine.skia.MakeWebGLContext(glContext) ?? null
         if (grContext === null) {
           continue
         }
 
-        const surface = this.engine.MakeOnScreenGLSurface(
+        const surface = AtEngine.skia.MakeOnScreenGLSurface(
           grContext,
           Math.ceil(size.width),
           Math.ceil(size.height),
-          this.engine.ColorSpace.SRGB
+          AtEngine.skia.ColorSpace.SRGB
         )
 
         return surface
@@ -160,25 +141,7 @@ export class AtEngine extends AssetsManager<'progress'> {
     }
 
     console.warn(`Caught ProgressEvent with target: Cannot create WebGL context.`)
-    return this.engine.MakeSWCanvasSurface(canvas)
-  }
-
-  prepare (): Promise<void> {
-    return new Promise((resolve) => {
-      this.load('manifest.json')
-        .then(res => res.json())
-        .then((manifest: Manifest) => {
-          if (!manifest.fonts || manifest.fonts.length === 0) {
-            manifest.fonts = []
-          }
-
-          return Promise.all(manifest.fonts.map(font => {
-            return this.load(font.dir)
-              .then(res => res.arrayBuffer())
-              .then(data => this.fonts.register(data, font.family))
-          }))
-        }).then(() => resolve())
-    })
+    return AtEngine.skia.MakeSWCanvasSurface(canvas)
   }
 
   /**
@@ -186,18 +149,18 @@ export class AtEngine extends AssetsManager<'progress'> {
    * @param {string} uri 
    * @returns {CanvasKit}
    */
-  ensure () {
+  ensure (): Promise<AtEngineSkia> {
     if (this.state === AtEngineStateKind.Initialized) {
-      invariant(this.engine !== null)
-      return Promise.resolve(this.engine as CanvasKit)
+      invariant(AtEngine.skia !== null)
+      return Promise.resolve(AtEngine.skia as AtEngineSkia)
     } else if (this.state === AtEngineStateKind.Initializing) {
-      return new Promise((resolve) => this.queue.push(() => resolve(this.engine as CanvasKit)))
+      return new Promise((resolve) => this.queue.push(() => resolve(AtEngine.skia as AtEngineSkia)))
     } else {
       this.state = AtEngineStateKind.Initializing
       return CanvasKitInit({
-        locateFile: () => this.env('SKIA_URI')
+        locateFile: () => this.uri
       }).then((skia: CanvasKit) => {
-        this.engine = skia as AtEngineKit
+        AtEngine.skia = skia as AtEngineSkia
         this.state = AtEngineStateKind.Initialized
 
         do {
@@ -207,10 +170,10 @@ export class AtEngine extends AssetsManager<'progress'> {
           }
         } while (this.queue.length > 0)
 
-      }).then(() => this.prepare())
+        return AtEngine.skia
+      })
     }
   }
 
+  abstract prepare (): Promise<void>
 }
-
-export const At = AtEngine.create()

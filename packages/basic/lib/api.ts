@@ -1,4 +1,4 @@
-import { defineReadOnly } from '@at/utility'
+import { defineReadOnly } from '@at/utils'
 import { EventEmitter } from './events'
 import { SubscribeHandle } from './subscribable'
 import { Subscribable } from './subscribable'

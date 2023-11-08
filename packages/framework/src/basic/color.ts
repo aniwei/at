@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { clamp, lerp, scaleAlpha } from './helper'
 
 export class Color extends Array<number> {

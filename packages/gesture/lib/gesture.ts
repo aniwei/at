@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Offset, Equalable } from '@at/geometry'
 import { GestureArenaManager } from './arena'
 import { PointerEvent, PointerEventConverter, PointerEventDecomposition } from './events'

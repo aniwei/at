@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { RRect } from './rrect'
 import { Offset } from './offset'
 import { Rect } from './rect'

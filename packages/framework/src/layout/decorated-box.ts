@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Offset, Size } from '../basic/geometry'
 import { AtImageConfiguration } from '../painting/image-provider'
 import { AtLayoutBox } from './box'

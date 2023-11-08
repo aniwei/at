@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 
 //// => AbstractNode
 export abstract class AbstractNode<T extends AbstractNode<T>, U extends unknown = unknown> {

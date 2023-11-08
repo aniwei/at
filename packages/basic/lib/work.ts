@@ -1,5 +1,5 @@
 import debug from 'debug'
-import { paddingLeft, invariant } from '@at/utility'
+import { paddingLeft, invariant } from '@at/utils'
 import { EventEmitter } from './events'
 import { 
   MessageContent, 

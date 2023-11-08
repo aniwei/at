@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { AllowedButtonsFilter, At } from '../at'
 import { Offset } from '../basic/geometry'
 import { Matrix4 } from '../basic/matrix4'

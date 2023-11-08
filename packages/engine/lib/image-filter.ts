@@ -1,6 +1,7 @@
-import { At } from '@at/core'
-import { listEquals, toFilterQuality, toMatrix } from '@at/utility'
+import { listEquals } from '@at/utils'
 import { ColorFilter } from './color-filter'
+import { AtEngine } from './engine'
+import { toFilterQuality, toMatrix } from './to'
 
 import * as Skia from './skia'
 
@@ -48,20 +49,20 @@ export class BlurImageFilter extends ImageFilter {
     sigmaY: number, 
     tileMode: Skia.TileMode
   ): Skia.ImageFilter {
-    return At.skia.ImageFilter.MakeBlur(sigmaX, sigmaY, tileMode, null)
+    return AtEngine.skia.ImageFilter.MakeBlur(sigmaX, sigmaY, tileMode, null)
   }
 
   // => mode 
   // 模糊模式
   get mode () {
     switch (this.tileMode) {
-      case At.skia.TileMode.Clamp:
+      case AtEngine.skia.TileMode.Clamp:
         return 'clamp'
-      case At.skia.TileMode.Mirror:
+      case AtEngine.skia.TileMode.Mirror:
         return 'mirror'
-      case At.skia.TileMode.Repeat:
+      case AtEngine.skia.TileMode.Repeat:
         return 'repeated'
-      case At.skia.TileMode.Decal:
+      case AtEngine.skia.TileMode.Decal:
         return 'decal'
     }
   }
@@ -134,7 +135,7 @@ export class MatrixImageFilter extends ImageFilter {
    * @returns {ImageFilter}
    */
   static resurrect (matrix: number[], quality: Skia.FilterQuality) {
-    return At.skia.ImageFilter.MakeMatrixTransform(
+    return AtEngine.skia.ImageFilter.MakeMatrixTransform(
       toMatrix(matrix),
       toFilterQuality(quality)!,
       null,

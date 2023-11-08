@@ -90,9 +90,9 @@ importers:
       '@at/geometry':
         specifier: workspace:^
         version: link:../geometry
-      '@at/utility':
+      '@at/utils':
         specifier: workspace:^
-        version: link:../utility
+        version: link:../utils
       bytes:
         specifier: ^3.1.2
         version: 3.1.2
@@ -182,9 +182,9 @@ importers:
 
   packages/basic:
     dependencies:
-      '@at/utility':
+      '@at/utils':
         specifier: workspace:^
-        version: link:../utility
+        version: link:../utils
       bytes:
         specifier: ^3.1.2
         version: 3.1.2
@@ -219,18 +219,15 @@ importers:
       '@at/basic':
         specifier: workspace:^
         version: link:../basic
-      '@at/core':
-        specifier: workspace:^
-        version: link:../at
       '@at/geometry':
         specifier: workspace:^
         version: link:../geometry
       '@at/math':
         specifier: workspace:^
         version: link:../math
-      '@at/utility':
+      '@at/utils':
         specifier: workspace:^
-        version: link:../utility
+        version: link:../utils
       canvaskit-wasm:
         specifier: ^0.38.0
         version: 0.38.0
@@ -238,6 +235,9 @@ importers:
         specifier: ^0.10.3
         version: 0.10.3
     devDependencies:
+      '@types/node':
+        specifier: ^20.8.10
+        version: 20.8.10
       typescript:
         specifier: ^5.1.3
         version: 5.1.3
@@ -272,9 +272,9 @@ importers:
       '@at/basic':
         specifier: workspace:^
         version: link:../basic
-      '@at/utility':
+      '@at/utils':
         specifier: workspace:^
-        version: link:../utility
+        version: link:../utils
       bytes:
         specifier: ^3.1.2
         version: 3.1.2
@@ -325,9 +325,9 @@ importers:
       '@at/geometry':
         specifier: workspace:^
         version: link:../geometry
-      '@at/utility':
+      '@at/utils':
         specifier: workspace:^
-        version: link:../utility
+        version: link:../utils
     devDependencies:
       typescript:
         specifier: ^5.1.3
@@ -345,26 +345,8 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@20.8.10)
 
-  packages/utility:
+  packages/utils:
     dependencies:
-      '@at/basic':
-        specifier: workspace:^
-        version: link:../basic
-      '@at/core':
-        specifier: workspace:^
-        version: link:../at
-      '@at/engine':
-        specifier: workspace:^
-        version: link:../engine
-      '@at/geometry':
-        specifier: workspace:^
-        version: link:../geometry
-      '@at/math':
-        specifier: workspace:^
-        version: link:../math
-      canvaskit-wasm:
-        specifier: ^0.38.0
-        version: 0.38.0
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
@@ -380,7 +362,7 @@ importers:
         version: 5.1.3
       vite:
         specifier: ^4.3.9
-        version: 4.4.9(@types/node@20.8.10)
+        version: 4.3.9(@types/node@20.8.10)
 
 packages:
 

@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility' 
+import { invariant } from '@at/utils' 
 import { AtLayoutObject, VoidCallback } from '../at'
 import { AtPaintingContext } from './painting-context'
 import { AtViewConfiguration } from './view'

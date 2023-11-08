@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility' 
+import { invariant } from '@at/utils' 
 import { AbstractNode } from '../basic/node'
 import { Matrix4 } from '../basic/matrix4'
 import { AtPointerEvent } from '../gestures/events'

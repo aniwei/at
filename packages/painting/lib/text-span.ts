@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { AtPointerEvent } from '../gestures/events'
 import { AtGestureRecognizer } from '../gestures/recognizer'
 import { At, RenderComparison } from '../at'

@@ -1,5 +1,6 @@
-import { invariant } from '@at/utility'
-import { At } from '@at/core'
+import { invariant } from '@at/utils'
+import { fetch } from '@at/basic'
+import { AtEngine } from './engine'
 
 
 import * as Skia from './skia'
@@ -50,7 +51,7 @@ export class RegisteredFont {
     this.buffer = buffer
     this.typeface = typeface
 
-    const font = new At.skia.Font(typeface)
+    const font = new AtEngine.skia.Font(typeface)
     font.getGlyphBounds([0], null)
   }
 }
@@ -97,7 +98,7 @@ export class Fonts {
     }
 
     this.familyToFont.clear()
-    this.provider = At.skia.TypefaceFontProvider.Make()
+    this.provider = AtEngine.skia.TypefaceFontProvider.Make()
 
     for (const font of this.registered) {
       this.provider.registerFont(font.buffer, font.family)
@@ -107,7 +108,7 @@ export class Fonts {
         this.familyToFont.set(font.family, families = [])
       }
 
-      families.push(new At.skia.Font(font.typeface))
+      families.push(new AtEngine.skia.Font(font.typeface))
     }
   }
 
@@ -121,10 +122,10 @@ export class Fonts {
   register (url: string, family: string): Promise<RegisteredFont | null>
   register (url: ArrayBuffer | string, family: string): Promise<RegisteredFont | null> {
     if (typeof url === 'string') {
-      return At.fetch(url)
+      return fetch(url)
         .then(resp => resp.arrayBuffer())
         .then((buffer: ArrayBuffer) => {
-          const typeface = At.skia.Typeface.MakeFreeTypeFaceFromData(buffer)
+          const typeface = AtEngine.skia.Typeface.MakeFreeTypeFaceFromData(buffer)
           invariant(typeface)
   
           return new RegisteredFont(family, buffer, typeface)
@@ -132,7 +133,7 @@ export class Fonts {
           throw error
         })
     } else {
-      const typeface = At.skia.Typeface.MakeFreeTypeFaceFromData(url)
+      const typeface = AtEngine.skia.Typeface.MakeFreeTypeFaceFromData(url)
       return Promise.resolve(new RegisteredFont(family, url, typeface as Skia.Typeface))
     }
   }

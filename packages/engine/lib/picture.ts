@@ -1,13 +1,9 @@
-/*
- * @author: Aniwei
- * @date: 2022-07-04 12:10:21
- */
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Rect } from '@at/geometry'
-import { At } from '@at/core'
 
 import { Image } from './image'
 import { Snapshot } from './snapshot'
+import { AtEngine } from './engine'
 
 import * as Skia from './skia'
 
@@ -61,7 +57,7 @@ export class Picture extends Skia.ManagedSkiaRef<Skia.Picture> {
    */
   toImage (width: number, height: number): Image {
     invariant(!this.disposed, 'The Picture object cannot be disposed when export to image.')
-    const surface: Skia.Surface = At.skia.MakeSurface(width, height)!
+    const surface: Skia.Surface = AtEngine.skia.MakeSurface(width, height)!
     const canvas = surface.getCanvas()
     
     // canvas.scale(2, 2)

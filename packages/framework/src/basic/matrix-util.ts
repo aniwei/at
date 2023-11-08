@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Offset, Rect } from './geometry'
 import { Matrix4 } from './matrix4'
 import { Vector4 } from './vector4'

@@ -2,7 +2,7 @@
  * @author: aniwei aniwei.studio@gmail.com
  * @date: 2022-10-31 00:53:37
  */
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 
 export abstract class AbstractNode<T extends AbstractNode<T>, U extends unknown = unknown> {
   

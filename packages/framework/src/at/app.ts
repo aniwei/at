@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { At, Surface } from './framework'
 import { Offset, Size } from '../basic/geometry'
 import { AtPipelineOwner } from '../layout/pipeline-owner'

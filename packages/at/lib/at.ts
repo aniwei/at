@@ -1,8 +1,5 @@
-import { AssetError, AssetsManager } from '@at/asset'
-import { CanvasKit } from 'canvaskit-wasm'
-import { AtInit } from './init'
 
-export const At = AtInit.create()
+import { AtKit } from './kit'
 
 export enum AssetsStateKind {
   Unload,
@@ -13,34 +10,17 @@ export enum AssetsStateKind {
 //// => AtInstance
 export interface AtInstanceFactory<T> {
   new (...rests: unknown[]): T
-  create <T extends AtInstance<E>, E extends string> (): T
+  create <T extends AtInstance> (): T
 } 
 
-export abstract class AtInstance<T extends string> extends AssetsManager<T> {
+export abstract class AtInstance extends AtKit {
   // => skia
-  public get skia (): CanvasKit {
-    return At.skia
+  public get skia () {
+    return AtKit.skia
   }
-
-  async load (asset: string): Promise<Response> {
-    const uri = this.getAssetURI(asset)
-
-    try {
-      return At.fetch(uri)
-    } catch (error: any) {
-      console.warn(`Caught ProgressEvent with target: ${1}`)
-      throw new AssetError(uri, error.status)
-    }
-  }
-
-  prepare (): Promise<void> {
-    return new Promise((resolve) => {
-      resolve()
-    })
-  }
-
+  
   start (callback: VoidFunction = (() => {})) {
-    return At.ensure()
+    return this.ensure()
       .then(() => this.prepare())
       .then(() => callback())
   }

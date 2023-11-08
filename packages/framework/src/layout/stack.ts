@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { lerp } from '../basic/helper'
 import { At } from '../at'
 import { Offset, Rect, Size } from '../basic/geometry'

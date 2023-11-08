@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { AtPointerEvent } from '../gestures/events'
 import { AtHitTestResult } from '../gestures/hit-test'
 import { Offset, Subscribable, VoidCallback } from '../at'

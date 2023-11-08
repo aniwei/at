@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Size } from '../basic/geometry'
 import { AtLayoutBox } from './box'
 import { AtBoxConstraints } from './box-constraints'

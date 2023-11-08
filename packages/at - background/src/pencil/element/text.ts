@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { At, AtTextSpan, AtLayoutParagraph, Rect } from '@at/framework'
 import { AtShape, AtShapePainter } from './shape'
 

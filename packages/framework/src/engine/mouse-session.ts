@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { UnimplementedError } from '..c/basic/error'
 import { AtPointerEvent } from '../gestures/events'
 

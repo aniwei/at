@@ -2,7 +2,7 @@
  * @author: Aniwei
  * @date: 2022-10-21 16:50:53
  */
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { ArrayLike, At } from '../at'
 import { Color } from './color'
 import { Matrix4 } from './matrix4'

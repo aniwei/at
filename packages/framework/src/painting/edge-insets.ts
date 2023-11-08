@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Axis, Padding } from './painting'
 import { At } from '../at'
 import { clamp, lerp } from '../basic/helper'

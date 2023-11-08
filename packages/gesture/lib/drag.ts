@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { At, Timer } from '../at'
 import { Matrix4 } from '../basic/matrix4'
 import { Offset } from '../basic/geometry'

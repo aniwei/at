@@ -3,7 +3,7 @@
  * @date: 2022-08-09 10:04:53
  */
 
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { AtPicture } from './picture'
 import { Matrix4 } from '../basic/matrix4'
 import { AtSurface } from './surface'

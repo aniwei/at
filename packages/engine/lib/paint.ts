@@ -1,5 +1,5 @@
-import { At } from '@at/core'
 import { Color } from '@at/basic'
+import { AtEngine } from './engine'
 import * as Skia from './skia'
 
 
@@ -86,7 +86,7 @@ export class Stroke extends PaintRefBox {
   }
 
   // => cap
-  protected _cap: Skia.StrokeCap = At.skia.StrokeCap.Butt
+  protected _cap: Skia.StrokeCap = AtEngine.skia.StrokeCap.Butt
   public get cap () {
     return this._cap
   }
@@ -107,7 +107,7 @@ export class Stroke extends PaintRefBox {
       this.skia.setStrokeJoin(join)
     }
   }
-  protected _join: Skia.StrokeJoin = At.skia.StrokeJoin.Miter
+  protected _join: Skia.StrokeJoin = AtEngine.skia.StrokeJoin.Miter
 }
 
 //// => Filter
@@ -203,7 +203,7 @@ export class Filter extends PaintRefBox {
   // }
 
   // => filter quality
-  protected _quality: Skia.FilterQuality = At.skia.FilterQuality.None
+  protected _quality: Skia.FilterQuality = AtEngine.skia.FilterQuality.None
   public get quality () {
     return this._quality
   }
@@ -224,11 +224,11 @@ export class Filter extends PaintRefBox {
 //// => Paint
 export class Paint extends PaintRefBox {
   static create (...rests: unknown[]) {
-    return super.create(new At.skia.Paint()) as Paint
+    return super.create(new AtEngine.skia.Paint()) as Paint
   }
 
   static resurrect (): Skia.Paint {
-    const paint = new At.skia.Paint()
+    const paint = new AtEngine.skia.Paint()
     return paint
   }
 
@@ -265,7 +265,7 @@ export class Paint extends PaintRefBox {
    }
 
   // => blendMode
-  protected _blendMode: Skia.BlendMode = At.skia.BlendMode.SrcOver
+  protected _blendMode: Skia.BlendMode = AtEngine.skia.BlendMode.SrcOver
   public get blendMode () {
     return this._blendMode
   }
@@ -278,7 +278,7 @@ export class Paint extends PaintRefBox {
 
   // => style
   // 画笔样式
-  protected _style: Skia.PaintStyle = At.skia.PaintStyle.Fill
+  protected _style: Skia.PaintStyle = AtEngine.skia.PaintStyle.Fill
   public get style () {
     return this._style
   }
@@ -318,7 +318,7 @@ export class Paint extends PaintRefBox {
    * @return {AtPaint}
    */  
   constructor () {
-    super(new At.skia.Paint())
+    super(new AtEngine.skia.Paint())
 
     this.stroke = Stroke.create(this.box)
     this.filter = Filter.create(this.box)

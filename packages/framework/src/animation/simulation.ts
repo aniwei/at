@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { nearZero } from '../basic/helper'
 import { At } from '../at'
 

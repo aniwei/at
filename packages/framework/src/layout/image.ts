@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 
 import { ImageRepeat } from '../painting/decoration-image'
 import { Offset, Rect, Size } from '../basic/geometry'

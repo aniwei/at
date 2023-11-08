@@ -1,9 +1,9 @@
-import { At } from '@at/core'
+import { AtEngine } from './engine'
 import * as Skia from './skia'
 
 export class MaskFilter extends Skia.ManagedSkiaRef<Skia.MaskFilter> {
   static resurrect (blurStyle: Skia.BlurStyle, sigma: number) {
-    return At.skia.MaskFilter.MakeBlur(blurStyle, sigma, true)
+    return AtEngine.skia.MaskFilter.MakeBlur(blurStyle, sigma, true)
   }
   /**
    * 模糊滤镜

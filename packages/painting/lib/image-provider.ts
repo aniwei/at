@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Size } from '../basic/geometry'
 import { AtImage } from '../engine/image'
 import { EventEmitter } from '../basic/events'

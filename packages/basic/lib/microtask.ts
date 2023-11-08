@@ -1,4 +1,4 @@
-import { isNative, invariant } from '@at/utility'
+import { isNative, invariant } from '@at/utils'
 
 
 //// => MicroTaskQueue

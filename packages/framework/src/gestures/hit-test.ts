@@ -2,7 +2,7 @@
  * @author: aniwei aniwei.studio@gmail.com
  * @date: 2022-10-30 14:29:58
  */
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Offset } from '../basic/geometry'
 import { Matrix4 } from '../basic/matrix4'
 

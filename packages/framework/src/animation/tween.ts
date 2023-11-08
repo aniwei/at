@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Color, Rect, Size } from '../at'
 import { AnimationStatus, AtAnimation } from './animation'
 import { SubscribeHandle } from '../basic/subscribable'

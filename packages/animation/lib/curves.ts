@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { UnimplementedError } from '@at/basic'
 import { clamp, lerp, sign } from '@at/basic'
 import { Offset } from '@at/geometry'

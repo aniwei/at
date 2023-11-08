@@ -23,7 +23,7 @@ export default defineConfig({
       external: [
         '@at/engine',
         '@at/geometry',
-        '@at/utility',
+        '@at/utils',
         'canvaskit-wasm',
       ]
     }

@@ -2,7 +2,7 @@
  * @author: Aniwei
  * @date: 2022-08-09 10:04:53
  */
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { At, AtImage, AtLayerTree, AtPaint, Subscribable, WebGLMajorVersion } from '../at'
 import { AtCanvas } from './canvas'
 

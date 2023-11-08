@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { AtDocument, AtDocumentConfiguration, ElementType } from './document'
 import { AtElement } from './element'
 import { AtPage } from './page'

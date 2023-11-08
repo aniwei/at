@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { AtLayoutParagraph } from '../at'
 import { Offset, Rect, Size } from '../basic/geometry'
 import { AtPaintingContext } from './painting-context'

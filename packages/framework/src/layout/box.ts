@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Offset, Size } from '../basic/geometry'
 import { Matrix4 } from '../basic/matrix4'
 import { MatrixUtils } from '../basic/matrix-util'

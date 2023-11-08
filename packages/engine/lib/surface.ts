@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Offset, Size } from '@at/geometry'
 
 import { Canvas } from './canvas'

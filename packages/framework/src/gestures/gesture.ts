@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Offset } from '../basic/geometry'
 import { AtGestureArenaManager } from './arena'
 import { AtPointerEvent, AtPointerEventConverter, AtPointerEventDecomposition } from './events'

@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { AtLayoutCustom, Color, Offset, Rect, Size } from '@at/framework'
 import { AtInteractiveCompositePainter, AtInteractiveCompositePainterOptions } from './Interactive-painter'
 

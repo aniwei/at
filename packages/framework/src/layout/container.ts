@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { AtLayoutObject } from './object'
 import type { LayoutObjectVisitor } from './object'
 import type { AtPipelineOwner } from './pipeline-owner'

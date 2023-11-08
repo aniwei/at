@@ -1,5 +1,5 @@
 import { ArrayLike } from '@at/basic'
-import { ArgumentError, invariant } from '@at/utility'
+import { ArgumentError, invariant } from '@at/utils'
 import { Vector3 } from './vector3'
 
 export class Matrix4 extends ArrayLike<Matrix4> {
@@ -81,7 +81,7 @@ export class Matrix4 extends ArrayLike<Matrix4> {
     return m4
   }
 
-  static fromList (...values: number[]) {
+  static fromList (values: number[]) {
     return new Matrix4(...values)
   }
 

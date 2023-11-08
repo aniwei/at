@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { At, AtCanvas, AtPaint, Color, Offset, Rect, Size, AtLayoutCustomPainter } from '@at/framework'
 
 export abstract class AtInteractivePainter extends AtLayoutCustomPainter {}

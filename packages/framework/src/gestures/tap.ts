@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Matrix4 } from '../basic/matrix4'
 import { Offset } from '../basic/geometry'
 import { PointerDeviceKind } from './pointer'

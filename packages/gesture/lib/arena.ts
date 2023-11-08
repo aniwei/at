@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { nextTick } from '@at/basic'
 
 // 手势处置枚举

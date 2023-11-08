@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { Matrix4 } from '../basic/matrix4'
 import { AtPointerEvent } from './events'
 

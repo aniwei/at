@@ -1,6 +1,6 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { ArrayLike } from '@at/basic'
-import { lerp } from '@at/utility'
+import { lerp } from '@at/utils'
 import { Offset } from './offset'
 import { Size } from './size'
 

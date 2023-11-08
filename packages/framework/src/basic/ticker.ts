@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { At, VoidCallback } from '../at'
 
 export type TickerCallback = (elapsed: number) => void

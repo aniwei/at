@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { AtPaint } from '../engine/paint'
 import { AtPath } from '../engine/path'
 import { AtCanvas } from '../engine/canvas'

@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { AtCanvas } from '../engine/canvas'
 import { Offset, Size } from '../basic/geometry'
 import { Subscribable } from '../basic/subscribable'

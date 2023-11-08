@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { clamp, lerp } from '@at/basic'
 import { Curve, Curves } from './curves'
 import { AnimationStatus, Animation } from './animation'

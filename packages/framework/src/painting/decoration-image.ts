@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { Rect } from '../basic/geometry'
 import { BoxFit } from './box-fit'
 import { AtAlignment, AtAlignmentGeometry } from './alignment'

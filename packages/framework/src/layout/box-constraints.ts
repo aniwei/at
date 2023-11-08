@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { clamp, lerp } from '../basic/helper'
 import { Size } from '../basic/geometry'
 import { AtConstraints } from './object'

@@ -1,12 +1,6 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { idle } from '@at/basic'
-
-export interface DeletedSkiaRef {
-  delete (): void
-  deleteLater (): void
-  isAliasOf (other: any): boolean
-  isDeleted (): boolean
-}
+import { SkiaRef } from './skia'
 
 //// => RefsRegistry
 // 引用管理
@@ -16,7 +10,7 @@ export class RefsRegistry {
   }
 
   // => finalization
-  protected _registry: FinalizationRegistry<DeletedSkiaRef> | null = null
+  protected _registry: FinalizationRegistry<SkiaRef> | null = null
   protected get registry () {
     if (this._registry === null) {
       this._registry = new FinalizationRegistry(this.cleanUp)
@@ -25,14 +19,14 @@ export class RefsRegistry {
     return this._registry
   }
 
-  protected queue: DeletedSkiaRef[] = []
+  protected queue: SkiaRef[] = []
   
   /**
    * 监听对象
    * @param {object} obj
    * @param {T} skia 
    */
-  register (obj: object, skia: DeletedSkiaRef) {
+  register (obj: object, skia: SkiaRef) {
     this.registry.register(obj, skia)
   }
 
@@ -48,7 +42,7 @@ export class RefsRegistry {
    * @param {T} ref
    * @return {*}
    */
-  cleanUp = (ref: DeletedSkiaRef) => {
+  cleanUp = (ref: SkiaRef) => {
     if (!ref.isDeleted()) {
       invariant(!ref.isDeleted(), 'Attempted to delete an already deleted Skia object.')
       this.queue.push(ref)

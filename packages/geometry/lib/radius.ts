@@ -1,5 +1,5 @@
-import { invariant } from '@at/utility'
-import { lerp } from '@at/utility'
+import { invariant } from '@at/utils'
+import { lerp } from '@at/utils'
 import { Point } from './point'
 
 export class Radius extends Point {

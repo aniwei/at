@@ -1,5 +1,5 @@
 import { At } from '../at'
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 
 
 export enum GestureDisposition {

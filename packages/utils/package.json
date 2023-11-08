@@ -1,5 +1,5 @@
 {
-  "name": "@at/utility",
+  "name": "@at/utils",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -25,12 +25,6 @@
     "vite": "^4.3.9"
   },
   "dependencies": {
-    "@at/basic": "workspace:^",
-    "@at/core": "workspace:^",
-    "@at/engine": "workspace:^",
-    "@at/geometry": "workspace:^",
-    "@at/math": "workspace:^",
-    "canvaskit-wasm": "^0.38.0",
     "path-browserify": "^1.0.1",
     "ts-invariant": "^0.10.3"
   }

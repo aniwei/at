@@ -1,4 +1,4 @@
-import { invariant } from '@at/utility'
+import { invariant } from '@at/utils'
 import { At, AtPaint } from '../at'
 import { Rect } from '../basic/geometry'
 import { Color } from '../basic/color'

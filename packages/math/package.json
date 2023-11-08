@@ -26,6 +26,6 @@
   "dependencies": {
     "@at/basic": "workspace:^",
     "@at/geometry": "workspace:^",
-    "@at/utility": "workspace:^"
+    "@at/utils": "workspace:^"
   }
 }

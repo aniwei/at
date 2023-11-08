@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { App, AppConfiguration, InitialCallback, Size, WorkerApp } from '@at/framework'
 import { AtInspector } from './inspector'
 import { AtDocument } from './element/document'

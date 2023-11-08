@@ -1,5 +1,5 @@
 import { Matrix4 } from '@at/math'
-import { invariant, listEquals } from '@at/utility'
+import { invariant, listEquals } from '@at/utils'
 import { Equalable } from '@at/basic'
 import { Rect, RRect } from '@at/geometry'
 

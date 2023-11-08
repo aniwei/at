@@ -1,4 +1,4 @@
-import invariant from '@at/utility'
+import invariant from '@at/utils'
 import { At, Offset } from '../at'
 import { AtPointerEvent } from './events'
 import { AtHitTestEntry } from './hit-test'
