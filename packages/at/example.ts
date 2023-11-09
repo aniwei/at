@@ -1,18 +1,35 @@
 import { Paint, Canvas } from '@at/engine'
-import { Offset } from '@at/geometry'
-import { App, } from './dist'
+import { Offset, Size } from '@at/geometry'
+import { ProxyApp } from './lib/index'
 
-const app = App.create() as App
-
-debugger
-app.start(() => {
-
-  // const surface = App.skia.MakeWebGLCanvasSurface(document.getElementById('webgl') as HTMLCanvasElement)
-  // const canvas = Canvas.create(surface?.getCanvas())
-  // const paint = Paint.create()
-
-  // debugger
-
-  // canvas.drawCircle(Offset.create(30, 30), 10, paint)
-  
+const proxy = ProxyApp.create(document.getElementById('webgl') as HTMLCanvasElement, {
+  size: Size.create(400, 400),
+  devicePixelRatio: 2
 })
+
+proxy.api.Engine.events.on('Runtime.Lifecycle.Update', () => {
+  debugger
+})
+
+proxy.start(() => {
+
+})
+
+
+// const instance = AtInstance.create(document.getElementById('webgl'), {
+//   width: 400,
+//   height: 400,
+//   devicePixelRatio: 2
+// })
+
+// instance.start(() => {
+//   debugger
+//   // const surface = App.skia.MakeWebGLCanvasSurface(document.getElementById('webgl') as HTMLCanvasElement)
+//   // const canvas = Canvas.create(surface?.getCanvas())
+//   // const paint = Paint.create()
+
+//   // debugger
+
+//   // canvas.drawCircle(Offset.create(30, 30), 10, paint)
+  
+// })

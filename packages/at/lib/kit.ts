@@ -3,19 +3,7 @@ import { Size } from '@at/geometry'
 import { AtEngine, Rasterizer, Skia } from '@at/engine'
 import { tryCatch } from '@at/utils'
 import { ApiService } from '@at/api'
-
-// Manifest
-export interface Font {
-  family: string,
-  dir: string
-}
-
-export interface AtManifest {
-  protocol: string,
-  fonts: Font[],
-  theme: {}
-}
-
+import { AtManifest } from './manifest'
 
 export enum AtEnvKind {
   Dev = 'development',
@@ -127,11 +115,10 @@ export abstract class AtKit extends AtEngine {
     return this._rasterizer
   }
 
-  protected element: AtRasterizerElement
-  protected environments: Environments
-  protected configuration: AtKitConfiguration
-
   public api: ApiService = ApiService.create()
+  public element: AtRasterizerElement
+  public environments: Environments
+  public configuration: AtKitConfiguration
 
   constructor (
     element: AtRasterizerElement, 

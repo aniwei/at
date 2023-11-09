@@ -30,8 +30,8 @@ export interface ApiService extends BaseApi<ApiEventKind> {
 }
 
 export class ApiService extends BaseApi<ApiEventKind> {
-  static create () {
-    return new ApiService()
+  static create (transport?: MessageTransport) {
+    return new ApiService(transport)
   }
 
   public state: ApiStateKind = ApiStateKind.Created
@@ -71,7 +71,7 @@ export class ApiService extends BaseApi<ApiEventKind> {
   connect (uri: unknown): void
   /**
    * 连接
-   * @param {WxApiTransport} transport 
+   * @param {ApiTransport} transport 
    * @returns {void}
    */
   connect (transport: ApiTransport): void {

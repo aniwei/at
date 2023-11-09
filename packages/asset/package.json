@@ -26,7 +26,6 @@
   },
   "dependencies": {
     "@at/basic": "workspace:^",
-    "@at/core": "workspace:^",
     "path-browserify": "^1.0.1"
   }
 }
