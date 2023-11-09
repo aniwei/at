@@ -29,10 +29,11 @@ export enum AtEnvKind {
   Production = 'producation'
 }
 
-export interface Environments {
+export interface AtEnvironments {
   SKIA_URI: string,
   AT_ENV: AtEnvKind
 }
+
 
 export abstract class AtEngine extends AssetsManager {
   
@@ -55,6 +56,50 @@ export abstract class AtEngine extends AssetsManager {
   // => refs
   // skia 对象引用管理
   static refs: RefsRegistry = RefsRegistry.create()
+
+  /**
+   * 
+   * @param size 
+   * @param canvas 
+   */
+  static tryCreateSurface (size: Size, canvas: HTMLCanvasElement) {
+    try {
+      return AtEngine.skia.MakeWebGLCanvasSurface(canvas)
+    } catch (error: any) {
+      console.warn(`Caught ProgressEvent with target: ${error.message}`)
+    }
+
+    const versions = [
+      WebGLMajorKind.WebGL1,
+      WebGLMajorKind.WebGL2
+    ]
+
+    for (const ver of versions) {
+      const glContext = AtEngine.skia.GetWebGLContext(canvas, {
+        antialias: 1,
+        majorVersion: ver
+      })
+
+      if (glContext !== 0) {
+        const grContext = AtEngine.skia.MakeWebGLContext(glContext) ?? null
+        if (grContext === null) {
+          continue
+        }
+
+        const surface = AtEngine.skia.MakeOnScreenGLSurface(
+          grContext,
+          Math.ceil(size.width),
+          Math.ceil(size.height),
+          AtEngine.skia.ColorSpace.SRGB
+        )
+
+        return surface
+      }
+    }
+
+    console.warn(`Caught ProgressEvent with target: Cannot create WebGL context.`)
+    return AtEngine.skia.MakeSWCanvasSurface(canvas)
+  }
 
   // => fonts
   // 懒创建
@@ -98,50 +143,6 @@ export abstract class AtEngine extends AssetsManager {
       console.warn(`Caught ProgressEvent with target: ${1}`)
       throw new AssetError(uri, error.status)
     }
-  }
-
-  /**
-   * 
-   * @param size 
-   * @param canvas 
-   */
-  tryCreateSurface (size: Size, canvas: HTMLCanvasElement) {
-    try {
-      return AtEngine.skia.MakeWebGLCanvasSurface(canvas)
-    } catch (error: any) {
-      console.warn(`Caught ProgressEvent with target: ${error.message}`)
-    }
-
-    const versions = [
-      WebGLMajorKind.WebGL1,
-      WebGLMajorKind.WebGL2
-    ]
-
-    for (const ver of versions) {
-      const glContext = AtEngine.skia.GetWebGLContext(canvas, {
-        antialias: 1,
-        majorVersion: ver
-      })
-
-      if (glContext !== 0) {
-        const grContext = AtEngine.skia.MakeWebGLContext(glContext) ?? null
-        if (grContext === null) {
-          continue
-        }
-
-        const surface = AtEngine.skia.MakeOnScreenGLSurface(
-          grContext,
-          Math.ceil(size.width),
-          Math.ceil(size.height),
-          AtEngine.skia.ColorSpace.SRGB
-        )
-
-        return surface
-      }
-    }
-
-    console.warn(`Caught ProgressEvent with target: Cannot create WebGL context.`)
-    return AtEngine.skia.MakeSWCanvasSurface(canvas)
   }
 
   /**

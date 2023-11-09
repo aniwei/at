@@ -505,10 +505,7 @@ export class Recorder extends Canvas {
   stop () {
     invariant(this.prictue, `Recorder is not recording`)
 
-    const picture = this.prictue?.finishRecordingAsPicture()
-    this.prictue.delete()
-    this.prictue = null
-
+    const picture = this.prictue?.finishRecordingAsPicture() as Skia.Picture
     return new Picture(picture, this.cullRect, this.snapshot)
   }
 
@@ -538,11 +535,11 @@ export class Recorder extends Canvas {
 
   /**
    * 
-   * @param oval 
-   * @param startAngle 
-   * @param sweepAngle 
-   * @param useCenter 
-   * @param paint 
+   * @param {Rect} oval 
+   * @param {number} startAngle 
+   * @param {number} sweepAngle 
+   * @param {boolean} useCenter 
+   * @param {Paint} paint 
    */
   drawArc (
     oval: Rect,
@@ -557,12 +554,12 @@ export class Recorder extends Canvas {
 
   /**
    * 
-   * @param paint 
-   * @param atlas 
-   * @param rstTransforms 
-   * @param rects 
-   * @param colors 
-   * @param blendMode 
+   * @param {Paint} paint 
+   * @param {Image} atlas 
+   * @param {number[]} rstTransforms 
+   * @param {number[]} rects 
+   * @param {number[]} colors 
+   * @param {Skia.BlendMode} blendMode 
    */
   drawAtlasRaw(
     paint: Paint,

@@ -1,11 +1,21 @@
 import { Matrix4 } from '@at/math'
 import { Picture } from './picture'
 import { Surface } from './surface'
-
-import * as Skia from './skia'
 import { LayerTree } from './layer-tree'
 
+import * as Skia from './skia'
+
+
+export interface RasterizerFactory<T> {
+  new (surface: Skia.Surface, devicePixelRatio: number): T
+  create (surface: Skia.Surface, devicePixelRatio: number): T
+}
 export abstract class Rasterizer extends Surface {
+  static create <T extends Rasterizer> (surface: Skia.Surface, devicePixelRatio: number): Rasterizer {
+    const RasterizerFactory = this as unknown as RasterizerFactory<T>
+    return new RasterizerFactory(surface, devicePixelRatio)
+  }
+
   protected devicePixelRatio: number
 
   public callbacks: VoidFunction[] = []

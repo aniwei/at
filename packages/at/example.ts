@@ -3,13 +3,16 @@ import { Offset } from '@at/geometry'
 import { App, } from './dist'
 
 const app = App.create() as App
+
+debugger
 app.start(() => {
-  const surface = App.skia.MakeWebGLCanvasSurface(document.getElementById('webgl') as HTMLCanvasElement)
-  const canvas = Canvas.create(surface?.getCanvas())
-  const paint = Paint.create()
 
-  debugger
+  // const surface = App.skia.MakeWebGLCanvasSurface(document.getElementById('webgl') as HTMLCanvasElement)
+  // const canvas = Canvas.create(surface?.getCanvas())
+  // const paint = Paint.create()
 
-  canvas.drawCircle(Offset.create(30, 30), 10, paint)
+  // debugger
+
+  // canvas.drawCircle(Offset.create(30, 30), 10, paint)
   
 })

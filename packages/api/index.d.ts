@@ -1,1 +1,1 @@
-export * from './types/lib'
+export * from './types/lib/index'

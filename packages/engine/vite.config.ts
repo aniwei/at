@@ -12,6 +12,7 @@ export default defineConfig({
     rollupOptions: {
       external: [
         '@at/core',
+        '@at/asset',
         '@at/basic',
         '@at/geometry',
         '@at/math',

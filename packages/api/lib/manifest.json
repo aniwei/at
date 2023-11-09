@@ -1,0 +1,35 @@
+{
+  "version": "1.0.0",
+  "domains": [
+    {
+      "name": "Engine",
+      "description": "画布引擎",
+      "dependencies": [],
+      "types": [],
+      "commands": [
+        
+      ],
+      "events": [
+        {
+          "name": "publish",
+          "description": "发布事件",
+          "parameters": [{
+            "name": "name",
+            "type": "enum",
+            "description": "事件名称",
+            "enum": [
+              "Runtime.Lifecycle.Update",
+              "Runtime.State.Update",
+              "Resource.CanvasKit.Loader.Update",
+              "Resource.Fonts.Loader.Update"
+            ]
+          }, {
+            "name": "parameters",
+            "type": "object",
+            "description": "事件数据"
+          }]
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,3 @@
-
 import { AtKit } from './kit'
 
 export enum AssetsStateKind {
@@ -18,11 +17,22 @@ export abstract class AtInstance extends AtKit {
   public get skia () {
     return AtKit.skia
   }
+
+  prepare(): Promise<void> {
+    return super.prepare().then(() => {
+      // 
+      // this.tryCreateSurface()
+    })
+  }
   
   start (callback: VoidFunction = (() => {})) {
     return this.ensure()
       .then(() => this.prepare())
       .then(() => callback())
+  }
+
+  stop () {
+    this.dispose()
   }
 }
 

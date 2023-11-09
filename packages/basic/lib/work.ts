@@ -1,6 +1,10 @@
-import debug from 'debug'
 import { paddingLeft, invariant } from '@at/utils'
 import { EventEmitter } from './events'
+import { 
+  MessageData, 
+  MessageReceivers, 
+  MessageSender 
+} from './message'
 import { 
   MessageContent, 
   MessageError,
@@ -10,14 +14,7 @@ import {
   MessageTransportPort, 
   MessageTransportStateKind 
 } from './transport'
-import { 
-  MessageData, 
-  MessageReceivers, 
-  MessageSender 
-} from './message'
 
-
-const transport_debug = debug('work')
 
 export type MessagePort = {
   onmessage: null | ((data: MessageEvent<unknown>) => void)
@@ -92,7 +89,7 @@ export class WorkTransport<T extends string = string> extends MessageTransport<W
         if (handle) {
           await handle(message)
         } else {
-          transport_debug(`无指令处理 %s`, message.command)
+          
         }
       } catch (error: any) {
         if (message?.id) {
