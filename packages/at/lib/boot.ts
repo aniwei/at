@@ -2,6 +2,7 @@ import { ApiStateKind, ApiTransport } from '@at/api'
 import { AtEngineConfiguration, Paint, Skia, Surface } from '@at/engine'
 import { Offset, Size } from '@at/geometry'
 import { AtInstance } from './at'
+import { Color } from '@at/basic'
 
 //// => ConnectionPayload
 interface ConnectionPayload {
@@ -52,8 +53,10 @@ app.start(() => {
   const surface = Surface.create(App.tryCreateSurface(size, app.element) as Skia.Surface)
 
   const canvas = surface.canvas
+  const paint = Paint.create()
 
-  canvas.drawCircle(Offset.create(200, 200), 100, Paint.create())
+  paint.color = Color.create(0xff00ff00)
+  canvas.drawCircle(Offset.create(200, 200), 100, paint)
 
   surface.skia.flush()
 })

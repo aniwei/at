@@ -1,11 +1,10 @@
 import { invariant } from '@at/utils'
-import { Size } from '../basic/geometry'
-import { AtImage } from '../engine/image'
-import { EventEmitter } from '../basic/events'
-import { AtAssetBundle } from '../basic/asset-boundle'
+import { Size } from '@at/geometry'
+import { Image, Skia } from '@at/engine'
+import { Equalable, EventEmitter } from '@at/basic'
+import { AssetBundle } from '@at/asset'
 
 import { At, Codec, FrameInfo, VoidCallback } from '../at'
-import type { TextDirection } from '../engine/skia'
 
 /**
  * @description: 图片解码
@@ -25,30 +24,30 @@ export type ImageChunkEvent = {
   expectedTotalBytes: number | null
 }
 
-export type ImageListener = (image: AtImageInfo, synchronous: boolean) => void
+export type ImageListener = (image: ImageInfo, synchronous: boolean) => void
 export type ImageChunkListener = (chunk: ImageChunkEvent) => void
 export type ImageErrorListener = (error: any) => void
 
 
-export type AtImageConfigurationOptions = {
+export type ImageConfigurationOptions = {
   bundle?: AtAssetBundle | null,
   devicePixelRatio?: number | null,
   textDirection?: TextDirection,
   size?: Size | null,
 }
 
-// => AtImageConfiguration
-export class AtImageConfiguration {
+// => ImageConfiguration
+export class ImageConfiguration {
   static get empty () {
-    return new AtImageConfiguration()
+    return new ImageConfiguration()
   }
   /**
    * 创建图片配置
    * @param {options} optons
    * @return {*}
    */
-  static create (options: AtImageConfigurationOptions) {
-    return new AtImageConfiguration(
+  static create (options: ImageConfigurationOptions) {
+    return new ImageConfiguration(
       options?.bundle,
       options?.devicePixelRatio,
       options?.textDirection,
@@ -57,9 +56,9 @@ export class AtImageConfiguration {
   }
 
   public size: Size | null
-  public bundle: AtAssetBundle | null
+  public bundle: AssetBundle | null
   public devicePixelRatio: number | null
-  public textDirection: TextDirection
+  public textDirection: Skia.TextDirection
   
   /**
    * 构造函数
@@ -87,15 +86,15 @@ export class AtImageConfiguration {
    * @param devicePixelRatio 
    * @param textDirection 
    * @param {Size | null} size 
-   * @return {AtImageConfiguration} 
+   * @return {ImageConfiguration} 
    */
   copyWith (
     bundle: AtAssetBundle | null = null,
     devicePixelRatio: number | null = At.globalSettings.devicePixelRatio,
     textDirection: TextDirection | null = null,
     size: Size | null = null,
-  ): AtImageConfiguration  {
-    return new AtImageConfiguration(
+  ): ImageConfiguration  {
+    return new ImageConfiguration(
       bundle ?? this.bundle,
       devicePixelRatio ?? this.devicePixelRatio,
       textDirection ?? this.textDirection,
@@ -105,12 +104,12 @@ export class AtImageConfiguration {
 
   /**
    * @description: 判断是否相等
-   * @param {AtImageConfiguration} other
+   * @param {ImageConfiguration} other
    * @return {*}
    */  
-  equal (other: AtImageConfiguration | null) {
+  equal (other: ImageConfiguration | null) {
     return (
-      other instanceof AtImageConfiguration &&
+      other instanceof ImageConfiguration &&
       other.bundle === this.bundle &&
       other.devicePixelRatio === this.devicePixelRatio &&
       other.textDirection === this.textDirection &&
@@ -118,30 +117,30 @@ export class AtImageConfiguration {
     )
   }
 
-  notEqual (value: AtImageConfiguration | null): boolean {
+  notEqual (value: ImageConfiguration | null): boolean {
     throw !this.equal(value)
   }
   
   toString () {
-    return `AtImageConfiguration(bundle: ${this.bundle}, devicePixelRatio: ${this.devicePixelRatio}, textDirection: ${this.textDirection}, size: ${this.size})`
+    return `ImageConfiguration(bundle: ${this.bundle}, devicePixelRatio: ${this.devicePixelRatio}, textDirection: ${this.textDirection}, size: ${this.size})`
   }
 }
 
 
-// => AtImageInfo
+// => ImageInfo
 /**
  * @description: 图片信息
  * @return {*}
  */
-export class AtImageInfo {
-  public image: AtImage
+export class ImageInfo implements Equalable<ImageInfo> {
+  public image: Image
   public scale: number 
   
   public get sizeBytes () {
     return this.image.height * this.image.width * 4
   } 
 
-  constructor (image: AtImage, scale: number = 1.0) {
+  constructor (image: Image, scale: number = 1.0) {
     invariant(image !== null, `The argument image cannot be null.`)
     invariant(scale !== null, `The argument image cannot be null.`)
 
@@ -149,26 +148,30 @@ export class AtImageInfo {
     this.scale = scale
   }
   
-  clone (): AtImageInfo {
-    return new AtImageInfo(
+  clone (): ImageInfo {
+    return new ImageInfo(
       this.image.clone(),
       this.scale
     )
   }
 
-  isCloneOf (other: AtImageInfo): boolean {
+  isCloneOf (other: ImageInfo): boolean {
     return (
       other.image.isCloneOf(this.image) &&
       other.scale === this.scale 
     )
   }
 
-  equal (other: AtImageInfo) {
+  equal (other: ImageInfo | null) {
     return (
-      other instanceof AtImageInfo &&
+      other instanceof ImageInfo &&
       other.scale === this.scale &&
       other.image === this.image
     )
+  }
+
+  notEqual (other: ImageInfo | null): boolean {
+    return this.equal(other)
   }
 
   dispose () {
@@ -176,16 +179,19 @@ export class AtImageInfo {
   }
 
   toString () {
-    return `AtImageInfo()`
+    return `ImageInfo(
+      [scale]: ${this.scale}
+      [image]: ${this.image}
+    )`
   }
 }
 
-// => AtImageStream
+// => ImageStream
 /**
  * @description: 图片时间流
  * @return {*}
  */
-export class AtImageStream extends EventEmitter<'image' | 'chunk' | 'error'> {
+export class ImageStream extends EventEmitter<'image' | 'chunk' | 'error'> {
   /**
    * @description: 绑定的 completer
    * @return {*}
@@ -194,11 +200,11 @@ export class AtImageStream extends EventEmitter<'image' | 'chunk' | 'error'> {
     return this.completer
   }
 
-  private _completer: AtImageStreamCompleter | null = null
+  private _completer: ImageStreamCompleter | null = null
   public get completer () {
     return this._completer
   }
-  public set completer (completer: AtImageStreamCompleter | null) {
+  public set completer (completer: ImageStreamCompleter | null) {
     if (completer !== null) {
       completer.add(this)
     }
@@ -210,7 +216,7 @@ export class AtImageStream extends EventEmitter<'image' | 'chunk' | 'error'> {
    * @param image 
    * @param synchronous 
    */
-  setImage (image: AtImageInfo, synchronous: boolean) {
+  setImage (image: ImageInfo, synchronous: boolean) {
     if (this.listenerCount('image') > 0) {
       try {
         this.emit('image', image.clone(), synchronous)
@@ -229,14 +235,14 @@ export class AtImageStream extends EventEmitter<'image' | 'chunk' | 'error'> {
   }
 }
 
-// => AtImageStreamCompleter
+// => ImageStreamCompleter
 /**
  * @description: 
  * @return {*}
  */
-export class AtImageStreamCompleter extends EventEmitter<'lastStreamRemovedCallbacks'> {
-  protected streams: AtImageStream[] = []
-  protected image: AtImageInfo | null = null
+export class ImageStreamCompleter extends EventEmitter<'lastStreamRemovedCallbacks'> {
+  protected streams: ImageStream[] = []
+  protected image: ImageInfo | null = null
 
   public disposed = false
   public keepAliveHandles: number = 0
@@ -250,7 +256,7 @@ export class AtImageStreamCompleter extends EventEmitter<'lastStreamRemovedCallb
     this.keepAliveHandles++
   }
 
-  setImage (image: AtImageInfo) {
+  setImage (image: ImageInfo) {
     this.checkIsDisposed()
     this.image?.dispose()
     this.image = image
@@ -275,7 +281,7 @@ export class AtImageStreamCompleter extends EventEmitter<'lastStreamRemovedCallb
     }
   }
 
-  add (stream: AtImageStream) {
+  add (stream: ImageStream) {
     this.checkIsDisposed()
     this.hadAtLeastOneStream = true
     this.streams.push(stream)
@@ -285,7 +291,7 @@ export class AtImageStreamCompleter extends EventEmitter<'lastStreamRemovedCallb
     }
   }
 
-  remove (stream: AtImageStream) {
+  remove (stream: ImageStream) {
     this.checkIsDisposed()
 
     const index = this.streams.findIndex(s => stream === s)
@@ -322,7 +328,7 @@ export class AtImageStreamCompleter extends EventEmitter<'lastStreamRemovedCallb
 }
 
 // => AtMultiFrameImageStreamCompleter
-export class AtMultiFrameImageStreamCompleter extends AtImageStreamCompleter {
+export class AtMultiFrameImageStreamCompleter extends ImageStreamCompleter {
   public scale: number
   public codec: Codec | null = null
   public nextFrame: FrameInfo | null = null
@@ -365,7 +371,7 @@ export class AtMultiFrameImageStreamCompleter extends AtImageStreamCompleter {
       this.isFirstFrame || 
       this.hasFrameDurationPassed(timestamp)
     ) {
-      this.emitFrame(new AtImageInfo(this.nextFrame.image.clone(), this.scale))
+      this.emitFrame(new ImageInfo(this.nextFrame.image.clone(), this.scale))
       
       this.shownTimestamp = timestamp
       this.frameDuration = this.nextFrame!.duration
@@ -410,7 +416,7 @@ export class AtMultiFrameImageStreamCompleter extends AtImageStreamCompleter {
         return
       }
       
-      this.emitFrame(new AtImageInfo(this.nextFrame.image.clone(), this.scale))
+      this.emitFrame(new ImageInfo(this.nextFrame.image.clone(), this.scale))
       this.nextFrame!.image.dispose()
       this.nextFrame = null
       return
@@ -429,12 +435,12 @@ export class AtMultiFrameImageStreamCompleter extends AtImageStreamCompleter {
     // SchedulerBinding.instance!.scheduleFrameCallback(this.handleAppFrame)
   }
 
-  emitFrame (imageInfo: AtImageInfo) {
+  emitFrame (imageInfo: ImageInfo) {
     this.setImage(imageInfo)
     this.framesEmitted += 1
   }
 
-  add (stream: AtImageStream) {
+  add (stream: ImageStream) {
     if (!this.hasStream && this.codec !== null && (
       this.image === null || this.codec!.frameCount > 1
     ))
@@ -447,7 +453,7 @@ export class AtMultiFrameImageStreamCompleter extends AtImageStreamCompleter {
    * @description 
    * @param stream 
    */
-  remove (stream: AtImageStream) {
+  remove (stream: ImageStream) {
     super.remove(stream)
     if (!this.hasStream) {
       // this.timer?.cancel()
@@ -463,34 +469,34 @@ export class AtMultiFrameImageStreamCompleter extends AtImageStreamCompleter {
   }
 }
 
-// => AtImageProviderKey
-export abstract class AtImageProviderKey {
-  abstract equal (other: AtImageProviderKey): boolean
+// => ImageProviderKey
+export abstract class ImageProviderKey {
+  abstract equal (other: ImageProviderKey): boolean
 }
 
-// => AtImageProvider
-export abstract class AtImageProvider<T extends AtImageProviderKey = AtImageProviderKey> { 
+// => ImageProvider
+export abstract class ImageProvider<T extends ImageProviderKey = ImageProviderKey> { 
   abstract key: T
 
-  abstract obtainKeyAsync (configuration: AtImageConfiguration): Promise<T>
-  abstract obtainKey (configuration: AtImageConfiguration): T
-  abstract load (key: T, decode: ImageDecodeCallback): AtImageStreamCompleter
+  abstract obtainKeyAsync (configuration: ImageConfiguration): Promise<T>
+  abstract obtainKey (configuration: ImageConfiguration): T
+  abstract load (key: T, decode: ImageDecodeCallback): ImageStreamCompleter
 
   /**
    * @description 创建图片流
-   * @param {AtImageConfiguration} configuration 
-   * @returns {AtImageStream}
+   * @param {ImageConfiguration} configuration 
+   * @returns {ImageStream}
    */
-  createStream (configuration: AtImageConfiguration): AtImageStream {
-    return new AtImageStream()
+  createStream (configuration: ImageConfiguration): ImageStream {
+    return new ImageStream()
   }
 
   /**
    * 
-   * @param {AtImageConfiguration} configuration 
-   * @return {AtImageStream}
+   * @param {ImageConfiguration} configuration 
+   * @return {ImageStream}
    */
-  resolve (configuration: AtImageConfiguration) {
+  resolve (configuration: ImageConfiguration) {
     invariant(configuration !== null, `The configuration argument cannot be null.`)
 
     const stream = this.createStream(configuration)
@@ -505,7 +511,7 @@ export abstract class AtImageProvider<T extends AtImageProviderKey = AtImageProv
    * @param configuration 
    * @returns 
    */
-  resolveAsync (configuration: AtImageConfiguration) {
+  resolveAsync (configuration: ImageConfiguration) {
     invariant(configuration !== null, `The configuration argument cannot be null.`)
     const stream = this.createStream(configuration)
 
@@ -518,14 +524,14 @@ export abstract class AtImageProvider<T extends AtImageProviderKey = AtImageProv
 
   /**
    * 
-   * @param {AtImageConfiguration} configuration
-   * @param {AtImageStream} stream 
-   * @param {AtImageProvider} key 
+   * @param {ImageConfiguration} configuration
+   * @param {ImageStream} stream 
+   * @param {ImageProvider} key 
    * @return void
    */
   resolveStreamForKey (
-    configuration: AtImageConfiguration, 
-    stream: AtImageStream, 
+    configuration: ImageConfiguration, 
+    stream: ImageStream, 
     key: T, 
   ): void  {
 
@@ -545,10 +551,10 @@ export abstract class AtImageProvider<T extends AtImageProviderKey = AtImageProv
 
   /**
    * @description: 获取图片缓存状态
-   * @param {AtImageConfiguration} configuration
+   * @param {ImageConfiguration} configuration
    * @return {*}
    */  
-   obtainCacheStatus (configuration: AtImageConfiguration): AtImageCacheStatus | null {
+   obtainCacheStatus (configuration: ImageConfiguration): ImageCacheStatus | null {
     invariant(configuration !== null, `The argument configuration cannot be null.`)
 
     const key = this.obtainKey(configuration)
@@ -559,10 +565,10 @@ export abstract class AtImageProvider<T extends AtImageProviderKey = AtImageProv
   
   /**
    * @description: 获取图片缓存状态
-   * @param {AtImageConfiguration} configuration
+   * @param {ImageConfiguration} configuration
    * @return {*}
    */  
-  obtainCacheStatusAsync (configuration: AtImageConfiguration): Promise<AtImageCacheStatus | null>  {
+  obtainCacheStatusAsync (configuration: ImageConfiguration): Promise<ImageCacheStatus | null>  {
     invariant(configuration !== null, `The argument configuration cannot be null.`)
 
     return this.obtainKeyAsync(configuration).then((key: T) => {
@@ -571,9 +577,9 @@ export abstract class AtImageProvider<T extends AtImageProviderKey = AtImageProv
     })
   }
 
-  equal (other: AtImageProvider<T> | null) {
+  equal (other: ImageProvider<T> | null) {
     return (
-      other instanceof AtImageProvider && 
+      other instanceof ImageProvider && 
       other === this
     )
   }
@@ -581,7 +587,7 @@ export abstract class AtImageProvider<T extends AtImageProviderKey = AtImageProv
 
 
 // => AtNetworkImageKey
-export class AtNetworkImageKey extends AtImageProviderKey {
+export class AtNetworkImageKey extends ImageProviderKey {
   equal (other: AtNetworkImageKey): boolean {
     return (
       other instanceof AtNetworkImageKey
@@ -596,7 +602,7 @@ export type AtNetworkImageOptions = {
 }
 
 // => AtNetworkImage
-export class AtNetworkImage extends AtImageProvider<AtNetworkImageKey> {
+export class AtNetworkImage extends ImageProvider<AtNetworkImageKey> {
   static create (options: AtNetworkImageOptions) {
     return new AtNetworkImage(
       options.url,
@@ -631,19 +637,19 @@ export class AtNetworkImage extends AtImageProvider<AtNetworkImageKey> {
 
   /**
    * 
-   * @param {AtImageConfiguration} configuration 
+   * @param {ImageConfiguration} configuration 
    * @return {Promise<this>}
    */
-  obtainKeyAsync (configuration: AtImageConfiguration): Promise<AtNetworkImage>  {
+  obtainKeyAsync (configuration: ImageConfiguration): Promise<AtNetworkImage>  {
     return Promise.resolve(this)
   }
 
   /**
    * 
-   * @param {AtImageConfiguration} configuration 
+   * @param {ImageConfiguration} configuration 
    * @return {this}
    */
-   obtainKey (configuration: AtImageConfiguration): AtNetworkImage {
+   obtainKey (configuration: ImageConfiguration): AtNetworkImage {
     return this
   }
 
@@ -651,7 +657,7 @@ export class AtNetworkImage extends AtImageProvider<AtNetworkImageKey> {
    * 
    * @param {AtNetworkImage} key 
    * @param {ImageDecodeCallback} decode 
-   * @return {AtImageStreamCompleter}
+   * @return {ImageStreamCompleter}
    */
   load (key: AtNetworkImage, decode: ImageDecodeCallback) {
     const chunks: ImageChunkEvent[] = []
@@ -694,7 +700,7 @@ export class AtNetworkImage extends AtImageProvider<AtNetworkImageKey> {
  * @description 图片缓存对象
  */
 export abstract class AtBaseImageCached { 
-  public completer: AtImageStreamCompleter
+  public completer: ImageStreamCompleter
   public sizeBytes: number | null
 
   /**
@@ -702,7 +708,7 @@ export abstract class AtBaseImageCached {
    * @param completer 
    * @param sizeBytes 
    */
-  constructor (completer: AtImageStreamCompleter, sizeBytes?: number | null) {
+  constructor (completer: ImageStreamCompleter, sizeBytes?: number | null) {
     invariant(completer !== null, `The argument "completer" cannot be null.`)
     this.completer = completer
     this.sizeBytes = sizeBytes ?? null
@@ -713,7 +719,7 @@ export abstract class AtBaseImageCached {
 
 // => AtCachedImage
 class AtCachedImage extends AtBaseImageCached {
-  constructor (completer: AtImageStreamCompleter, sizeBytes: number | null) {
+  constructor (completer: ImageStreamCompleter, sizeBytes: number | null) {
     super(completer, sizeBytes)
   }
 }
@@ -722,13 +728,13 @@ class AtCachedImage extends AtBaseImageCached {
  * @description 正在挂在图片对象
  */
 class AtPencildingImage extends AtBaseImageCached {
-  public stream: AtImageStream
+  public stream: ImageStream
 
   /**
-   * @param {AtImageStreamCompleter} completer 
-   * @param {AtImageStream} stream 
+   * @param {ImageStreamCompleter} completer 
+   * @param {ImageStream} stream 
    */
-  constructor (completer: AtImageStreamCompleter, stream: AtImageStream) {
+  constructor (completer: ImageStreamCompleter, stream: ImageStream) {
     super(completer, 0)
     this.stream = stream
   }
@@ -741,12 +747,12 @@ class AtPencildingImage extends AtBaseImageCached {
 class AtLiveImage extends AtBaseImageCached {
   /**
    * 
-   * @param {AtImageStreamCompleter} completer 
+   * @param {ImageStreamCompleter} completer 
    * @param {VoidCallback} handleRemove 
    * @param {number | null} sizeBytes 
    */
   constructor (
-    completer: AtImageStreamCompleter, 
+    completer: ImageStreamCompleter, 
     handleRemove: VoidCallback, 
     sizeBytes: number | null = null
     ) {
@@ -768,7 +774,7 @@ class AtLiveImage extends AtBaseImageCached {
   }
 }
 
-export class AtImageCacheStorage<K extends AtImageProviderKey, V extends AtBaseImageCached> {
+export class ImageCacheStorage<K extends ImageProviderKey, V extends AtBaseImageCached> {
   public storage: Map<K, V> = new Map()
 
   public get size () {
@@ -832,14 +838,14 @@ export class AtImageCacheStorage<K extends AtImageProviderKey, V extends AtBaseI
   }
 }
 
-export class AtImageCache<T extends AtImageProviderKey = AtImageProviderKey> {
+export class ImageCache<T extends ImageProviderKey = ImageProviderKey> {
   static create () {
-    return new AtImageCache()
+    return new ImageCache()
   }
 
-  public livingImages: AtImageCacheStorage<T, AtLiveImage> = new AtImageCacheStorage()
-  public cachedImages: AtImageCacheStorage<T, AtCachedImage> = new AtImageCacheStorage()
-  public pendingImages: AtImageCacheStorage<T, AtPencildingImage> = new AtImageCacheStorage()
+  public livingImages: ImageCacheStorage<T, AtLiveImage> = new ImageCacheStorage()
+  public cachedImages: ImageCacheStorage<T, AtCachedImage> = new ImageCacheStorage()
+  public pendingImages: ImageCacheStorage<T, AtPencildingImage> = new ImageCacheStorage()
 
   public listenedOnce: boolean = false
   public sizeBytes: number = 0
@@ -903,7 +909,7 @@ export class AtImageCache<T extends AtImageProviderKey = AtImageProviderKey> {
 
   /**
    * 
-   * @param {AtImageProvider} key 
+   * @param {ImageProvider} key 
    * @param {boolean} includeLive 
    * @return {boolean}
    */
@@ -932,7 +938,7 @@ export class AtImageCache<T extends AtImageProviderKey = AtImageProviderKey> {
 
   /**
    * @description 创建缓存
-   * @param {AtImageProvider} key 
+   * @param {ImageProvider} key 
    * @param {AtCachedImage} image 
    */
   touch (key: T, image: AtCachedImage) {
@@ -950,13 +956,13 @@ export class AtImageCache<T extends AtImageProviderKey = AtImageProviderKey> {
 
   /**
    * 
-   * @param {AtImageProvider} key 
-   * @param {AtImageStreamCompleter} completer 
+   * @param {ImageProvider} key 
+   * @param {ImageStreamCompleter} completer 
    * @param {number | null} sizeBytes 
    */
   trackLiveImage (
     key: T, 
-    completer: AtImageStreamCompleter, 
+    completer: ImageStreamCompleter, 
     sizeBytes: number | null
   ) {
     this.livingImages.putIfAbsent(key, () => {
@@ -966,7 +972,7 @@ export class AtImageCache<T extends AtImageProviderKey = AtImageProviderKey> {
     })
   }
 
-  putIfAbsent (key: T, loader: () => AtImageStreamCompleter): AtImageStreamCompleter | null {
+  putIfAbsent (key: T, loader: () => ImageStreamCompleter): ImageStreamCompleter | null {
     invariant(key !== null, `The argument key cannot be null.`)
     invariant(loader !== null, `The argument loader cannot be null.`)
    
@@ -990,16 +996,16 @@ export class AtImageCache<T extends AtImageProviderKey = AtImageProviderKey> {
       return live.completer
     }
 
-    let result: AtImageStreamCompleter
+    let result: ImageStreamCompleter
 
-    result = loader() as AtImageStreamCompleter
+    result = loader() as ImageStreamCompleter
     this.trackLiveImage(key, result, null)
     
     let listenedOnce = false
     let untrackedPendingImage: AtPencildingImage | null
     
-    const stream = new AtImageStream()
-    stream.on('image', (info: AtImageInfo | null, sync: boolean) => {
+    const stream = new ImageStream()
+    stream.on('image', (info: ImageInfo | null, sync: boolean) => {
       let sizeBytes: number | null = null
 
       if (info !== null) {
@@ -1038,8 +1044,8 @@ export class AtImageCache<T extends AtImageProviderKey = AtImageProviderKey> {
     return result
   }
 
-  statusForKey (key: T): AtImageCacheStatus {
-    return new AtImageCacheStatus(
+  statusForKey (key: T): ImageCacheStatus {
+    return new ImageCacheStatus(
       this.pendingImages.containsKey(key),
       this.cachedImages.containsKey(key),
       this.livingImages.containsKey(key),
@@ -1080,8 +1086,8 @@ export class AtImageCache<T extends AtImageProviderKey = AtImageProviderKey> {
   }
 }
 
-// => AtImageCacheStatus
-export class AtImageCacheStatus {
+// => ImageCacheStatus
+export class ImageCacheStatus {
   public live: boolean
   public pending: boolean
   public keepAlive: boolean
@@ -1102,9 +1108,9 @@ export class AtImageCacheStatus {
     this.live = live
   }
 
-  equal (other: AtImageCacheStatus) {
+  equal (other: ImageCacheStatus) {
     return (
-      other instanceof AtImageCacheStatus &&
+      other instanceof ImageCacheStatus &&
       other.keepAlive === this.keepAlive &&
       other.pending === this.pending &&
       other.live === this.live
@@ -1112,18 +1118,18 @@ export class AtImageCacheStatus {
   }
   
   toString () {
-    return `AtImageCacheStatus(${this.pending}, ${this.keepAlive}, ${this.live})`
+    return `ImageCacheStatus(${this.pending}, ${this.keepAlive}, ${this.live})`
   }
 }
 
 // // => AtResizeImageKey
 export class AtResizeImageKey {
-  public key: AtImageProviderKey | null
+  public key: ImageProviderKey | null
   public width: number
   public height: number
 
   constructor (
-    key: AtImageProviderKey | null, 
+    key: ImageProviderKey | null, 
     width: number = 0, 
     height: number = 0
   ) {
@@ -1146,12 +1152,12 @@ export class AtResizeImageKey {
 }
 
 // => AtResizeImage
-export class AtResizeImage extends AtImageProvider {
+export class AtResizeImage extends ImageProvider {
   static resizeIfNeeded (
     cacheWidth: number | null = null, 
     cacheHeight: number | null = null,  
-    provider: AtImageProvider
-  ): AtImageProvider {
+    provider: ImageProvider
+  ): ImageProvider {
     if (cacheWidth !== null || cacheHeight !== null) {
       return new AtResizeImage(
         provider, 
@@ -1168,10 +1174,10 @@ export class AtResizeImage extends AtImageProvider {
   public width: number
   public height: number
   public allowUpscaling: boolean 
-  public provider: AtImageProvider
+  public provider: ImageProvider
 
   constructor (
-    provider: AtImageProvider,
+    provider: ImageProvider,
     width: number,
     height: number,
     allowUpscaling: boolean = true
@@ -1187,7 +1193,7 @@ export class AtResizeImage extends AtImageProvider {
   }
 
 
-  load (key: AtResizeImageKey, decode: ImageDecodeCallback): AtImageStreamCompleter {
+  load (key: AtResizeImageKey, decode: ImageDecodeCallback): ImageStreamCompleter {
     const decodeResize = (
       bytes: Uint8Array, 
       cacheWidth: number | null = null, 
@@ -1202,11 +1208,11 @@ export class AtResizeImage extends AtImageProvider {
       return decode(bytes, this.width, this.height, this.allowUpscaling)
     }
 
-    const completer: AtImageStreamCompleter = this.provider.load(this.key, decodeResize)
+    const completer: ImageStreamCompleter = this.provider.load(this.key, decodeResize)
     return completer
   }
 
-  obtainKeyAsync (configuration: AtImageConfiguration): Promise<AtResizeImageKey> {
+  obtainKeyAsync (configuration: ImageConfiguration): Promise<AtResizeImageKey> {
     return Promise.resolve().then(() => {
       return this.provider.obtainKeyAsync(configuration).then(key => {
         this.key.key = key
@@ -1215,7 +1221,7 @@ export class AtResizeImage extends AtImageProvider {
     })
   }
 
-  obtainKey (configuration: AtImageConfiguration): AtResizeImageKey {    
+  obtainKey (configuration: ImageConfiguration): AtResizeImageKey {    
     this.key.key = this.provider.obtainKey(configuration)
     return this.key
   }

@@ -1,11 +1,24 @@
 import { invariant } from '@at/utils'
-import { lerp } from '@at/basic'
-import { TextDirection } from '../engine/skia'
+import { lerp } from '@at/utils'
+import { AtEngine, Skia } from '@at/engine'
+import { Equalable } from '@at/basic'
 import { Offset, Rect, Size } from '@at/geometry'
-import { At } from '../at'
 
+//// => AlignmentGeometry
+export interface AlignmentGeometryFactory<T> {
+  new (...rests: unknown[]): T
+  new (x: number, y: number, start: number): T
+  create (...rests: unknown[]) : T
+  create (x: number, y: number, start: number): T
+}
+export abstract class AlignmentGeometry extends Equalable<AlignmentGeometry> {
+  static create <T extends AlignmentGeometry>(...rests: unknown[]): AlignmentGeometry
+  static create <T extends AlignmentGeometry>(x: number, y: number, start: number): AlignmentGeometry {
+    const AlignmentGeometryFactory = this as unknown as AlignmentGeometryFactory<T>
 
-export abstract class AlignmentGeometry extends Computable<AlignmentGeometry> {
+    return new AlignmentGeometryFactory(x, y, start)
+  }
+
   /**
    * 插值计算
    * @param {AlignmentGeometry | null} a
@@ -18,8 +31,6 @@ export abstract class AlignmentGeometry extends Computable<AlignmentGeometry> {
     b: AlignmentGeometry | null, 
     t: number
   ): AlignmentGeometry | null {
-    invariant(t !== null, `The argument t cannot be null.`)
-
     if (a === null && b === null) {
       return null
     }
@@ -53,11 +64,12 @@ export abstract class AlignmentGeometry extends Computable<AlignmentGeometry> {
 
   /**
    * 
-   * @param x 
-   * @param y 
-   * @param start 
+   * @param {number} x 
+   * @param {number} y 
+   * @param {number} start 
    */
   constructor (x: number, y: number, start: number) {
+    super()
     this.x = x
     this.y = y
     this.start = start
@@ -69,7 +81,7 @@ export abstract class AlignmentGeometry extends Computable<AlignmentGeometry> {
   abstract divide (other: number): AlignmentGeometry
   abstract modulo (other: number): AlignmentGeometry
   abstract negate (): AlignmentGeometry 
-  abstract resolve (direction: TextDirection | null): Alignment
+  abstract resolve (direction: Skia.TextDirection | null): Alignment
 
   equal (other: AlignmentGeometry | null) {
     return (
@@ -85,22 +97,31 @@ export abstract class AlignmentGeometry extends Computable<AlignmentGeometry> {
   }
 
   toString () {
-    return `AlignmentGeometry(x: ${this.x}, y: ${this.y}, start: ${this.start})`
+    return `AlignmentGeometry(
+      [x]: ${this.x}, 
+      [y]: ${this.y}, 
+      [start]: ${this.start}
+    )`
   }
 }
 
+//// => Alignment
 export class Alignment extends AlignmentGeometry {
   static TOP_LEFT = new Alignment(-1.0, -1.0)
   static TOP_CENTER = new Alignment(0.0, -1.0)
   static TOP_RIGHT = new Alignment(1.0, -1.0)
 
   static CENTER_LEFT = new Alignment(-1.0, 0.0)
-  static CENTER_CENTER = new Alignment(0.0, 0.0)
+  static CENTER = new Alignment(0.0, 0.0)
   static CENTER_RIGHT = new Alignment(1.0, 0.0)
 
   static BUTTON_LEFT = new Alignment(-1.0, 1.0)
   static BUTTON_CENTER = new Alignment(0.0, 1.0)
   static BUTTON_RIGHT = new Alignment(1.0, 1.0)
+
+  static create (x: number, y: number) {
+    return super.create(x, y) as Alignment
+  }
 
   /**
    * 插值计算
@@ -114,8 +135,6 @@ export class Alignment extends AlignmentGeometry {
     b: Alignment | null, 
     t: number
   ): Alignment | null {
-    invariant(t !== null, 'The argument "t" cannot be null.')
-
     if (a === null && b === null) {
       return null
     }
@@ -198,6 +217,13 @@ export class Alignment extends AlignmentGeometry {
     )
   }
 
+  negate (): Alignment  {
+    return new Alignment(
+      -this.x, 
+      -this.y
+    )
+  }
+
   alongOffset (other: Offset) {
     const centerX = other.dx / 2.0
     const centerY = other.dy / 2.0
@@ -239,29 +265,36 @@ export class Alignment extends AlignmentGeometry {
     )
   }
 
-  resolve (direction: TextDirection | null): Alignment {
+  resolve (direction: Skia.TextDirection | null): Alignment {
     return this
   } 
 
   toString () {
-    return `Alignment(${this.x}, ${this.y}, ${this.start})`
+    return `Alignment(
+      [x]: ${this.x}, 
+      [y]: ${this.y}, 
+      [start]: ${this.start}
+    )`
   }
 }
 
 
 export class AlignmentDirectional extends AlignmentGeometry {
-  static topStart = new AlignmentDirectional(-1.0, -1.0)
-  static topCenter = new AlignmentDirectional(0.0, -1.0)
-  static topEnd = new AlignmentDirectional(1.0, -1.0)
-  static centerStart = new AlignmentDirectional(-1.0, 0.0)
-  static center = new AlignmentDirectional(0.0, 0.0)
-  static centerEnd = new AlignmentDirectional(1.0, 0.0)
-  static bottomStart = new AlignmentDirectional(-1.0, 1.0)
-  static bottomCenter = new AlignmentDirectional(0.0, 1.0)
-  static bottomEnd = new AlignmentDirectional(1.0, 1.0)
+  static TOP_START = new AlignmentDirectional(-1.0, -1.0)
+  static TOP_CENTER = new AlignmentDirectional(0.0, -1.0)
+  static TOP_END = new AlignmentDirectional(1.0, -1.0)
+  static CENTER_START = new AlignmentDirectional(-1.0, 0.0)
+  static CENTER = new AlignmentDirectional(0.0, 0.0)
+  static CENTER_END = new AlignmentDirectional(1.0, 0.0)
+  static BOTTOM_START = new AlignmentDirectional(-1.0, 1.0)
+  static BOTTOM_CENTER = new AlignmentDirectional(0.0, 1.0)
+  static BOTTOM_END = new AlignmentDirectional(1.0, 1.0)
+
+  static create (y: number, start: number) {
+    return super.create(y, start) as AlignmentDirectional
+  }
 
   /**
-   * @description: 
    * @param {AlignmentDirectional | null} a
    * @param {AlignmentDirectional | null} b
    * @param {number} t
@@ -271,9 +304,7 @@ export class AlignmentDirectional extends AlignmentGeometry {
     a: AlignmentDirectional | null, 
     b: AlignmentDirectional | null, 
     t: number
-  ): AlignmentDirectional | null {
-    invariant(t !== null, `The argument t cannot be null.`)
-    
+  ): AlignmentDirectional | null {    
     if (a === null && b === null) {
       return null
     }
@@ -292,15 +323,11 @@ export class AlignmentDirectional extends AlignmentGeometry {
   }
 
   /**
-   * @description: 
    * @param {number} y
    * @param {number} start
    * @return {*}
    */  
-  constructor (y: number, start: number ) {
-    invariant(y !== null, `The argument y cannot be null.`)
-    invariant(start !== null, `The argument start cannot be null.`)
-
+  constructor (y: number, start: number) {
     super(0, y, start)
   }
 
@@ -346,10 +373,10 @@ export class AlignmentDirectional extends AlignmentGeometry {
     )
   }
   
-  resolve (direction: TextDirection | null): Alignment {
+  resolve (direction: Skia.TextDirection | null): Alignment {
     invariant(direction !== null, 'Cannot resolve AlignmentDirectional without a TextDirection.')
 
-    if (direction === At.TextDirection.RTL) {
+    if (direction === AtEngine.skia.TextDirection.RTL) {
       return new Alignment(-this.start, this.y)
     } else {
       return new Alignment(this.start, this.y) 
@@ -357,13 +384,15 @@ export class AlignmentDirectional extends AlignmentGeometry {
   }
 
   toString () {
-    return `AlignmentDirectional(${this.y}, ${this.start})`
+    return `AlignmentDirectional(
+      [y]: ${this.y}, 
+      [start]: ${this.start}
+    )`
   }
 }
 
 export class MixedAlignment extends AlignmentGeometry {
   /**
-   * @description: 
    * @param {number} x
    * @param {number} y
    * @param {number} start
@@ -431,10 +460,8 @@ export class MixedAlignment extends AlignmentGeometry {
    * @param {TextDirection} direction
    * @return {*}
    */  
-  resolve (direction: TextDirection | null): Alignment {
-    invariant(direction !== null, 'Cannot resolve MixedAlignment without a TextDirection.')
-
-    if (direction === At.TextDirection.RTL) {
+  resolve (direction: Skia.TextDirection): Alignment {
+    if (direction === AtEngine.skia.TextDirection.RTL) {
       return new Alignment(
         this.x - this.start, 
         this.y
@@ -448,24 +475,11 @@ export class MixedAlignment extends AlignmentGeometry {
   }
 
   toString () {
-    return `MixedAlignment()`
+    return `MixedAlignment(
+      [x]: ${this.x},
+      [y]: ${this.y},
+      [start]: ${this.start}
+    )`
   }
 }
 
-export class AtTextAlignVertical {
-  public y: number
-
-  constructor (y: number) {
-    invariant(y !== null, `The argument y cannot be null.`)
-    invariant(y >= -1.0 && y <= 1.0)
-    this.y = y
-  }
-  
-  static top = new AtTextAlignVertical(-1.0)
-  static center = new AtTextAlignVertical(0.0)
-  static bottom = new AtTextAlignVertical(1.0)
-
-  toString () {
-    return `Alignment.AtTextAlignVectical(${this.y})`
-  }
-}

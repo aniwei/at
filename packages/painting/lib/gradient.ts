@@ -1,41 +1,33 @@
-import { invariant } from '@at/utils'
-import { Matrix4 } from '../basic/matrix4'
-import { Color } from '../basic/color'
-import { Offset, Rect } from '../basic/geometry'
-import { listEquals, lerp } from '../basic/helper'
-import { AtGradientConical, AtGradientLinear, AtGradientRadial, AtGradientSweep, AtShader } from '../engine/shader'
-
-import { At } from '../at'
-import { AtAlignment, AtAlignmentGeometry } from './alignment'
-
-import type { ArrayLike } from '../at'
-import type { TextDirection, TileMode } from '../engine/skia'
+import { invariant, lerp, listEquals } from '@at/utils'
+import { Color, Equalable } from '@at/basic'
+import { Matrix4 } from '@at/math'
+import { AtEngine, GradientConical, GradientLinear, GradientRadial, GradientSweep, Shader, Skia } from '@at/engine'
+import { Offset, Rect } from '@at/geometry'
+import { Alignment, AlignmentGeometry } from './alignment'
 
 
 
-export type ColorsAndStops = {
-  colors: ArrayLike<Color>
-  stops: ArrayLike<number>
+
+export interface ColorsAndStops {
+  colors: Color[]
+  stops: number[]
 }
 
 /**
  * 
- * @param colors 
- * @param stops 
- * @param t 
+ * @param {Color[]} colors 
+ * @param {number[]} stops 
+ * @param {number} t 
  * @returns 
  */
 function sample (
-  colors: ArrayLike<Color>, 
-  stops: ArrayLike<number>, 
+  colors: Color[], 
+  stops: number[], 
   t: number
 ): Color {
-  invariant(colors !== null, `The argument colors cannot be null.`)
   invariant(colors.length !== 0, `The argument "colors" length cannot be zero.`)
-  invariant(stops !== null, `The argument "colors" cannot be null.`)
   invariant(stops.length !== 0, `The argument "stops" length cannot be zero.`)
-  invariant(t !== null, `The argument "t" cannot be null.`)
-
+  
   if (t <= stops[0]) {
     return colors[0] as Color
   }
@@ -55,7 +47,6 @@ function sample (
 }
 
 /**
- * @description: 
  * @param {Color} aColors
  * @param {number} aStops
  * @param {Color} bColors
@@ -64,20 +55,20 @@ function sample (
  * @return {*}
  */
 function interpolateColorsAndStops (
-  aColors: ArrayLike<Color>,
-  aStops: ArrayLike<number>,
-  bColors: ArrayLike<Color>,
+  aColors: Color[],
+  aStops: number[],
+  bColors: Color[],
   bStops: number[],
   t: number,
 ): ColorsAndStops {
-  invariant(aColors.length >= 2, ``)
-  invariant(bColors.length >= 2, ``)
-  invariant(aStops.length === aColors.length, ``)
-  invariant(bStops.length === bColors.length, ``)
+  invariant(aColors.length >= 2)
+  invariant(bColors.length >= 2)
+  invariant(aStops.length === aColors.length)
+  invariant(bStops.length === bColors.length)
 
   const stops = new Set<number>([...(aStops as Array<number>), ...bStops])
   const interpolatedStops: number[] = Array.from(stops).sort()
-  // @TODO
+  
   const interpolatedColors: Color[] = interpolatedStops.map<Color>((stop: number) => {
     return Color.lerp(
       sample(aColors, aStops, stop), 
@@ -92,14 +83,19 @@ function interpolateColorsAndStops (
   }
 }
 
-export abstract class AtGradientTransform {
+//// => GradientTransform
+export abstract class GradientTransform implements Equalable<GradientTransform> {
   abstract transform (
     bounds: Rect, 
-    textDirection?: TextDirection | null
+    textDirection?: Skia.TextDirection | null
   ): Matrix4 | null
+
+    abstract equal (other: GradientTransform | null): boolean
+    abstract notEqual (other: GradientTransform | null): boolean
 }
 
-export class AtGradientRotation extends AtGradientTransform {
+//// => GradientRotation
+export class GradientRotation extends GradientTransform {
   public radians: number
 
   constructor (radians: number) {
@@ -109,7 +105,7 @@ export class AtGradientRotation extends AtGradientTransform {
 
   transform (
     bounds: Rect, 
-    textDirection?: TextDirection | null
+    textDirection?: Skia.TextDirection | null
   ): Matrix4 {
     invariant(bounds !== null)
 
@@ -126,64 +122,68 @@ export class AtGradientRotation extends AtGradientTransform {
     return matrix
   }
 
-  equal (other: AtGradientRotation) {
+  equal (other: GradientRotation | null) {
     return (
-      other instanceof AtGradientRotation && 
+      other instanceof GradientRotation && 
       other.radians === this.radians
     )
   }
 
+  notEqual(other: GradientRotation | null): boolean {
+    return !this.equal(other)
+  }
+
   toString () {
-    return `GradientRotation(...)`
+    return `GradientRotation([radians]: ${this.radians})`
   }
 }
 
 /**
  * @description: 渐变抽象类
  */
-export abstract class AtGradient {
+export abstract class Gradient {
 
   static linear (
     from: Offset,
     to: Offset ,
-    colors: ArrayLike<Color>, 
-    stops: ArrayLike<number> = [],
-    tileMode: TileMode = At.TileMode.Clamp,
-    matrix4: ArrayLike<number> | null = null,
+    colors: Color[], 
+    stops: number[] = [],
+    tileMode: Skia.TileMode = AtEngine.skia.TileMode.Clamp,
+    matrix4: number[] | null = null,
   ) {
-    return new AtGradientLinear(
+    return GradientLinear.create({
       from, 
       to, 
       colors, 
       stops, 
       tileMode, 
       matrix4
-    )
+    })
   }
 
   static radial (
     center: Offset,
     radius: number,
-    colors: ArrayLike<Color>, 
-    stops: ArrayLike<number>,
-    tileMode: TileMode = At.TileMode.Clamp,
-    matrix4: ArrayLike<number> | null = null,
+    colors: Color[], 
+    stops: number[],
+    tileMode: Skia.TileMode = AtEngine.skia.TileMode.Clamp,
+    matrix4: number[] | null = null,
     focal: Offset | null,
     focalRadius: number = 0,
   ) {
     if (focal === null || (focal === center && focalRadius === 0)) {
-      return new AtGradientRadial(
+      return GradientRadial.create({
         center, 
         radius, 
         tileMode, 
         colors, 
         stops, 
         matrix4
-      )
+      })
     } else {
-      invariant(center.notEqual(Offset.zero) || focal.notEqual(Offset.zero), ``)
+      invariant(center.notEqual(Offset.ZERO) || focal.notEqual(Offset.ZERO), ``)
       
-      return new AtGradientConical(
+      return new GradientConical(
         focal, 
         focalRadius, 
         center, 
@@ -199,13 +199,13 @@ export abstract class AtGradient {
   static sweep (
     center: Offset,
     colors: Color[], 
-    stops: ArrayLike<number>,
-    tileMode: TileMode = At.TileMode.Clamp,
+    stops: number[],
+    tileMode: Skia.TileMode = AtEngine.skia.TileMode.Clamp,
     startAngle: number = 0.0,
     endAngle: number = Math.PI * 2,
-    matrix4: ArrayLike<number> | null,
+    matrix4: number[] | null,
   ) {
-    return new AtGradientSweep(
+    return new GradientSweep(
       center,
       tileMode,
       startAngle,
@@ -223,9 +223,8 @@ export abstract class AtGradient {
    * @param t 
    * @returns 
    */
-  static lerp (a: AtGradient | null, b: AtGradient | null, t: number): AtGradient | null {
-    invariant(t !== null, `The argument t cannot be null.`)
-    let result: AtGradient | null = null
+  static lerp (a: Gradient | null, b: Gradient | null, t: number): Gradient | null {
+    let result: Gradient | null = null
 
     if (b !== null) {
       result = b.lerpFrom(a, t)
@@ -250,14 +249,14 @@ export abstract class AtGradient {
       : b.scale((t - 0.5) * 2.0)
   }
 
-  public colors: ArrayLike<Color>
-  public stops: ArrayLike<number> | null
-  public transform: AtGradientTransform | null
+  public colors: Color[]
+  public stops: number[] | null
+  public transform: GradientTransform | null
   
   constructor (
-    colors: ArrayLike<Color>,
-    stops: ArrayLike<number> | null,
-    transform: AtGradientTransform | null
+    colors: Color[],
+    stops: number[] | null,
+    transform: GradientTransform | null
   ) {
     this.colors = colors
     this.stops = stops
@@ -271,7 +270,6 @@ export abstract class AtGradient {
 
     invariant(this.colors.length >= 2, 'Colors list must have at least two colors')
     const separation = 1.0 / (this.colors.length - 1)
-
     const array: number[] = []
 
     for (let i = 0; i< this.colors.length; i++) {
@@ -282,13 +280,13 @@ export abstract class AtGradient {
   }
 
   abstract createShader (
-    rect: unknown, 
-    textDirection: TextDirection | null
-  ): AtShader
+    rect: Rect, 
+    textDirection: Skia.TextDirection | null
+  ): Shader
   
-  abstract scale (factor: number): AtGradient
+  abstract scale (factor: number): Gradient
   
-  lerpFrom (a: AtGradient | null, t: number): AtGradient | null {
+  lerpFrom (a: Gradient | null, t: number): Gradient | null {
     if (a === null) {
       return this.scale(t)
     }
@@ -296,9 +294,9 @@ export abstract class AtGradient {
   }
 
   lerpTo (
-    b: AtGradient | null, 
+    b: Gradient | null, 
     t: number
-  ): AtGradient | null {
+  ): Gradient | null {
     if (b === null) {
       return this.scale(1.0 - t)
     }
@@ -313,7 +311,7 @@ export abstract class AtGradient {
    */
   resolveTransform (
     bounds: Rect, 
-    textDirection?: TextDirection | null
+    textDirection?: Skia.TextDirection | null
   ) {
     return this.transform?.transform(
       bounds, 
@@ -321,25 +319,23 @@ export abstract class AtGradient {
     ) ?? null
   }
 
-  abstract equal (gradient: AtGradient | null): boolean
-  abstract notEqual (gradient: AtGradient | null): boolean 
+  abstract equal (gradient: Gradient | null): boolean
+  abstract notEqual (gradient: Gradient | null): boolean 
 }
 
-
-export type AtLinearGradientOptions = {
-  begin?: AtAlignmentGeometry,
-  end?: AtAlignmentGeometry,
-  colors: ArrayLike<Color>,
-  stops: ArrayLike<number> | null,
-  tileMode: TileMode,
-  transform?: AtGradientTransform | null
+//// => LinearGradient
+export type LinearGradientOptions = {
+  begin?: AlignmentGeometry,
+  end?: AlignmentGeometry,
+  colors: Color[],
+  stops: number[] | null,
+  tileMode: Skia.TileMode,
+  transform?: GradientTransform | null
 }
 
-// 线性渐变
-export class AtLinearGradient extends AtGradient {
-
-  static create (options: AtLinearGradientOptions) {
-    return new AtLinearGradient(
+export class LinearGradient extends Gradient {
+  static create (options: LinearGradientOptions) {
+    return new LinearGradient(
       options.begin,
       options.end,
       options.colors,
@@ -349,22 +345,18 @@ export class AtLinearGradient extends AtGradient {
     )
   } 
 
-  public begin: AtAlignmentGeometry
-  public end: AtAlignmentGeometry
-  public tileMode: TileMode
+  public begin: AlignmentGeometry
+  public end: AlignmentGeometry
+  public tileMode: Skia.TileMode
 
   constructor (
-    begin: AtAlignmentGeometry = AtAlignment.centerLeft,
-    end: AtAlignmentGeometry = AtAlignment.centerRight,
-    colors: ArrayLike<Color>,
-    stops: ArrayLike<number> | null,
-    tileMode: TileMode,
-    transform: AtGradientTransform | null = null
+    begin: AlignmentGeometry = Alignment.CENTER_LEFT,
+    end: AlignmentGeometry = Alignment.CENTER_RIGHT,
+    colors: Color[],
+    stops: number[] | null,
+    tileMode: Skia.TileMode,
+    transform: GradientTransform | null = null
   ) {
-    invariant(begin !== null, `The argument begin cannot be null.`)
-    invariant(end !== null, `The argument end cannot be null.`)
-    invariant(tileMode !== null, `The argument tileMode cannot be null.`)
-
     super(
       colors,
       stops,
@@ -376,8 +368,8 @@ export class AtLinearGradient extends AtGradient {
     this.tileMode = tileMode
   }
 
-  createShader (rect: Rect, textDirection: TextDirection | null): AtShader {
-    return AtGradient.linear(
+  createShader (rect: Rect, textDirection: Skia.TextDirection | null): Shader {
+    return Gradient.linear(
       this.begin.resolve(textDirection).withinRect(rect),
       this.end.resolve(textDirection).withinRect(rect),
       this.colors, 
@@ -387,38 +379,38 @@ export class AtLinearGradient extends AtGradient {
     )
   }
 
-  scale (factor: number): AtLinearGradient {
-    return new AtLinearGradient(
+  scale (factor: number): LinearGradient {
+    return new LinearGradient(
       this.begin,
       this.end,
-      (this.colors as Array<Color>).map<Color>((color) => Color.lerp(null, color, factor) as Color),
+      this.colors.map<Color>((color) => Color.lerp(null, color, factor) as Color),
       this.stops,
       this.tileMode,
       this.transform
     )
   }
 
-  lerpFrom (a: AtGradient | null, t: number): AtGradient | null {
-    if (a === null || (a instanceof AtLinearGradient)) {
-      return AtLinearGradient.lerp(a as AtLinearGradient, this, t)
+  lerpFrom (a: Gradient | null, t: number): Gradient | null {
+    if (a === null || (a instanceof LinearGradient)) {
+      return LinearGradient.lerp(a as LinearGradient, this, t)
     }
 
     return super.lerpFrom(a, t)
   }
 
-  lerpTo (b: AtGradient | null, t: number): AtGradient | null {
-    if (b === null || (b instanceof AtLinearGradient)) {
-      return AtLinearGradient.lerp(this, b as AtLinearGradient, t)
+  lerpTo (b: Gradient | null, t: number): Gradient | null {
+    if (b === null || (b instanceof LinearGradient)) {
+      return LinearGradient.lerp(this, b as LinearGradient, t)
     }
 
     return super.lerpTo(b, t)
   }
 
   static lerp (
-    a: AtLinearGradient | null, 
-    b: AtLinearGradient | null, 
+    a: LinearGradient | null, 
+    b: LinearGradient | null, 
     t: number
-  ): AtLinearGradient | null {
+  ): LinearGradient | null {
     invariant(t !== null)
     if (a === null && b === null) {
       return null
@@ -437,9 +429,9 @@ export class AtLinearGradient extends AtGradient {
       t,
     )
     
-    return new AtLinearGradient(
-      AtAlignmentGeometry.lerp(a.begin, b.begin, t)!,
-      AtAlignmentGeometry.lerp(a.end, b.end, t)!,
+    return new LinearGradient(
+      AlignmentGeometry.lerp(a.begin, b.begin, t)!,
+      AlignmentGeometry.lerp(a.end, b.end, t)!,
       interpolated.colors,
       interpolated.stops,
       t < 0.5 ? a.tileMode : b.tileMode, // TODO(ianh): interpolate tile mode
@@ -447,9 +439,9 @@ export class AtLinearGradient extends AtGradient {
     )
   }
 
-  equal (other: AtLinearGradient | null) {    
+  equal (other: LinearGradient | null) {    
     return (
-      other instanceof AtLinearGradient &&
+      other instanceof LinearGradient &&
       other.begin === this.begin &&
       other.end === this.end &&
       other.tileMode === this.tileMode &&
@@ -459,23 +451,29 @@ export class AtLinearGradient extends AtGradient {
     )
   }
 
-  notEqual (other: AtLinearGradient | null) {
+  notEqual (other: LinearGradient | null) {
     return !this.equal(other)
   }
 
   toString () {
-    return ``
+    return `LinearGradient(
+      [begin]: ${this.begin}
+      [end]: ${this.end}
+      [colors]: ${this.colors}
+      [stops]: ${this.stops}
+      [tileMode]: ${this.tileMode}
+      [transform]: ${this.transform}
+    )`
   }
 }
 
 
-export class AtRadialGradient extends AtGradient {
+export class RadialGradient extends Gradient {
   static lerp (
-    a: AtRadialGradient | null, 
-    b: AtRadialGradient | null, 
+    a: RadialGradient | null, 
+    b: RadialGradient | null, 
     t: number
-  ): AtRadialGradient | null {
-    invariant(t !== null);
+  ): RadialGradient | null {
     if (a === null && b === null) {
       return null
     }
@@ -493,39 +491,34 @@ export class AtRadialGradient extends AtGradient {
       t,
     )
 
-    return new AtRadialGradient(
-      AtAlignmentGeometry.lerp(a.center, b.center, t)!,
-      Math.max(0.0, lerp(a.radius, b.radius, t)!),
+    return new RadialGradient(
+      AlignmentGeometry.lerp(a.center, b.center, t) as AlignmentGeometry,
+      Math.max(0.0, lerp(a.radius, b.radius, t)),
       interpolated.colors,
       interpolated.stops,
       t < 0.5 ? a.tileMode : b.tileMode,
-      AtAlignmentGeometry.lerp(a.focal, b.focal, t) as AtAlignmentGeometry,
-      Math.max(0.0, lerp(a.focalRadius, b.focalRadius, t)!),
+      AlignmentGeometry.lerp(a.focal, b.focal, t) as AlignmentGeometry,
+      Math.max(0.0, lerp(a.focalRadius, b.focalRadius, t)),
       null
     )
   }
 
-  public center: AtAlignmentGeometry
+  public center: AlignmentGeometry
   public radius: number
-  public tileMode: TileMode
-  public focal: AtAlignmentGeometry
+  public tileMode: Skia.TileMode
+  public focal: AlignmentGeometry
   public focalRadius: number
 
   constructor (
-    center: AtAlignmentGeometry = AtAlignment.center,
+    center: AlignmentGeometry = Alignment.CENTER,
     radius: number = 0.5,
-    colors: ArrayLike<Color>,
-    stops: ArrayLike<number> | null,
-    tileMode: TileMode = At.TileMode.Clamp,
-    focal: AtAlignmentGeometry,
+    colors: Color[],
+    stops: number[] | null,
+    tileMode: Skia.TileMode = AtEngine.skia.TileMode.Clamp,
+    focal: AlignmentGeometry,
     focalRadius: number = 0.0,
-    transform: AtGradientTransform | null
+    transform: GradientTransform | null
   ) {
-    invariant(center !== null, `The argument center cannot be null.`)
-    invariant(radius !== null, `The argument radius cannot be null.`)
-    invariant(tileMode !== null, `The argument tileMode cannot be null.`)
-    invariant(focalRadius !== null, `The argument focalRadius cannot be null.`)
-    
     super(colors, stops, transform)
 
     this.center = center
@@ -535,8 +528,8 @@ export class AtRadialGradient extends AtGradient {
     this.focalRadius = focalRadius
   }
 
-  createShader (rect: Rect, textDirection: TextDirection) {
-    return AtGradient.radial(
+  createShader (rect: Rect, textDirection: Skia.TextDirection) {
+    return Gradient.radial(
       this.center.resolve(textDirection).withinRect(rect),
       this.radius * rect.shortestSide,
       this.colors, 
@@ -548,8 +541,8 @@ export class AtRadialGradient extends AtGradient {
     )
   }
   
-  scale (factor: number): AtRadialGradient {
-    return new AtRadialGradient(
+  scale (factor: number): RadialGradient {
+    return new RadialGradient(
       this.center,
       this.radius,
       (this.colors as Array<Color>).map<Color>((color) => Color.lerp(null, color, factor)!),
@@ -561,9 +554,9 @@ export class AtRadialGradient extends AtGradient {
     )
   }
 
-  lerpFrom (a: AtGradient | null, t: number): AtGradient | null {
-    if (a === null || (a instanceof AtRadialGradient)) {
-      return AtRadialGradient.lerp(a as AtRadialGradient, this, t);
+  lerpFrom (a: Gradient | null, t: number): Gradient | null {
+    if (a === null || (a instanceof RadialGradient)) {
+      return RadialGradient.lerp(a as RadialGradient, this, t);
     }
     return super.lerpFrom(a, t);
   }
@@ -574,17 +567,17 @@ export class AtRadialGradient extends AtGradient {
    * @param t 
    * @returns 
    */
-  lerpTo (b: AtGradient | null, t: number): AtGradient | null {
-    if (b === null || (b instanceof AtRadialGradient)) {
-      return AtRadialGradient.lerp(this, b as AtRadialGradient, t);
+  lerpTo (b: Gradient | null, t: number): Gradient | null {
+    if (b === null || (b instanceof RadialGradient)) {
+      return RadialGradient.lerp(this, b as RadialGradient, t);
     }
 
     return super.lerpTo(b, t);
   }
 
-  equal (other: AtRadialGradient | null) {
+  equal (other: RadialGradient | null) {
     return (
-      other instanceof AtRadialGradient &&
+      other instanceof RadialGradient &&
       other.radius === this.radius &&
       other.tileMode === this.tileMode &&
       other.transform === this.transform &&
@@ -596,16 +589,16 @@ export class AtRadialGradient extends AtGradient {
     )
   }
 
-  notEqual (other: AtRadialGradient | null) {
+  notEqual (other: RadialGradient | null) {
     return !this.equal(other)
   }
 
   toString () {
-    return `AtRadialGradient()`
+    return `RadialGradient()`
   }
 }
 
-export class AtSweepGradient extends AtGradient {
+export class AtSweepGradient extends Gradient {
   static lerp (
     a: AtSweepGradient | null, 
     b: AtSweepGradient | null, 
@@ -633,7 +626,7 @@ export class AtSweepGradient extends AtGradient {
     )
 
     return new AtSweepGradient(
-      AtAlignmentGeometry.lerp(a.center, b.center, t)!,
+      AlignmentGeometry.lerp(a.center, b.center, t)!,
       Math.max(0.0, lerp(a.startAngle, b.startAngle, t)!),
       Math.max(0.0, lerp(a.endAngle, b.endAngle, t)!),
       interpolated.colors,
@@ -643,19 +636,19 @@ export class AtSweepGradient extends AtGradient {
     )
   }
 
-  public center: AtAlignmentGeometry
+  public center: AlignmentGeometry
   public startAngle: number
   public endAngle: number
-  public tileMode: TileMode
+  public tileMode: Skia.TileMode
 
   constructor (
-    center: AtAlignmentGeometry = AtAlignment.center,
+    center: AlignmentGeometry = Alignment.CENTER,
     startAngle: number = 0.0,
     endAngle: number = Math.PI * 2,
-    colors: ArrayLike<Color>,
-    stops: ArrayLike<number> | null,
-    tileMode: TileMode,
-    transform: AtGradientTransform | null
+    colors: Color[],
+    stops: number[] | null,
+    tileMode: Skia.TileMode,
+    transform: GradientTransform | null
   ) {
    
     
@@ -669,9 +662,9 @@ export class AtSweepGradient extends AtGradient {
 
   createShader (
     rect: Rect, 
-    textDirection: TextDirection
-  ): AtShader {
-    return AtGradient.sweep(
+    textDirection: Skia.TextDirection
+  ): Shader {
+    return Gradient.sweep(
       this.center.resolve(textDirection).withinRect(rect),
       this.colors as Array<Color>, 
       this.impliedStops(), 
@@ -694,7 +687,7 @@ export class AtSweepGradient extends AtGradient {
     )
   }
 
-  lerpFrom (a: AtGradient | null, t: number): AtGradient | null {
+  lerpFrom (a: Gradient | null, t: number): Gradient | null {
     if (a === null || (a instanceof AtSweepGradient)) {
       return AtSweepGradient.lerp(a as AtSweepGradient, this, t)
     }
@@ -702,7 +695,7 @@ export class AtSweepGradient extends AtGradient {
     return super.lerpFrom(a, t)
   }
 
-  lerpTo (b: AtGradient | null, t: number): AtGradient | null {
+  lerpTo (b: Gradient | null, t: number): Gradient | null {
     if (b === null || (b instanceof AtSweepGradient)) {
       return AtSweepGradient.lerp(this, b as AtSweepGradient, t)
     }
@@ -728,6 +721,6 @@ export class AtSweepGradient extends AtGradient {
   }
 
   toString () {
-    return `AtSweepGradient()`
+    return `SweepGradient()`
   }
 }
