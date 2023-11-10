@@ -1,4 +1,4 @@
-import { Size } from '../basic/geometry'
+import { Size } from '@at/geometry'
 
 export enum BoxFit {
   Fill,
@@ -10,6 +10,7 @@ export enum BoxFit {
   ScaleDown,
 }
 
+//// => FittedSizes
 export class FittedSizes {
   public source: Size
   public destination: Size
@@ -41,7 +42,7 @@ export function applyBoxFit (
     outputSize.height <= 0.0 || 
     outputSize.width <= 0.0
   ) {
-    return new FittedSizes(Size.zero, Size.zero)
+    return new FittedSizes(Size.ZERO, Size.ZERO)
   }
 
   let sourceSize: Size

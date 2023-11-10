@@ -1,7 +1,6 @@
-import { invariant } from '@at/utils'
-import { lerp } from '@at/utils'
-import { AtEngine, Skia } from '@at/engine'
 import { Equalable } from '@at/basic'
+import { invariant, lerp } from '@at/utils'
+import { AtEngine, Skia } from '@at/engine'
 import { Offset, Rect, Size } from '@at/geometry'
 
 //// => AlignmentGeometry
@@ -278,7 +277,7 @@ export class Alignment extends AlignmentGeometry {
   }
 }
 
-
+//// => AlignmentDirectional
 export class AlignmentDirectional extends AlignmentGeometry {
   static TOP_START = new AlignmentDirectional(-1.0, -1.0)
   static TOP_CENTER = new AlignmentDirectional(0.0, -1.0)
@@ -391,6 +390,7 @@ export class AlignmentDirectional extends AlignmentGeometry {
   }
 }
 
+//// => MixedAlignment
 export class MixedAlignment extends AlignmentGeometry {
   /**
    * @param {number} x

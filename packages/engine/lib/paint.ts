@@ -7,6 +7,7 @@ import { MaskFilter } from './mask-filter'
 import { ManagedSkiaColorFilter } from './color-filter'
 
 import * as Skia from './skia'
+import { PathDashEffect } from '.'
 
 
 //// => PaintBoxRef
@@ -63,8 +64,8 @@ export abstract class PaintRefBox {
 //// => Stroke
 // 线
 export class Stroke extends PaintRefBox { 
-  static create (...rests: unknown[]) {
-    return super.create(...rests) as Stroke
+  static create (box: Skia.SkiaRefBox<PaintRefBox, Skia.Paint>) {
+    return super.create(box) as Stroke
   }
 
   // => miterLimit
@@ -119,8 +120,8 @@ export class Stroke extends PaintRefBox {
 //// => Filter
 // 滤镜类
 export class Filter extends PaintRefBox {
-  static create (...rests: unknown[]) {
-    return super.create(...rests) as Filter
+  static create (box: Skia.SkiaRefBox<PaintRefBox, Skia.Paint>) {
+    return super.create(box) as Filter
   }
   // => invertColors colors
   // protected _invertColors: boolean = false
@@ -226,7 +227,7 @@ export class Filter extends PaintRefBox {
 
 //// => Paint
 export class Paint extends PaintRefBox {
-  static create (...rests: unknown[]) {
+  static create () {
     return super.create(new AtEngine.skia.Paint()) as Paint
   }
 
@@ -239,32 +240,30 @@ export class Paint extends PaintRefBox {
   // 线
   protected _stroke: Stroke | null = null
   public get stroke () {
+    if (this._stroke === null) {
+      invariant(this.box)
+      this._stroke = Stroke.create(this.box)
+    }
     return this._stroke
   }
-  public set stroke (stroke: Stroke | null) {
-    if (this._stroke !== stroke) {
-      if (this._stroke !== null) {
-        this._stroke.dispose()
+
+  // => filter
+  // 滤镜对象
+  protected _filter: Filter | null = null
+  public get filter () {
+    if (this._filter === null) {
+      this._filter = Filter.create(this.box)
+    }
+    return this._filter
+  }
+  public set filter (filter: Filter | null) {
+    if (this._filter !== filter) {
+      if (this._filter !== null) {
+        this._filter.dispose()
       }
       
-      this._stroke = stroke
+      this._filter = filter
     }
-  }
-
-   // => filter
-   // 滤镜对象
-   protected _filter: Filter | null = null
-   public get filter () {
-     return this._filter
-   }
-   public set filter (filter: Filter | null) {
-     if (this._filter !== filter) {
-       if (this._filter !== null) {
-         this._filter.dispose()
-       }
-       
-       this._filter = filter
-     }
    }
 
   // => blendMode
@@ -316,15 +315,24 @@ export class Paint extends PaintRefBox {
     }
   }
 
+  // => effect
+  public get effect () {
+    return this._effect
+  }
+  public set effect (effect: PathDashEffect | null) {
+    if (this._effect !== effect) {
+      this._effect = effect
+      this.skia.setPathEffect(effect?.skia ?? null)
+    }
+  }
+  private _effect: PathDashEffect | null = null
+
   /**
    * @param {Paint} skia
    * @return {AtPaint}
    */  
   constructor () {
     super(new AtEngine.skia.Paint())
-
-    this.stroke = Stroke.create(this.box)
-    this.filter = Filter.create(this.box)
 
     this.skia.setAntiAlias(this.isAntiAlias)
     this.skia.setColorInt(this.color.value)

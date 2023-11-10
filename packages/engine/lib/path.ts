@@ -1,9 +1,8 @@
-// @ts-nocheck
 import { invariant } from '@at/utils'
-import { At } from '@at/core'
 import { Matrix4 } from '@at/math'
-import { toMatrix, toPoints } from '@at/utils'
 import { Offset, Radius, Rect, RRect } from '@at/geometry'
+import { toMatrix, toPoints } from './to'
+import { AtEngine } from './engine'
 
 import * as Skia from './skia'
 
@@ -16,7 +15,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @param {Skia.Path} skia
    * @returns {Path}
    */
-  static create (skia: Skia.Path): Path {
+  static create (skia?: Skia.Path): Path {
     return super.create(skia) as Path
   }
 

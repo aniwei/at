@@ -1,29 +1,30 @@
 import { invariant } from '@at/utils'
-import { TextDirection } from '../engine/skia'
-import { Radius, Rect, RRect } from '../basic/geometry'
-import { At } from '../at'
+import { AtEngine, Skia } from '@at/engine'
+import { Radius, Rect, RRect } from '@at/geometry'
+import { Equalable } from 'packages/basic/types/lib'
 
-export abstract class AtBorderRadiusGeometry {
+
+
+//// => BorderRadiusGeometry
+export abstract class BorderRadiusGeometry implements Equalable<BorderRadiusGeometry> {
   /**
    * 
-   * @param {AtBorderRadiusGeometry | null} a 
-   * @param {AtBorderRadiusGeometry | null} b 
+   * @param {BorderRadiusGeometry | null} a 
+   * @param {BorderRadiusGeometry | null} b 
    * @param {number} t 
-   * @returns {AtBorderRadiusGeometry | null}
+   * @returns {BorderRadiusGeometry | null}
    */
   static lerp (
-    a: AtBorderRadiusGeometry | null, 
-    b: AtBorderRadiusGeometry | null, 
+    a: BorderRadiusGeometry | null, 
+    b: BorderRadiusGeometry | null, 
     t: number
-  ): AtBorderRadiusGeometry | null {
-    invariant(t !== null, `The argument "t" cannot be null.`)
-
+  ): BorderRadiusGeometry | null {
     if (a === null && b === null) {
       return null
     }
 
-    a ??= AtBorderRadius.zero
-    b ??= AtBorderRadius.zero
+    a ??= BorderRadius.ZERO
+    b ??= BorderRadius.ZERO
 
     return a.add(b.subtract(a).multiply(t))
   }
@@ -37,6 +38,8 @@ export abstract class AtBorderRadiusGeometry {
   public bottomStart: Radius
   public bottomEnd: Radius
 
+
+  constructor (...rests: Radius[])
   /**
    * 
    * @param {Radius} topLeft 
@@ -70,11 +73,11 @@ export abstract class AtBorderRadiusGeometry {
 
   /**
    * 圆角相加
-   * @param {AtBorderRadiusGeometry} other 
-   * @returns {AtBorderRadiusGeometry}
+   * @param {BorderRadiusGeometry} other 
+   * @returns {BorderRadiusGeometry}
    */
-  add (other: AtBorderRadiusGeometry): AtBorderRadiusGeometry {
-    return new AtMixedBorderRadius(
+  add (other: BorderRadiusGeometry): BorderRadiusGeometry {
+    return new MixedBorderRadius(
       this.topLeft.add(other.topLeft),
       this.topRight.add(other.topRight),
       this.bottomLeft.add(other.bottomLeft),
@@ -88,11 +91,11 @@ export abstract class AtBorderRadiusGeometry {
 
   /**
    * 
-   * @param {AtBorderRadiusGeometry} other 
-   * @returns {AtBorderRadiusGeometry}
+   * @param {BorderRadiusGeometry} other 
+   * @returns {BorderRadiusGeometry}
    */
-  subtract (other: AtBorderRadiusGeometry): AtBorderRadiusGeometry {
-    return new AtMixedBorderRadius(
+  subtract (other: BorderRadiusGeometry): BorderRadiusGeometry {
+    return new MixedBorderRadius(
       this.topLeft.subtract(other.topLeft),
       this.topRight.subtract(other.topRight),
       this.bottomLeft.subtract(other.bottomLeft),
@@ -104,15 +107,15 @@ export abstract class AtBorderRadiusGeometry {
     )
   }
 
-  abstract negate (): AtBorderRadiusGeometry
-  abstract multiply (other: number): AtBorderRadiusGeometry
-  abstract divide (other: number): AtBorderRadiusGeometry
-  abstract modulo (other: number): AtBorderRadiusGeometry
-  abstract resolve (direction: TextDirection | null): AtBorderRadius
+  abstract inverse (): BorderRadiusGeometry
+  abstract multiply (other: number): BorderRadiusGeometry
+  abstract divide (other: number): BorderRadiusGeometry
+  abstract modulo (other: number): BorderRadiusGeometry
+  abstract resolve (direction: Skia.TextDirection | null): BorderRadius
 
-  equal (other: AtBorderRadiusGeometry | null) {
+  equal (other: BorderRadiusGeometry | null) {
     return (
-      other instanceof AtBorderRadiusGeometry &&
+      other instanceof BorderRadiusGeometry &&
       other.topLeft.equal(this.topLeft) &&
       other.topRight.equal(this.topRight) &&
       other.bottomLeft.equal(this.bottomLeft) &&
@@ -124,17 +127,27 @@ export abstract class AtBorderRadiusGeometry {
     )
   }
 
-  notEqual (other: AtBorderRadiusGeometry | null) {
+  notEqual (other: BorderRadiusGeometry | null) {
     return !this.equal(other)
   }
 
   toString () {
-    return `AtBorderRadiusGeometry(...)`
+    return `BorderRadiusGeometry(
+      [topLeft]: ${this.topLeft},
+      [topRight]: ${this.topRight},
+      [bottomLeft]: ${this.bottomLeft},
+      [bottomRight]: ${this.bottomRight},
+      [topStart]: ${this.topStart},
+      [topEnd]: ${this.topEnd},
+      [bottomStart]: ${this.bottomStart},
+      [bottomEnd]: ${this.bottomEnd},
+    )`
   }
 }
 
-export class AtBorderRadius extends AtBorderRadiusGeometry {
-  static zero = AtBorderRadius.all(Radius.zero)
+export class BorderRadius extends BorderRadiusGeometry {
+  static ZERO = BorderRadius.all(Radius.ZERO)
+
   static all (radius: Radius) {
     return this.only(
       radius,
@@ -145,53 +158,50 @@ export class AtBorderRadius extends AtBorderRadiusGeometry {
   }
 
   static lerp (
-    a: AtBorderRadius | null, 
-    b: AtBorderRadius | null, 
+    a: BorderRadius | null, 
+    b: BorderRadius | null, 
     t: number
-  ): AtBorderRadius | null {
-    invariant(t !== null)
-    if (
-      a === null && 
-      b === null
-    ) {
+  ): BorderRadius | null {
+    if (a === null && b === null) {
       return null
     }
 
     if (a === null) {
-      return b!.multiply(t)
+      invariant(b)
+      return b.multiply(t)
     }
 
     if (b == null) {
       return a.multiply(1.0 - t)
     }
 
-    return AtBorderRadius.only(
-      Radius.lerp(a.topLeft, b.topLeft, t)!,
-      Radius.lerp(a.topRight, b.topRight, t)!,
-      Radius.lerp(a.bottomRight, b.bottomRight, t)!,
-      Radius.lerp(a.bottomLeft, b.bottomLeft, t)!,
+    return BorderRadius.only(
+      Radius.lerp(a.topLeft, b.topLeft, t) as Radius,
+      Radius.lerp(a.topRight, b.topRight, t) as Radius,
+      Radius.lerp(a.bottomRight, b.bottomRight, t) as Radius,
+      Radius.lerp(a.bottomLeft, b.bottomLeft, t) as Radius,
     )
   }
 
   static circular (radius: number) {
-    return AtBorderRadius.all(Radius.circular(radius))
+    return BorderRadius.all(Radius.circular(radius))
   }
 
-  static vertical (top: Radius = Radius.zero, bottom: Radius = Radius.zero,) {
-    return AtBorderRadius.only(top, top, bottom, bottom)
+  static vertical (top: Radius = Radius.ZERO, bottom: Radius = Radius.ZERO,) {
+    return BorderRadius.only(top, top, bottom, bottom)
   }
 
-  static horizontal(left: Radius = Radius.zero, right: Radius = Radius.zero,) {
-    AtBorderRadius.only(left, right, right, left)
+  static horizontal(left: Radius = Radius.ZERO, right: Radius = Radius.ZERO,) {
+    BorderRadius.only(left, right, right, left)
   } 
 
   static only(
-    topLeft: Radius = Radius.zero,
-    topRight: Radius = Radius.zero,
-    bottomRight: Radius = Radius.zero,
-    bottomLeft: Radius = Radius.zero,
+    topLeft: Radius = Radius.ZERO,
+    topRight: Radius = Radius.ZERO,
+    bottomRight: Radius = Radius.ZERO,
+    bottomLeft: Radius = Radius.ZERO,
   ) {
-    return new AtBorderRadius(topLeft, topRight, bottomRight, bottomLeft,)
+    return new BorderRadius(topLeft, topRight, bottomRight, bottomLeft,)
   }
 
   constructor (
@@ -205,10 +215,10 @@ export class AtBorderRadius extends AtBorderRadiusGeometry {
       topRight,
       bottomRight,
       bottomLeft,
-      Radius.zero,
-      Radius.zero,
-      Radius.zero,
-      Radius.zero,
+      Radius.ZERO,
+      Radius.ZERO,
+      Radius.ZERO,
+      Radius.ZERO,
     )
   }
 
@@ -226,7 +236,7 @@ export class AtBorderRadius extends AtBorderRadiusGeometry {
    bottomRight:  Radius | null,
    bottomLeft:  Radius | null,
   ) {
-    return AtBorderRadius.only(
+    return BorderRadius.only(
       topLeft ?? this.topLeft,
       topRight ?? this.topRight,
       bottomRight ?? this.bottomRight,
@@ -249,17 +259,17 @@ export class AtBorderRadius extends AtBorderRadiusGeometry {
     )
   }
 
-  negate (): AtBorderRadius {
-    return AtBorderRadius.only(
-      this.topLeft.negate(),
-      this.topRight.negate(),
-      this.bottomRight.negate(),
-      this.bottomLeft.negate(),
+  inverse (): BorderRadius {
+    return BorderRadius.only(
+      this.topLeft.inverse(),
+      this.topRight.inverse(),
+      this.bottomRight.inverse(),
+      this.bottomLeft.inverse(),
     )
   }
 
-  subtract (other: AtBorderRadiusGeometry): AtBorderRadiusGeometry {
-    return AtBorderRadius.only(
+  subtract (other: BorderRadiusGeometry): BorderRadiusGeometry {
+    return BorderRadius.only(
       this.topLeft.subtract(other.topLeft),
       this.topRight.subtract(other.topRight),
       this.bottomRight.subtract(other.bottomRight),
@@ -267,8 +277,8 @@ export class AtBorderRadius extends AtBorderRadiusGeometry {
     )
   }
 
-  add (other: AtBorderRadiusGeometry): AtBorderRadiusGeometry {
-    return AtBorderRadius.only(
+  add (other: BorderRadiusGeometry): BorderRadiusGeometry {
+    return BorderRadius.only(
       this.topLeft.add(other.topLeft),
       this.topRight.add(other.topRight),
       this.bottomRight.add(other.bottomRight),
@@ -276,8 +286,8 @@ export class AtBorderRadius extends AtBorderRadiusGeometry {
     )
   }
 
-  multiply (other: number): AtBorderRadius {
-    return AtBorderRadius.only(
+  multiply (other: number): BorderRadius {
+    return BorderRadius.only(
       this.topLeft.multiply(other),
       this.topRight.multiply(other),
       this.bottomRight.multiply(other),
@@ -285,8 +295,8 @@ export class AtBorderRadius extends AtBorderRadiusGeometry {
     )
   }
 
-  divide (other: number): AtBorderRadius {
-    return AtBorderRadius.only(
+  divide (other: number): BorderRadius {
+    return BorderRadius.only(
       this.topLeft.divide(other),
       this.topRight.divide(other),
       this.bottomRight.divide(other),
@@ -294,8 +304,8 @@ export class AtBorderRadius extends AtBorderRadiusGeometry {
     )
   }
 
-  modulo (other: number): AtBorderRadius {
-    return AtBorderRadius.only(
+  modulo (other: number): BorderRadius {
+    return BorderRadius.only(
       this.topLeft.modulo(other),
       this.topRight.modulo(other),
       this.bottomRight.modulo(other),
@@ -303,40 +313,39 @@ export class AtBorderRadius extends AtBorderRadiusGeometry {
     )
   }
   
-  resolve (direction: TextDirection | null) {
+  resolve (direction: Skia.TextDirection | null) {
     return this
   }
 }
 
-export class AtBorderRadiusDirectional extends AtBorderRadiusGeometry {
-  static zero = AtBorderRadiusDirectional.all(Radius.zero)
+export class BorderRadiusDirectional extends BorderRadiusGeometry {
+  static zero = BorderRadiusDirectional.all(Radius.ZERO)
 
   /**
    * 插值计算
-   * @param {AtBorderRadiusDirectional} a 
-   * @param {AtBorderRadiusDirectional} b 
+   * @param {BorderRadiusDirectional} a 
+   * @param {BorderRadiusDirectional} b 
    * @param {number} t 
-   * @returns {AtBorderRadiusDirectional | null}
+   * @returns {BorderRadiusDirectional | null}
    */
   static lerp (
-    a: AtBorderRadiusDirectional | null, 
-    b: AtBorderRadiusDirectional | null, 
+    a: BorderRadiusDirectional | null, 
+    b: BorderRadiusDirectional | null, 
     t: number
-  ): AtBorderRadiusDirectional | null {
-    invariant(t !== null, `The argument "t" cannot be null.`)
-    
+  ): BorderRadiusDirectional | null {    
     if (a === null && b === null) {
       return null
     }
     if (a === null) {
-      return b!.multiply(t)
+      invariant(b)
+      return b.multiply(t)
     }
 
     if (b === null) {
       return a.multiply(1.0 - t)
     }
 
-    return AtBorderRadiusDirectional.only(
+    return BorderRadiusDirectional.only(
       Radius.lerp(a.topStart, b.topStart, t) as Radius,
       Radius.lerp(a.topEnd, b.topEnd, t) as Radius,
       Radius.lerp(a.bottomStart, b.bottomStart, t) as Radius,
@@ -345,7 +354,7 @@ export class AtBorderRadiusDirectional extends AtBorderRadiusGeometry {
   }
 
   static all (radius: Radius) {
-    return AtBorderRadiusDirectional.only(radius, radius, radius, radius)
+    return BorderRadiusDirectional.only(radius, radius, radius, radius)
   }
 
   static circular (radius: number) {
@@ -356,10 +365,13 @@ export class AtBorderRadiusDirectional extends AtBorderRadiusGeometry {
    * 
    * @param {Radius} top 
    * @param {Radius} bottom 
-   * @returns {AtBorderRadiusDirectional}
+   * @returns {BorderRadiusDirectional}
    */
-  static vertical(top: Radius = Radius.zero, bottom: Radius = Radius.zero,) {
-    return AtBorderRadiusDirectional.only(top, top, bottom, bottom)
+  static vertical (
+    top: Radius = Radius.ZERO, 
+    bottom: Radius = Radius.ZERO
+  ) {
+    return BorderRadiusDirectional.only(top, top, bottom, bottom)
   }
 
   /**
@@ -368,8 +380,11 @@ export class AtBorderRadiusDirectional extends AtBorderRadiusGeometry {
    * @param end 
    * @returns 
    */
-  static horizontal(start: Radius = Radius.zero, end: Radius = Radius.zero) {
-    return AtBorderRadiusDirectional.only(
+  static horizontal (
+    start: Radius = Radius.ZERO, 
+    end: Radius = Radius.ZERO
+  ) {
+    return BorderRadiusDirectional.only(
       start,
       end,
       start,
@@ -378,12 +393,12 @@ export class AtBorderRadiusDirectional extends AtBorderRadiusGeometry {
   }
 
   static only(
-    topStart: Radius = Radius.zero,
-    topEnd: Radius = Radius.zero,
-    bottomStart: Radius = Radius.zero,
-    bottomEnd: Radius = Radius.zero,
+    topStart: Radius = Radius.ZERO,
+    topEnd: Radius = Radius.ZERO,
+    bottomStart: Radius = Radius.ZERO,
+    bottomEnd: Radius = Radius.ZERO,
   ) {
-    return new AtBorderRadiusDirectional(
+    return new BorderRadiusDirectional(
       topStart,
       topEnd,
       bottomStart,
@@ -405,10 +420,10 @@ export class AtBorderRadiusDirectional extends AtBorderRadiusGeometry {
     bottomEnd: Radius,
   ) { 
     super(
-      Radius.zero,
-      Radius.zero,
-      Radius.zero,
-      Radius.zero,
+      Radius.ZERO,
+      Radius.ZERO,
+      Radius.ZERO,
+      Radius.ZERO,
       topStart,
       topEnd,
       bottomStart,
@@ -416,17 +431,17 @@ export class AtBorderRadiusDirectional extends AtBorderRadiusGeometry {
     )
   }
 
-  negate (): AtBorderRadiusGeometry {
-    return AtBorderRadiusDirectional.only(
-      this.topStart.negate(),
-      this.topEnd.negate(),
-      this.bottomStart.negate(),
-      this.bottomEnd.negate(),
+  inverse (): BorderRadiusGeometry {
+    return BorderRadiusDirectional.only(
+      this.topStart.inverse(),
+      this.topEnd.inverse(),
+      this.bottomStart.inverse(),
+      this.bottomEnd.inverse(),
     )
   }
 
-  subtract (other: AtBorderRadiusGeometry): AtBorderRadiusGeometry  {
-    return AtBorderRadiusDirectional.only(
+  subtract (other: BorderRadiusGeometry): BorderRadiusGeometry  {
+    return BorderRadiusDirectional.only(
       this.topStart.subtract(other.topStart),
       this.topEnd.subtract(other.topEnd),
       this.bottomStart.subtract(other.bottomStart),
@@ -434,8 +449,8 @@ export class AtBorderRadiusDirectional extends AtBorderRadiusGeometry {
     )
   }
 
-  multiply (other: number): AtBorderRadiusGeometry  {
-    return AtBorderRadiusDirectional.only(
+  multiply (other: number): BorderRadiusGeometry  {
+    return BorderRadiusDirectional.only(
       this.topStart.multiply(other),
       this.topEnd.multiply(other),
       this.bottomStart.multiply(other),
@@ -443,8 +458,8 @@ export class AtBorderRadiusDirectional extends AtBorderRadiusGeometry {
     )
   }
 
-  divide (other: number): AtBorderRadiusGeometry  {
-    return AtBorderRadiusDirectional.only(
+  divide (other: number): BorderRadiusGeometry  {
+    return BorderRadiusDirectional.only(
       this.topStart.divide(other),
       this.topEnd.divide(other),
       this.bottomStart.divide(other),
@@ -452,8 +467,8 @@ export class AtBorderRadiusDirectional extends AtBorderRadiusGeometry {
     )
   }
 
-  modulo (other: number): AtBorderRadiusGeometry  {
-    return AtBorderRadiusDirectional.only(
+  modulo (other: number): BorderRadiusGeometry  {
+    return BorderRadiusDirectional.only(
       this.topStart.modulo(other),
       this.topEnd.modulo(other),
       this.bottomStart.modulo(other),
@@ -461,18 +476,18 @@ export class AtBorderRadiusDirectional extends AtBorderRadiusGeometry {
     )
   }
   
-  resolve (direction: TextDirection | null): AtBorderRadius {
+  resolve (direction: Skia.TextDirection | null): BorderRadius {
     invariant(direction !== null)
 
-    if (direction === At.TextDirection.RTL) {
-      return AtBorderRadius.only(
+    if (direction === AtEngine.skia.TextDirection.RTL) {
+      return BorderRadius.only(
         this.topEnd,
         this.topStart,
         this.bottomEnd,
         this.bottomStart,
       )
     } else {
-      return AtBorderRadius.only(
+      return BorderRadius.only(
         this.topStart,
         this.topEnd,
         this.bottomStart,
@@ -482,7 +497,7 @@ export class AtBorderRadiusDirectional extends AtBorderRadiusGeometry {
   }
 }
 
-export class AtMixedBorderRadius extends AtBorderRadiusGeometry {
+export class MixedBorderRadius extends BorderRadiusGeometry {
   constructor (
     topLeft: Radius,
     topRight: Radius,
@@ -505,21 +520,21 @@ export class AtMixedBorderRadius extends AtBorderRadiusGeometry {
     )
   }
 
-  negate (): AtMixedBorderRadius {
-    return new AtMixedBorderRadius(
-      this.topLeft.negate(),
-      this.topRight.negate(),
-      this.bottomLeft.negate(),
-      this.bottomRight.negate(),
-      this.topStart.negate(),
-      this.topEnd.negate(),
-      this.bottomStart.negate(),
-      this.bottomEnd.negate(),
+  inverse (): MixedBorderRadius {
+    return new MixedBorderRadius(
+      this.topLeft.inverse(),
+      this.topRight.inverse(),
+      this.bottomLeft.inverse(),
+      this.bottomRight.inverse(),
+      this.topStart.inverse(),
+      this.topEnd.inverse(),
+      this.bottomStart.inverse(),
+      this.bottomEnd.inverse(),
     )
   }
 
-  add (other: AtMixedBorderRadius): AtMixedBorderRadius {
-    return new AtMixedBorderRadius(
+  add (other: MixedBorderRadius): MixedBorderRadius {
+    return new MixedBorderRadius(
       this.topLeft.add(other.topLeft),
       this.topRight.add(other.topRight),
       this.bottomLeft.add(other.bottomLeft),
@@ -531,8 +546,8 @@ export class AtMixedBorderRadius extends AtBorderRadiusGeometry {
     )
   }
 
-  subtract (other: AtMixedBorderRadius): AtMixedBorderRadius {
-    return new AtMixedBorderRadius(
+  subtract (other: MixedBorderRadius): MixedBorderRadius {
+    return new MixedBorderRadius(
       this.topLeft.subtract(other.topLeft),
       this.topRight.subtract(other.topRight),
       this.bottomLeft.subtract(other.bottomLeft),
@@ -544,8 +559,8 @@ export class AtMixedBorderRadius extends AtBorderRadiusGeometry {
     )
   }
 
-  multiply (other: number): AtMixedBorderRadius {
-    return new AtMixedBorderRadius(
+  multiply (other: number): MixedBorderRadius {
+    return new MixedBorderRadius(
       this.topLeft.multiply(other),
       this.topRight.multiply(other),
       this.bottomLeft.multiply(other),
@@ -557,8 +572,8 @@ export class AtMixedBorderRadius extends AtBorderRadiusGeometry {
     )
   }
 
-  divide (other: number): AtMixedBorderRadius {
-    return new AtMixedBorderRadius(
+  divide (other: number): MixedBorderRadius {
+    return new MixedBorderRadius(
       this.topLeft.divide(other),
       this.topRight.divide(other),
       this.bottomLeft.divide(other),
@@ -570,8 +585,8 @@ export class AtMixedBorderRadius extends AtBorderRadiusGeometry {
     )
   }
 
-  modulo (other: number): AtMixedBorderRadius {
-    return new AtMixedBorderRadius(
+  modulo (other: number): MixedBorderRadius {
+    return new MixedBorderRadius(
       this.topLeft.modulo(other),
       this.topRight.modulo(other),
       this.bottomLeft.modulo(other),
@@ -583,18 +598,18 @@ export class AtMixedBorderRadius extends AtBorderRadiusGeometry {
     )
   }
   
-  resolve (direction: TextDirection | null): AtBorderRadius {
+  resolve (direction: Skia.TextDirection | null): BorderRadius {
     invariant(direction !== null)
 
-    if (direction === At.TextDirection.RTL) {
-      return AtBorderRadius.only(
+    if (direction === AtEngine.skia.TextDirection.RTL) {
+      return BorderRadius.only(
         this.topLeft.add(this.topEnd),
         this.topRight.add(this.topStart),
         this.bottomLeft.add(this.bottomEnd),
         this.bottomRight.add(this.bottomStart),
       )
     } else {
-      return AtBorderRadius.only(
+      return BorderRadius.only(
         this.topLeft.add(this.topStart),
         this.topRight.add(this.topEnd),
         this.bottomLeft.add(this.bottomStart),

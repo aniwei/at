@@ -1,2 +1,6 @@
 export * from './alignment'
+export * from './box-fit'
+export * from './border'
+export * from './border-radius'
 export * from './gradient'
+export * from './painting'

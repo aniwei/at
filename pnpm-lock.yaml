@@ -94,6 +94,9 @@ importers:
       '@at/geometry':
         specifier: workspace:^
         version: link:../geometry
+      '@at/painting':
+        specifier: workspace:^
+        version: link:../painting
       '@at/utils':
         specifier: workspace:^
         version: link:../utils

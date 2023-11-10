@@ -1,15 +1,10 @@
-import { invariant } from '@at/utils'
-import { At, AtPainting } from '../at'
-import { Color } from '../basic/color'
-import { AtCanvas } from '../engine/canvas'
-import { AtPath } from '../engine/path'
-import { AtPaint } from '../engine/paint'
-import { lerp } from '../basic/helper'
-import { AtBorderRadius } from './border-radius'
+import { invariant, lerp } from '@at/utils'
+import { Color } from '@at/basic'
+import { Canvas, Path, Paint, Skia, PathDashEffect, AtEngine } from '@at/engine'
+import { BorderRadius } from './border-radius'
 
-import type { TextDirection } from '../engine/skia'
-import { AtPathDashEffect } from '../engine/path-effect'
 
+//// => BorderSide
 export enum BorderShape {
   Rectangle,
   Circle,
@@ -29,15 +24,16 @@ export enum BorderPosition {
   Inside,
 }
 
+export class BorderSide {
+  static NONE = new BorderSide(new Color(0xFF000000), 0, BorderStyle.None)
 
-export class AtBorderSide {
   /**
    * 
-   * @param color 
-   * @param width 
-   * @param style 
-   * @param pettern 
-   * @returns 
+   * @param {Color?} color 
+   * @param {number?} width 
+   * @param {BorderStyle?} style 
+   * @param {BorderPosition?} position 
+   * @param {number[]?} pettern 
    */
   static create (
     color?: Color,
@@ -46,26 +42,21 @@ export class AtBorderSide {
     position?: BorderPosition,
     pettern?: number[]
   ) {
-    return new AtBorderSide(color, width, style, position, pettern)
+    return new BorderSide(color, width, style, position, pettern)
   }
-
-  static none = new AtBorderSide(new Color(0xFF000000), 0, BorderStyle.None)
 
   /**
    * 合并边框
-   * @param {AtBorderSide} a 
-   * @param {AtBorderSide} b 
-   * @returns {AtBorderSide} 
+   * @param {BorderSide} a 
+   * @param {BorderSide} b 
+   * @returns {BorderSide} 
    */
-  static merge (a: AtBorderSide, b: AtBorderSide) {
-    invariant(a !== null, `The argument "a" cannot be null.`)
-    invariant(b !== null, `The argument "b" cannot be null.`)
-
+  static merge (a: BorderSide, b: BorderSide) {
     const aIsNone = a.style === BorderStyle.None && a.width === 0
     const bIsNone = b.style === BorderStyle.None && b.width === 0
 
     if (aIsNone && bIsNone) {
-      return AtBorderSide.none
+      return BorderSide.NONE
     }
 
     if (aIsNone) {
@@ -79,19 +70,16 @@ export class AtBorderSide {
     invariant(a.color === b.color, `Merged borders must be the same colo.`)
     invariant(a.style === b.style, `Merged borders must be the same style.`)
 
-    return new AtBorderSide(a.color, a.width + b.width, a.style)
+    return new BorderSide(a.color, a.width + b.width, a.style)
   }
 
   /**
    * 判断是否可合并边框
-   * @param {AtBorderSide} a 
-   * @param {AtBorderSide} b 
+   * @param {BorderSide} a 
+   * @param {BorderSide} b 
    * @returns {boolean}
    */
-  static canMerge (a: AtBorderSide, b: AtBorderSide) {
-    invariant(a !== null, `The argument "a" cannot be null.`)
-    invariant(b !== null, `The argument "b" cannot be null.`)
-
+  static canMerge (a: BorderSide, b: BorderSide) {
     if (
       (a.style === BorderStyle.None && a.width === 0) ||
       (b.style == BorderStyle.None && b.width === 0)
@@ -107,20 +95,16 @@ export class AtBorderSide {
 
   /**
    * 边框差值计算
-   * @param {AtBorderSide} a 
-   * @param {AtBorderSide} b 
+   * @param {BorderSide} a 
+   * @param {BorderSide} b 
    * @param {number} t 
-   * @returns {AtBorderSide}
+   * @returns {BorderSide}
    */
   static lerp (
-    a: AtBorderSide, 
-    b: AtBorderSide, 
+    a: BorderSide, 
+    b: BorderSide, 
     t: number
   ) {
-    invariant(a !== null, `The argument "a" cannot be null.`)
-    invariant(b !== null, `The argument "b" cannot be null.`)
-    invariant(t !== null, `The argument "t" cannot be null.`)
-
     if (t === 0) {
       return a
     }
@@ -131,11 +115,11 @@ export class AtBorderSide {
 
     const width = lerp(a.width, b.width, t)
     if (width < 0) {
-      return AtBorderSide.none
+      return BorderSide.NONE
     }
     
     if (a.style === b.style) {
-      return new AtBorderSide(
+      return new BorderSide(
         Color.lerp(a.color, b.color, t)!,
         width,
         a.style,
@@ -163,17 +147,17 @@ export class AtBorderSide {
         break
     }
 
-    return new AtBorderSide(
+    return new BorderSide(
       Color.lerp(colorA, colorB, t) as Color, 
       width
     )
   }
 
-  public width: number = 1.0
   public style: BorderStyle
   public position: BorderPosition
   public color: Color
   public pettern: number[]
+  public width: number = 1.0
 
   constructor (
     color: Color = new Color(0xFF000000),
@@ -182,10 +166,7 @@ export class AtBorderSide {
     position: BorderPosition = BorderPosition.Center,
     pettern: number[] = []
   ) {
-    invariant(color !== null)
-    invariant(width !== null)
     invariant(width >= 0.0)
-    invariant(style !== null)
 
     this.width = width
     this.style = style
@@ -196,12 +177,12 @@ export class AtBorderSide {
 
   /**
    * 
-   * @param color 
-   * @param width 
-   * @param style 
-   * @param position 
-   * @param pettern 
-   * @returns 
+   * @param {Color | null} color 
+   * @param {number | null} width 
+   * @param {BorderStyle | null} style 
+   * @param {BorderPosition | null} position 
+   * @param {number[]} pettern 
+   * @returns {BorderSide}
    */
   copyWith (
     color: Color | null, 
@@ -211,7 +192,7 @@ export class AtBorderSide {
     pettern: number[] | null
   ) {
     invariant(width === null || width >= 0)
-    return new AtBorderSide(
+    return new BorderSide(
       color ?? this.color,
       width ?? this.width,
       style ?? this.style,
@@ -221,38 +202,37 @@ export class AtBorderSide {
   }
 
   scale (t: number) {
-    invariant(t !== null)
-    return new AtBorderSide(
+    return new BorderSide(
       this.color,
       Math.max(0, this.width * t),
       t > 0 ? this.style : BorderStyle.None
     )
   }
 
-  toPaint (): AtPaint {
-    const paint = new AtPaint()
+  toPaint (): Paint {
+    const paint = new Paint()
 
     switch (this.style) {
       case BorderStyle.Solid:
       case BorderStyle.Dashed:
       case BorderStyle.Dotted:
         paint.color = this.color
-        paint.strokeWidth = this.width
-        paint.style = At.PaintStyle.Stroke
+        paint.stroke.width = this.width
+        paint.style = AtEngine.skia.PaintStyle.Stroke
         break
     }
 
     switch (this.style) {
       case BorderStyle.Dotted: 
       case BorderStyle.Dashed: {
-        paint.effect = AtPathDashEffect.create(this.pettern)
+        paint.effect = PathDashEffect.create(this.pettern)
         break
       }
 
       case BorderStyle.None: {
         paint.color = new Color(0x00000000)
-        paint.strokeWidth = 0
-        paint.style = At.PaintStyle.Stroke
+        paint.stroke.width = 0
+        paint.style = AtEngine.skia.PaintStyle.Stroke
         break
       }
     }
@@ -260,33 +240,37 @@ export class AtBorderSide {
     return paint
   }
 
-  equal (other: AtBorderSide | null) {
+  equal (other: BorderSide | null) {
     return (
-      other instanceof AtBorderSide &&
+      other instanceof BorderSide &&
       other.color === this.color &&
       other.width === this.width &&
       other.style === this.style
     )
   }
 
-  notEqual (other:AtBorderSide | null) {
+  notEqual (other:BorderSide | null) {
     return !this.equal(other)
   }
 
   toString () {
-    return `AtBorderSide(${this.color}, ${this.width}, ${this.style})`
+    return `BorderSide(
+      [color]: ${this.color}, 
+      [width]: ${this.width}, 
+      [style]: ${this.style}
+    )`
   }
 }
 
-export abstract class AtShapeBorder<T extends AtShapeBorder<T>> {
-  static lerp<T extends AtShapeBorder<T>>(
-    a: AtShapeBorder<T> | null, 
-    b: AtShapeBorder<T> | null, 
+export abstract class ShapeBorder<T extends ShapeBorder<T>> {
+  static lerp<T extends ShapeBorder<T>>(
+    a: ShapeBorder<T> | null, 
+    b: ShapeBorder<T> | null, 
     t: number
-  ): AtShapeBorder<T> | null {
+  ): ShapeBorder<T> | null {
     invariant(t !== null)
 
-    let result: AtShapeBorder<T> | null = null
+    let result: ShapeBorder<T> | null = null
 
     if (b !== null) {
       result = b.lerpFrom(a, t)
@@ -300,32 +284,32 @@ export abstract class AtShapeBorder<T extends AtShapeBorder<T>> {
   
   abstract getOuterPath(
     shape: unknown, 
-    textDirection?: TextDirection | null
-  ): AtPath
+    textDirection?: Skia.TextDirection | null
+  ): Path
   
   abstract getInnerPath(
     shape: unknown, 
-    textDirection?: TextDirection | null
-  ): AtPath 
+    textDirection?: Skia.TextDirection | null
+  ): Path 
   
   abstract paint (
-    canvas: AtCanvas, 
+    canvas: Canvas, 
     rect: unknown, 
-    textDirection?: TextDirection | null,
+    textDirection?: Skia.TextDirection | null,
     shape?: BorderShape,
-    borderRadius?: AtBorderRadius | null
+    borderRadius?: BorderRadius | null
   ): void
 
-  abstract scale (t: number): AtShapeBorder<T>
+  abstract scale (t: number): ShapeBorder<T>
   
-  lerpFrom (a: AtShapeBorder<T> | null, t: number): AtShapeBorder<T> | null {
+  lerpFrom (a: ShapeBorder<T> | null, t: number): ShapeBorder<T> | null {
     if (a === null) {
       return this.scale(1.0 - t)
     }
     return null
   }
 
-  lerpTo (a: AtShapeBorder<T> | null, t: number): AtShapeBorder<T> | null {
+  lerpTo (a: ShapeBorder<T> | null, t: number): ShapeBorder<T> | null {
     if (a === null) {
       return this.scale(1.0 - t)
     }
@@ -333,52 +317,48 @@ export abstract class AtShapeBorder<T extends AtShapeBorder<T>> {
   }
 }
 
-export abstract class AtOutlinedBorder extends AtShapeBorder<AtOutlinedBorder> {
-  public side: AtBorderSide
+export abstract class OutlinedBorder extends ShapeBorder<OutlinedBorder> {
+  public side: BorderSide
 
-  constructor (side: AtBorderSide) {
+  constructor (side: BorderSide) {
     super()
-
-    invariant(side !== null)
     this.side = side
   }
    
-  abstract copyWith (side: AtBorderSide | null): AtOutlinedBorder
+  abstract copyWith (side: BorderSide | null): OutlinedBorder
 
-  equal (other: AtOutlinedBorder | null) {
+  equal (other: OutlinedBorder | null) {
     return other?.side.equal(this.side)
   }
 
-  notEqual (other: AtOutlinedBorder | null) {
+  notEqual (other: OutlinedBorder | null) {
     return !this.equal(other)
   }
 }
 
-export type AtBorderOptions = {
+export type BorderOptions = {
   color?: Color,
   width?: number,
   style?: BorderStyle
 }
 
-export  class AtBorder extends AtOutlinedBorder {
-  static create (options?: AtBorderOptions) {
-    const side = AtBorderSide.create(
+export  class Border extends OutlinedBorder {
+  static create (options?: BorderOptions) {
+    const side = BorderSide.create(
       options?.color,
       options?.width,
       options?.style
     )
 
-    return new AtBorder(side)
+    return new Border(side)
   }
 
   static lerp (
-    a: AtBorder | null, 
-    b: AtBorder | null, 
+    a: Border | null, 
+    b: Border | null, 
     t: number
-  ): AtBorder | null {
-    invariant(t !== null)
-
-    let result: AtBorder | null = null
+  ): Border | null {
+    let result: Border | null = null
 
     if (b !== null) {
       result = b.lerpFrom(a, t)
@@ -410,65 +390,65 @@ export  class AtBorder extends AtOutlinedBorder {
     return this.side.position
   }
 
-  constructor (side: AtBorderSide) {
+  constructor (side: BorderSide) {
     super(side)
   }
 
-  copyWith (side: AtBorderSide | null): AtBorder {
-    return new AtBorder(side ?? this.side)
+  copyWith (side: BorderSide | null): Border {
+    return new Border(side ?? this.side)
   }
   
   add (
-    other: AtShapeBorder<AtBorder>, 
+    other: ShapeBorder<Border>, 
     reversed: boolean
-  ): AtShapeBorder<AtBorder> | null {
+  ): ShapeBorder<Border> | null {
     return null
   }
 
   lerpFrom (
-    a: AtBorder | null, 
+    a: Border | null, 
     t: number
-  ): AtBorder | null {
-    return super.lerpFrom(a, t) as AtBorder | null
+  ): Border | null {
+    return super.lerpFrom(a, t) as Border | null
   }
 
   lerpTo (
-    b: AtBorder | null, 
+    b: Border | null, 
     t: number
-  ): AtBorder | null {
-    return super.lerpFrom(b, t) as AtBorder | null
+  ): Border | null {
+    return super.lerpFrom(b, t) as Border | null
   }
 
-  scale (t: number): AtShapeBorder<AtBorder> {
+  scale (t: number): ShapeBorder<Border> {
     const side = this.side.scale(t)
 
-    return new AtBorder(side)
+    return new Border(side)
   }
 
   getOuterPath (
-    shape: AtPath, 
-    textDirection: TextDirection
-  ): AtPath {
-    const path = shape ?? AtPath.create()
+    shape: Path, 
+    textDirection: Skia.TextDirection
+  ): Path {
+    const path = shape ?? Path.create()
     return path
   }
 
   getInnerPath (
-    shape: AtPath, 
-    textDirection: TextDirection
-  ): AtPath {
-    const path = shape ?? AtPath.create()
+    shape: Path, 
+    textDirection: Skia.TextDirection
+  ): Path {
+    const path = shape ?? Path.create()
     return path
   }
 
   paint (
-    canvas: AtCanvas,
-    shape: AtPath, 
+    canvas: Canvas,
+    shape: Path, 
   ): void {
-    AtPainting.paintBorderWithIrregular(
-      canvas, 
-      shape,
-      this.side
-    )
+    // Painting.paintBorderWithIrregular(
+    //   canvas, 
+    //   shape,
+    //   this.side
+    // )
   }
 }

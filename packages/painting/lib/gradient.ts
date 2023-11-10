@@ -168,7 +168,7 @@ export abstract class Gradient {
     stops: number[],
     tileMode: Skia.TileMode = AtEngine.skia.TileMode.Clamp,
     matrix4: number[] | null = null,
-    focal: Offset | null,
+    focal: Offset | null = null,
     focalRadius: number = 0,
   ) {
     if (focal === null || (focal === center && focalRadius === 0)) {
@@ -203,7 +203,7 @@ export abstract class Gradient {
     tileMode: Skia.TileMode = AtEngine.skia.TileMode.Clamp,
     startAngle: number = 0.0,
     endAngle: number = Math.PI * 2,
-    matrix4: number[] | null,
+    matrix4: number[] | null = null,
   ) {
     return new GradientSweep(
       center,
@@ -514,7 +514,7 @@ export class RadialGradient extends Gradient {
     radius: number = 0.5,
     colors: Color[],
     stops: number[] | null,
-    tileMode: Skia.TileMode = AtEngine.skia.TileMode.Clamp,
+    tileMode: Skia.TileMode,
     focal: AlignmentGeometry,
     focalRadius: number = 0.0,
     transform: GradientTransform | null
@@ -523,7 +523,7 @@ export class RadialGradient extends Gradient {
 
     this.center = center
     this.radius = radius
-    this.tileMode = tileMode
+    this.tileMode = tileMode ?? AtEngine.skia.TileMode.Clamp
     this.focal = focal
     this.focalRadius = focalRadius
   }

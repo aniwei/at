@@ -1,8 +1,10 @@
 import { ApiStateKind, ApiTransport } from '@at/api'
 import { AtEngineConfiguration, Paint, Skia, Surface } from '@at/engine'
-import { Offset, Size } from '@at/geometry'
-import { AtInstance } from './at'
+import { Offset, Rect, Size } from '@at/geometry'
 import { Color } from '@at/basic'
+import { BorderSide, BorderStyle, Painting } from '@at/painting'
+import { AtInstance } from './at'
+
 
 //// => ConnectionPayload
 interface ConnectionPayload {
@@ -49,14 +51,21 @@ export class App extends AtInstance {
 const app = App.create()
 
 app.start(() => {
+
   const size = Size.create(400, 400)
   const surface = Surface.create(App.tryCreateSurface(size, app.element) as Skia.Surface)
 
   const canvas = surface.canvas
-  const paint = Paint.create()
+  const rect = Rect.fromLTWH(10, 10, 100, 100)
 
-  paint.color = Color.create(0xff00ff00)
-  canvas.drawCircle(Offset.create(200, 200), 100, paint)
+  Painting.paintBorderWithRectangle(
+    canvas,
+    rect,
+    BorderSide.create(Color.BLACK, 1.0, BorderStyle.Solid),
+    BorderSide.create(Color.BLACK, 1.0, BorderStyle.Solid),
+    BorderSide.create(Color.BLACK, 1.0, BorderStyle.Solid),
+    BorderSide.create(Color.BLACK, 1.0, BorderStyle.Solid)
+  )
 
   surface.skia.flush()
 })
