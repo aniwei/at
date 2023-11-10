@@ -1,5 +1,6 @@
 import { Offset, Rect } from '@at/geometry'
 import { Matrix4 } from '@at/math'
+import { Color } from '@at/basic'
 import { AtEngine } from './engine'
 import { TransformError } from './transform-error'
 import * as Skia from './skia'
@@ -186,4 +187,57 @@ export function transformRect (transform: Matrix4, rect: Rect) {
     kRectData[2],
     kRectData[3],
   )
+}
+
+
+
+/**
+ * @param {Color} colors
+ * @return {*}
+ */
+export function toColors (colors: Color[]) {
+  const result = new Uint32Array(colors.length)
+  for (let i = 0; i < colors.length; i++) {
+    result[i] = colors[i].value
+  }
+  return result
+}
+
+/**
+ * @param {ArrayLike} stops
+ * @return {*}
+ */
+export function toColorStops (stops: number[] | null = null) {
+  if (stops === null) {
+    return [0, 1]
+  }
+
+  const result: number[] = []
+
+  for (let i = 0; i < stops.length; i++) {
+    result[i] = stops[i]
+  }
+  
+  return result
+}
+
+
+/**
+ * @param {FilterQuality} filterQuality
+ * @return {*}
+ */
+export function toMipmapMode (filterQuality: Skia.FilterQuality) {
+  return filterQuality == AtEngine.skia.FilterQuality.Medium
+      ? AtEngine.skia.MipmapMode.Linear
+      : AtEngine.skia.MipmapMode.None
+}
+
+/**
+ * @param {FilterQuality} filterQuality
+ * @return {*}
+ */
+export function toFilterMode (filterQuality: Skia.FilterQuality) {
+  return filterQuality == AtEngine.skia.FilterQuality.None
+      ? AtEngine.skia.FilterMode.Nearest
+      : AtEngine.skia.FilterMode.Linear
 }

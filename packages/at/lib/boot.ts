@@ -1,6 +1,7 @@
 import { ApiStateKind, ApiTransport } from '@at/api'
-import { AtEngineConfiguration } from '@at/engine'
+import { AtEngineConfiguration, Paint, Skia, Surface } from '@at/engine'
 import { AtInstance } from './at'
+import { Offset, Size } from '@at/geometry'
 
 //// => ConnectionPayload
 interface ConnectionPayload {
@@ -47,5 +48,12 @@ export class App extends AtInstance {
 const app = App.create()
 
 app.start(() => {
-  
+  const size = Size.create(400, 400)
+  const surface = Surface.create(App.tryCreateSurface(size, app.element) as Skia.Surface)
+
+  const canvas = surface.canvas
+
+  canvas.drawCircle(Offset.create(100, 100), 100, Paint.create())
+
+  surface.skia.flush()
 })

@@ -1,478 +1,596 @@
+import { invariant } from '@at/utils'
+import { Offset, offsetIsValid } from '@at/geometry'
+import { Color } from '@at/basic'
+import { matrix4IsValid } from '@at/math'
+import { AtEngine } from './engine'
+import { Image } from './image'
+import { 
+  toColors, 
+  toColorStops, 
+  toFilterMode, 
+  toMatrix, 
+  toMipmapMode,
+} from './to'
+
+
 import * as Skia from './skia'
-// import { matrix4IsValid, offsetIsValid, toColors, toColorStops, toFilterMode, toMatrix, toMipmapMode } from '../basic/helper'
 
-// import type { ArrayLike } from '../at'
-// import type { AtImage } from './image'
-// import type { Color } from '../basic/color'
-// import type { Offset } from '../basic/geometry'
-// import type { FilterQuality, Shader, TileMode } from './skia'
+//// => Shader
+// 
+export abstract class Shader extends Skia.ManagedSkiaRef<Skia.Shader> {
+  // => skia
+  public get skia () {
+    invariant(super.skia)
+    return super.skia
+  }
+  public set skia (skia: Skia.Shader) {
+    super.skia = skia
+  }
 
-export abstract class AtShader extends Skia.ManagedSkiaRef<Skia.Shader> {
   withQuality (quality: Skia.FilterQuality) {
     return this.skia
   }
 }
 
-// export class GradientSweep extends Shader {
-//   /**
-//    * 
-//    * @param center 
-//    * @param tileMode 
-//    * @param startAngle 
-//    * @param endAngle 
-//    * @param colors 
-//    * @param stops 
-//    * @param matrix4 
-//    * @returns 
-//    */
-//   static resurrect (
-//     center: Offset, 
-//     tileMode: TileMode,
-//     startAngle: number, 
-//     endAngle: number, 
-//     colors: ArrayLike<Color>, 
-//     stops: ArrayLike<number>, 
-//     matrix4: ArrayLike<number> | null
-//   ) {
-//     invariant(colors !== null, `The colors argument cannot be null.`)
-//     invariant(tileMode !== null, `The tileMode argument cannot be null.`)
-//     invariant(startAngle !== null, `The startAngle argument cannot be null.`)
-//     invariant(endAngle !== null, `The endAngle argument cannot be null.`)
-//     invariant(startAngle < endAngle, `The startAngle cannot be gather than endAngle.`)
-//     invariant(matrix4 === null || matrix4IsValid(matrix4),  `The matrix4 argument cannot be null.`)
+//// =>GradientSweep
+export interface GradientSweepOptions {
+  center: Offset, 
+  tileMode: Skia.TileMode,
+  startAngle: number, 
+  endAngle: number, 
+  colors: Color[], 
+  stops: number[], 
+  matrix4: number[] | null
+}
 
-//     const degrees = 180.0 / Math.PI
+// 渐变
+export class GradientSweep extends Shader {
+  static create (options: GradientSweepOptions) {
+    return new GradientSweep(
+      options.center,
+      options.tileMode,
+      options.startAngle,
+      options.endAngle,
+      options.colors,
+      options.stops,
+      options.matrix4,
+    )
+  }
 
-//     return skia.Shader.MakeSweepGradient(
-//       center.dx,
-//       center.dy,
-//       toColors(colors),
-//       toColorStops(stops),
-//       tileMode,
-//       matrix4 !== null ? toMatrix(matrix4) : undefined,
-//       0,
-//       startAngle * degrees,
-//       endAngle * degrees,
-//     )
-//   }
-
-//   protected center: Offset
-//   protected colors: ArrayLike<Color>
-//   protected tileMode: TileMode
-//   protected endAngle: number
-//   protected startAngle: number
-//   protected stops: ArrayLike<number>
-//   protected matrix4: ArrayLike<number> | null
-
-//   /**
-//    * 构造函数
-//    * @param center 
-//    * @param tileMode 
-//    * @param startAngle 
-//    * @param endAngle 
-//    * @param colors 
-//    * @param stops 
-//    * @param matrix4 
-//    */
-//   constructor (
-//     center: Offset, 
-//     tileMode: TileMode,
-//     startAngle: number, 
-//     endAngle: number, 
-//     colors: ArrayLike<Color>, 
-//     stops: ArrayLike<number>, 
-//     matrix4: ArrayLike<number> | null
-//   ) {
-//     super(GradientSweep.resurrect(
-//       center,
-//       tileMode,
-//       startAngle,
-//       endAngle,
-//       colors,
-//       stops,
-//       matrix4,  
-//     ))
-
-//     this.center = center
-//     this.colors = colors
-//     this.stops = stops
-//     this.tileMode = tileMode
-//     this.startAngle = startAngle
-//     this.endAngle = endAngle
-//     this.matrix4 = matrix4
-//   }  
-
-//   /**
-//    * 
-//    */
-//   resurrect () {
-//     return GradientSweep.resurrect(
-//       this.center,
-//       this.tileMode,
-//       this.startAngle,
-//       this.endAngle,
-//       this.colors,
-//       this.stops,
-//       this.matrix4,  
-//     )
-//   }
-// }
-
-// export class GradientLinear extends AtShader {
-//   /**
-//    * 
-//    * @param to 
-//    * @param from 
-//    * @param colors 
-//    * @param stops 
-//    * @param tileMode 
-//    * @param matrix4 
-//    * @returns 
-//    */
-//   static resurrect (
-//     to: Offset,
-//     from: Offset,
-//     colors: ArrayLike<Color>,
-//     stops: ArrayLike<number>,
-//     tileMode: TileMode,
-//     matrix4: ArrayLike<number> | null = null
-//   ) {
-//     invariant(offsetIsValid(from), `The argument from was invalid.`)
-//     invariant(offsetIsValid(to), `The argument to was invalid.`)
-//     invariant(colors !== null, `The argument colors cannot be null.`)
-//     invariant(tileMode !== null, `The argument colors cannot be null.`)
-
-//     return At.Shader.MakeLinearGradient(
-//       from,
-//       to,
-//       toColors(colors),
-//       toColorStops(stops),
-//       tileMode,
-//       matrix4 !== null ? toMatrix(matrix4) : undefined,
-//     )
-//   }
-
-//   protected to: Offset
-//   protected from: Offset
-//   protected colors: ArrayLike<Color>
-//   protected stops: ArrayLike<number>
-//   protected tileMode: TileMode
-//   protected matrix4: ArrayLike<number> | null
-
-//   /**
-//    * 构造函数
-//    * @param from 
-//    * @param to 
-//    * @param colors 
-//    * @param stops 
-//    * @param tileMode 
-//    * @param matrix4 
-//    */
-//   constructor (
-//     from: Offset,
-//     to: Offset,
-//     colors: ArrayLike<Color>,
-//     stops: ArrayLike<number>,
-//     tileMode: TileMode,
-//     matrix4: ArrayLike<number> | null = null
-//   ) {
-//     super(AtGradientLinear.resurrect(
-//       from,
-//       to,
-//       colors,
-//       stops,
-//       tileMode,
-//       matrix4,
-//     ))
-
-//     this.to = to
-//     this.from = from
-//     this.colors = colors
-//     this.stops = stops
-//     this.tileMode = tileMode
-//     this.matrix4 = matrix4
-//   }
-
-//   /**
-//    * 创建 Skia
-//    * @returns 
-//    */
-//   resurrect () {
-//     return AtGradientLinear.resurrect(
-//       this.from,
-//       this.to,
-//       this.colors,
-//       this.stops,
-//       this.tileMode,
-//       this.matrix4
-//     )
-//   }
-// }
-
-// /**
-//  * 
-//  */
-// export class AtGradientRadial extends AtShader {
-//   /**
-//    * 
-//    * @param center 
-//    * @param radius 
-//    * @param tileMode 
-//    * @param colors 
-//    * @param stops 
-//    * @param matrix4 
-//    * @returns 
-//    */
-//   static resurrect (
-//     center: Offset ,
-//     radius: number,
-//     tileMode: TileMode,
-//     colors: ArrayLike<Color>,
-//     stops: ArrayLike<number>,
-//     matrix4: ArrayLike<number> | null
-//   ) {
-//     return At.Shader.MakeRadialGradient(
-//       center,
-//       radius,
-//       toColors(colors),
-//       toColorStops(stops),
-//       tileMode,
-//       matrix4 !== null ? toMatrix(matrix4!) : undefined,
-//       0,
-//     )
-//   }
-
-//   protected center: Offset 
-//   protected radius: number
-//   protected tileMode: TileMode
-//   protected colors: ArrayLike<Color>
-//   protected stops: ArrayLike<number>
-//   protected matrix4: ArrayLike<number> | null
-
-//   /**
-//    * 构造函数
-//    * @param center 
-//    * @param radius 
-//    * @param tileMode 
-//    * @param colors 
-//    * @param stops 
-//    * @param matrix4 
-//    */
-//   constructor (
-//     center: Offset ,
-//     radius: number,
-//     tileMode: TileMode,
-//     colors: ArrayLike<Color>,
-//     stops: ArrayLike<number> = [0, 1],
-//     matrix4: ArrayLike<number> | null
-//   ) {
-//     super(AtGradientRadial.resurrect(
-//       center,
-//       radius,
-//       tileMode,
-//       colors,
-//       stops,
-//       matrix4,
-//     ))
-
-//     this.center = center
-//     this.radius = radius
-//     this.tileMode = tileMode
-//     this.matrix4 = matrix4
-//     this.colors = colors
-//     this.stops = stops
-//   }
-
-//   /**
-//    * 
-//    * @returns  
-//    */
-//   resurrect () {
-//     return AtGradientRadial.resurrect(
-//       this.center,
-//       this.radius,
-//       this.tileMode,
-//       this.colors,
-//       this.stops,
-//       this.matrix4,
-//     )
-//   }
-// }
-
-// export class AtGradientConical extends AtShader {
-//   /**
-//    * 
-//    * @param focal 
-//    * @param focalRadius 
-//    * @param center 
-//    * @param radius 
-//    * @param colors 
-//    * @param stops 
-//    * @param tileMode 
-//    * @param matrix4 
-//    * @returns 
-//    */
-//   static resurrect (
-//     focal: Offset,
-//     focalRadius: number,
-//     center: Offset ,
-//     radius: number,
-//     colors: ArrayLike<Color>,
-//     stops: ArrayLike<number>,
-//     tileMode: TileMode,
-//     matrix4: ArrayLike<number> | null
-//   ) {
-//     return At.Shader.MakeTwoPointConicalGradient(
-//       focal,
-//       focalRadius,
-//       center,
-//       radius,
-//       toColors(colors),
-//       toColorStops(stops),
-//       tileMode,
-//       matrix4 !== null ? toMatrix(matrix4) : undefined
-//     )
-//   }
-
-//   protected focal: Offset
-//   protected focalRadius: number
-//   protected center: Offset 
-//   protected radius: number
-//   protected tileMode: TileMode
-//   protected colors: ArrayLike<Color>
-//   protected stops: ArrayLike<number>
-//   protected matrix4: ArrayLike<number> | null
-  
-
-//   /**
-//    * 构造函数
-//    * @param {Offset} focal 
-//    * @param {number} focalRadius 
-//    * @param {Offset} center 
-//    * @param {number} radius 
-//    * @param {ArrayLike<number>} colors 
-//    * @param {ArrayLike<number>} stops 
-//    * @param {TileMode} tileMode 
-//    * @param {ArrayLike<number> | null} matrix4 
-//    */
-//   constructor (
-//     focal: Offset,
-//     focalRadius: number,
-//     center: Offset ,
-//     radius: number,
-//     colors: ArrayLike<Color>,
-//     stops: ArrayLike<number>,
-//     tileMode: TileMode,
-//     matrix4: ArrayLike<number> | null
-//   ) {
-//     super(AtGradientConical.resurrect(
-//       focal,
-//       focalRadius,
-//       center,
-//       radius,
-//       colors,
-//       stops,
-//       tileMode,
-//       matrix4,
-//     ))
-
-//     this.focal = focal
-//     this.focalRadius = focalRadius
-//     this.center = center
-//     this.radius = radius
-//     this.colors = colors
-//     this.stops = stops
-//     this.tileMode = tileMode
-//     this.matrix4 = matrix4
-//   }
-
-//   /**
-//    * 
-//    * @returns 
-//    */
-//   resurrect () {
-//     return AtGradientConical.resurrect(
-//       this.focal,
-//       this.focalRadius,
-//       this.center,
-//       this.radius,
-//       this.colors,
-//       this.stops,
-//       this.tileMode,
-//       this.matrix4,
-//     )
-//   }
-// }
-
-// export class AtImageShader extends AtShader {
-//   protected tileModeX: TileMode
-//   protected tileModeY: TileMode
-//   protected image: AtImage
-//   protected filterQuality: FilterQuality
-//   protected matrix4: ArrayLike<number> | null
-//   protected cachedQuality: FilterQuality | null = null
-
-//   /**
-//    * @description: 
-//    * @param {ImageShaderOptions} options
-//    * @return {ImageShader}
-//    */  
-//   constructor (
-//     image: AtImage,
-//     tileModeX: TileMode,
-//     tileModeY: TileMode,
-//     filterQuality: FilterQuality,
-//     matrix4: ArrayLike<number> | null
-//   ) {
-//     super(image.skia)
-
-//     this.image = image
-//     this.matrix4 = matrix4
-//     this.tileModeX = tileModeX
-//     this.tileModeY = tileModeY
-//     this.filterQuality = filterQuality
-//   }
-  
-//   /**
-//    * @description: 
-//    * @param {FilterQuality} contextualQuality
-//    * @return {IShader}
-//    */  
-//   withQuality (contextualQuality: FilterQuality): Shader {
-//     const quality = this.filterQuality ?? contextualQuality
-//     let shader = this.skia
+  /**
+   * 
+   * @param {Offset} center 
+   * @param {Skia.TileMode} tileMode 
+   * @param {number} startAngle 
+   * @param {number} endAngle 
+   * @param {Color[]} colors 
+   * @param {number[]} stops 
+   * @param {number[]} matrix4 
+   */
+  static resurrect (
+    center: Offset, 
+    tileMode: Skia.TileMode,
+    startAngle: number, 
+    endAngle: number, 
+    colors: Color[], 
+    stops: number[], 
+    matrix4: number[] | null
+  ) {
     
-//     if (this.cachedQuality !== quality || shader === null) {
-//       if (quality === At.FilterQuality.High) {
-//         shader = this.image.skia.makeShaderCubic(
-//           this.tileModeX,
-//           this.tileModeY,
-//           1 / 3,
-//           1 / 3,
-//           toMatrix(this.matrix4!),
-//         )
-//       } else {
-//         shader = this.image.skia.makeShaderOptions(
-//           this.tileModeX,
-//           this.tileModeY,
-//           toFilterMode(quality),
-//           toMipmapMode(quality),
-//           toMatrix(this.matrix4!), 
-//         )
-//       }
+    invariant(matrix4 === null || matrix4IsValid(matrix4),  `The matrix4 argument cannot be null.`)
+    const degrees = 180.0 / Math.PI
 
-//       this.cachedQuality = quality
-//       this.skia = shader
-//     }
+    return AtEngine.skia.Shader.MakeSweepGradient(
+      center.dx,
+      center.dy,
+      toColors(colors),
+      toColorStops(stops),
+      tileMode,
+      matrix4 !== null ? toMatrix(matrix4) : null,
+      0,
+      startAngle * degrees,
+      endAngle * degrees,
+    )
+  }
 
-//     return shader
-//   }
+  protected center: Offset
+  protected colors: Color[]
+  protected endAngle: number
+  protected startAngle: number
+  protected stops: number[]
+  protected tileMode: Skia.TileMode
+  protected matrix4: number[] | null
 
-//   /**
-//    * @description: 
-//    * @return {Shader}
-//    */  
-//   resurrect () {
-//     return this.withQuality(this.cachedQuality ?? At.FilterQuality.None)!
-//   } 
-// }
+  /**
+   * 构造函数
+   * @param {Offset} center 
+   * @param {Skia.TileMode} tileMode 
+   * @param {number} startAngle 
+   * @param {number} endAngle 
+   * @param {Color[]} colors 
+   * @param {number[]} stops 
+   * @param {number[]} matrix4 
+   */
+  constructor (
+    center: Offset, 
+    tileMode: Skia.TileMode,
+    startAngle: number, 
+    endAngle: number, 
+    colors: Color[], 
+    stops: number[], 
+    matrix4: number[] | null
+  ) {
+    super(GradientSweep.resurrect(
+      center,
+      tileMode,
+      startAngle,
+      endAngle,
+      colors,
+      stops,
+      matrix4,  
+    ))
+
+    this.center = center
+    this.colors = colors
+    this.stops = stops
+    this.tileMode = tileMode
+    this.startAngle = startAngle
+    this.endAngle = endAngle
+    this.matrix4 = matrix4
+  }  
+
+  /**
+   * 
+   */
+  resurrect () {
+    return GradientSweep.resurrect(
+      this.center,
+      this.tileMode,
+      this.startAngle,
+      this.endAngle,
+      this.colors,
+      this.stops,
+      this.matrix4,  
+    )
+  }
+}
+
+
+//// => GradientLinear
+// 线性渐变
+export interface GradientLinearOptions {
+  to: Offset,
+  from: Offset,
+  colors: Color[],
+  stops: number[],
+  tileMode: Skia.TileMode,
+  matrix4?: number[] | null
+}
+
+export class GradientLinear extends Shader {
+  static create (options: GradientLinearOptions) {
+    return new GradientLinear(
+      options.to,
+      options.from,
+      options.colors,
+      options.stops,
+      options.tileMode,
+      options.matrix4,
+    )
+  }
+
+  /**
+   * 创建 skia 对象
+   * @param {Offset} to 
+   * @param {Offset} from 
+   * @param {Color[]} colors 
+   * @param {number[]} stops 
+   * @param {Skia.TileMode} tileMode 
+   * @param {number[]} matrix4 
+   * @returns 
+   */
+  static resurrect (
+    to: Offset,
+    from: Offset,
+    colors: Color[],
+    stops: number[],
+    tileMode: Skia.TileMode,
+    matrix4: number[] | null = null
+  ) {
+    invariant(offsetIsValid(from), `The argument from was invalid.`)
+    invariant(offsetIsValid(to), `The argument to was invalid.`)
+    
+    return AtEngine.skia.Shader.MakeLinearGradient(
+      from,
+      to,
+      toColors(colors),
+      toColorStops(stops),
+      tileMode,
+      matrix4 !== null ? toMatrix(matrix4) : undefined,
+    )
+  }
+
+  protected to: Offset
+  protected from: Offset
+  protected colors: Color[]
+  protected stops: number[]
+  protected tileMode: Skia.TileMode
+  protected matrix4: number[] | null
+
+   /**
+   * 构造函数
+   * @param {Offset} to 
+   * @param {Offset} from 
+   * @param {Color[]} colors 
+   * @param {number[]} stops 
+   * @param {Skia.TileMode} tileMode 
+   * @param {number[] | null} matrix4 
+   * @returns 
+   */
+  constructor (
+    from: Offset,
+    to: Offset,
+    colors: Color[],
+    stops: number[],
+    tileMode: Skia.TileMode,
+    matrix4: number[] | null = null
+  ) {
+    super(GradientLinear.resurrect(
+      from,
+      to,
+      colors,
+      stops,
+      tileMode,
+      matrix4,
+    ))
+
+    this.to = to
+    this.from = from
+    this.colors = colors
+    this.stops = stops
+    this.tileMode = tileMode
+    this.matrix4 = matrix4
+  }
+
+  /**
+   * 创建 Skia
+   * @returns 
+   */
+  resurrect () {
+    return GradientLinear.resurrect(
+      this.from,
+      this.to,
+      this.colors,
+      this.stops,
+      this.tileMode,
+      this.matrix4
+    )
+  }
+}
+
+//// => GradientRadial
+export interface GradientRadialOptions {
+  center: Offset ,
+  radius: number,
+  tileMode: Skia.TileMode,
+  colors: Color[],
+  stops: number[],
+  matrix4: number[] | null
+}
+
+/**
+ * 
+ */
+export class GradientRadial extends Shader {
+  static create (options: GradientRadialOptions) {
+    return new GradientRadial(
+      options.center,
+      options.radius,
+      options.tileMode,
+      options.colors,
+      options.stops,
+      options.matrix4,
+    )
+  }
+
+  /**
+   * 
+   * @param {Offset} center 
+   * @param {number} radius 
+   * @param {Skia.TileMode} tileMode 
+   * @param {Color[]} colors 
+   * @param {number[]} stops 
+   * @param {number[]} matrix4 
+   * @returns 
+   */
+  static resurrect (
+    center: Offset ,
+    radius: number,
+    tileMode: Skia.TileMode,
+    colors: Color[],
+    stops: number[],
+    matrix4: number[] | null = null
+  ) {
+    return AtEngine.skia.Shader.MakeRadialGradient(
+      center,
+      radius,
+      toColors(colors),
+      toColorStops(stops),
+      tileMode,
+      matrix4 !== null ? toMatrix(matrix4!) : undefined,
+      0,
+    )
+  }
+
+  protected center: Offset 
+  protected radius: number
+  protected tileMode: Skia.TileMode
+  protected colors: Color[]
+  protected stops: number[]
+  protected matrix4: number[] | null
+
+  /**
+   * 
+   * @param {Offset} center 
+   * @param {number} radius 
+   * @param {Skia.TileMode} tileMode 
+   * @param {Color[]} colors 
+   * @param {number[]} stops 
+   * @param {number[]} matrix4 
+   * @returns 
+   */
+  constructor (
+    center: Offset ,
+    radius: number,
+    tileMode: Skia.TileMode,
+    colors: Color[],
+    stops: number[] = [0, 1],
+    matrix4: number[] | null
+  ) {
+    super(GradientRadial.resurrect(
+      center,
+      radius,
+      tileMode,
+      colors,
+      stops,
+      matrix4,
+    ))
+
+    this.center = center
+    this.radius = radius
+    this.tileMode = tileMode
+    this.matrix4 = matrix4
+    this.colors = colors
+    this.stops = stops
+  }
+
+  resurrect () {
+    return GradientRadial.resurrect(
+      this.center,
+      this.radius,
+      this.tileMode,
+      this.colors,
+      this.stops,
+      this.matrix4,
+    )
+  }
+}
+
+//// => GradientConical
+export interface GradientConicalOptions {
+  focal: Offset,
+  focalRadius: number,
+  center: Offset ,
+  radius: number,
+  colors: Color[],
+  stops: number[],
+  tileMode: Skia.TileMode,
+  matrix4: number[] | null
+}
+
+export class GradientConical extends Shader {
+  static create (options: GradientConicalOptions) {
+    return new GradientConical(
+      options.focal,
+      options.focalRadius,
+      options.center,
+      options.radius,
+      options.colors,
+      options.stops,
+      options.tileMode,
+      options.matrix4,
+    )
+  }
+
+  /**
+   * 构造函数
+   * @param {Offset} focal 
+   * @param {number} focalRadius 
+   * @param {Offset} center 
+   * @param {number} radius 
+   * @param {number[]} colors 
+   * @param {number[]} stops 
+   * @param {TileMode} tileMode 
+   * @param {number[] | null} matrix4 
+   */
+  static resurrect (
+    focal: Offset,
+    focalRadius: number,
+    center: Offset ,
+    radius: number,
+    colors: Color[],
+    stops: number[],
+    tileMode: Skia.TileMode,
+    matrix4: number[] | null
+  ) {
+    return AtEngine.skia.Shader.MakeTwoPointConicalGradient(
+      focal,
+      focalRadius,
+      center,
+      radius,
+      toColors(colors),
+      toColorStops(stops),
+      tileMode,
+      matrix4 !== null ? toMatrix(matrix4) : undefined
+    )
+  }
+
+  protected focal: Offset
+  protected focalRadius: number
+  protected center: Offset 
+  protected radius: number
+  protected tileMode: Skia.TileMode
+  protected colors: Color[]
+  protected stops: number[]
+  protected matrix4: number[] | null
+  
+
+  /**
+   * 构造函数
+   * @param {Offset} focal 
+   * @param {number} focalRadius 
+   * @param {Offset} center 
+   * @param {number} radius 
+   * @param {number[]} colors 
+   * @param {number[]} stops 
+   * @param {TileMode} tileMode 
+   * @param {number[] | null} matrix4 
+   */
+  constructor (
+    focal: Offset,
+    focalRadius: number,
+    center: Offset ,
+    radius: number,
+    colors: Color[],
+    stops: number[],
+    tileMode: Skia.TileMode,
+    matrix4: number[] | null
+  ) {
+    super(GradientConical.resurrect(
+      focal,
+      focalRadius,
+      center,
+      radius,
+      colors,
+      stops,
+      tileMode,
+      matrix4,
+    ))
+
+    this.focal = focal
+    this.focalRadius = focalRadius
+    this.center = center
+    this.radius = radius
+    this.colors = colors
+    this.stops = stops
+    this.tileMode = tileMode
+    this.matrix4 = matrix4
+  }
+
+  /**
+   * 
+   * @returns 
+   */
+  resurrect () {
+    return GradientConical.resurrect(
+      this.focal,
+      this.focalRadius,
+      this.center,
+      this.radius,
+      this.colors,
+      this.stops,
+      this.tileMode,
+      this.matrix4,
+    )
+  }
+}
+
+//// => ImageShaderOptions
+export interface ImageShaderOptions {
+  image: Image,
+  tileModeX: Skia.TileMode,
+  tileModeY: Skia.TileMode,
+  quality: Skia.FilterQuality,
+  matrix4: number[] | null
+}
+
+export class ImageShader extends Shader {
+  static create (options: ImageShaderOptions) {
+    return new ImageShader(
+      options.image,
+      options.tileModeX,
+      options.tileModeY,
+      options.quality,
+      options.matrix4,
+    )
+  }
+
+  protected tileModeX: Skia.TileMode
+  protected tileModeY: Skia.TileMode
+  protected image: Image
+  protected quality: Skia.FilterQuality
+  protected matrix4: number[] | null
+  protected cachedQuality: Skia.FilterQuality | null = null
+
+  /**
+   * @description: 
+   * @param {ImageShaderOptions} options
+   * @return {ImageShader}
+   */  
+  constructor (
+    image: Image,
+    tileModeX: Skia.TileMode,
+    tileModeY: Skia.TileMode,
+    quality: Skia.FilterQuality,
+    matrix4: number[] | null
+  ) {
+    super(image.skia)
+
+    this.image = image
+    this.matrix4 = matrix4
+    this.tileModeX = tileModeX
+    this.tileModeY = tileModeY
+    this.quality = quality
+  }
+  
+  /**
+   * @param {FilterQuality} quality
+   * @return {IShader}
+   */  
+  withQuality (quality: Skia.FilterQuality): Skia.Shader {
+    const q = this.quality ?? quality
+    let shader = this.skia
+    
+    if (this.cachedQuality !== q || shader === null) {
+      if (q === AtEngine.skia.FilterQuality.High) {
+        shader = this.image.skia.makeShaderCubic(
+          this.tileModeX,
+          this.tileModeY,
+          1 / 3,
+          1 / 3,
+          toMatrix(this.matrix4!),
+        )
+      } else {
+        shader = this.image.skia.makeShaderOptions(
+          this.tileModeX,
+          this.tileModeY,
+          toFilterMode(q),
+          toMipmapMode(q),
+          toMatrix(this.matrix4!), 
+        )
+      }
+
+      this.cachedQuality = quality
+      this.skia = shader
+    }
+
+    return shader
+  }
+
+  /**
+   * @return {Shader}
+   */  
+  resurrect () {
+    return this.withQuality(this.cachedQuality ?? AtEngine.skia.FilterQuality.None)
+  } 
+}

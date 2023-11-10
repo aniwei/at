@@ -16,13 +16,15 @@ export class AnimatedImage extends Skia.ManagedSkiaRef<Skia.AnimatedImage> {
     return new AnimatedImage(bytes, src)
   }
 
+  // 帧索引
   public index: number = 0
+  // 帧数
   public frames: number = 0
+  // 重复
   public repetitions: number = -1
   
   public src: string
   public bytes: Uint8Array
-  public disposed = false
 
   /**
    * @description: 
@@ -92,8 +94,7 @@ export class AnimatedImage extends Skia.ManagedSkiaRef<Skia.AnimatedImage> {
    */  
   dispose () {
     invariant(!this.disposed, 'Cannot dispose a codec that has already been disposed.')
-    this.disposed = true
-
     this.delete()
+    this.disposed = true
   }
 }

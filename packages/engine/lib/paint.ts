@@ -1,5 +1,11 @@
 import { Color } from '@at/basic'
+import { invariant } from '@at/utils'
 import { AtEngine } from './engine'
+import { Shader } from './shader'
+import { ImageFilter } from './image-filter'
+import { MaskFilter } from './mask-filter'
+import { ManagedSkiaColorFilter } from './color-filter'
+
 import * as Skia from './skia'
 
 
@@ -55,7 +61,7 @@ export abstract class PaintRefBox {
 }
 
 //// => Stroke
-// 路径类
+// 线
 export class Stroke extends PaintRefBox { 
   static create (...rests: unknown[]) {
     return super.create(...rests) as Stroke
@@ -140,18 +146,6 @@ export class Filter extends PaintRefBox {
   //   }
   // }
 
-  // => shader 
-  // protected _shader: Shader | null = null
-  // public get shader () {
-  //   return this._shader
-  // }
-  // public set shader (shader: Shader | null) {
-  //   if (this.shader !== shader) {
-  //     this._shader = shader
-  //     this.skia.setShader(this.shader?.withQuality(this.filterQuality) ?? null)
-  //   }
-  // }
-
   // => color filter
   // public get color () {
   //   return this.effectiveColor?.filter ?? null
@@ -177,30 +171,40 @@ export class Filter extends PaintRefBox {
   // }
 
   // => mask filter
-  // protected _mask: MaskFilter | null = null
-  // public get mask () {
-  //   return this._mask
-  // }
-  // public set mask (filter: MaskFilter | null) {
-  //   if (this.mask !== filter) {
-  //     this._mask = filter 
-  //     this.skia.setMaskFilter(this._mask?.skia ?? null)
-  //   }
-  // }
+  protected _mask: MaskFilter | null = null
+  public get mask () {
+    return this._mask
+  }
+  public set mask (filter: MaskFilter | null) {
+    if (this.mask !== filter) {
+      this._mask = filter 
+      this.skia.setMaskFilter(this._mask?.skia ?? null)
+    }
+  }
 
   // => image filter
-  // protected _image: ManagedSkiaImageFilterConvertible | null = null
-  // public get image () {
-  //   return this._image
-  // }
-  // public set image (filter: ManagedSkiaImageFilterConvertible | null) {
-  //   if (this.image !== filter) {
-  //     this._image = filter
+  protected _image: ImageFilter | null = null
+  public get image () {
+    return this._image
+  }
+  public set image (filter: ImageFilter | null) {
+    if (this.image !== filter) {
+      this._image = filter
+      this.skia.setImageFilter(this.image?.skia ?? null)
+    }
+  }
 
-  //     this.managedImage = filter.image
-  //     this.skia.setImageFilter(this.managedImage?.skia ?? null)
-  //   }
-  // }
+  // => shader 
+  protected _shader: Shader | null = null
+  public get shader () {
+    return this._shader
+  }
+  public set shader (shader: Shader | null) {
+    if (this.shader !== shader) {
+      this._shader = shader
+      this.skia.setShader(this.shader?.withQuality(this.quality) ?? null)
+    }
+  }
 
   // => filter quality
   protected _quality: Skia.FilterQuality = AtEngine.skia.FilterQuality.None
@@ -210,14 +214,13 @@ export class Filter extends PaintRefBox {
   public set quality (quality: Skia.FilterQuality) {
     if (this.quality !== quality) {
       this._quality = quality
-      // TODO
-      // this.skia.setShader((this.shader).withQuality(this.quality))
+      invariant(this.shader)
+      this.skia.setShader((this.shader).withQuality(this.quality))
     }
   }
 
-  // public originalColor: ManagedSkiaColorFilter | null = null
-  // public effectiveColor: ManagedSkiaColorFilter | null = null
-  // public managedImage: ManagedSkiaRef<ImageFilter> | null = null
+  public original: ManagedSkiaColorFilter | null = null
+  public effective: ManagedSkiaColorFilter | null = null
 }
 
 

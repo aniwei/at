@@ -47,6 +47,11 @@ export class SurfaceFrame {
 }
 
 export class Surface extends Skia.ManagedSkiaRef<Skia.Surface> {
+  static create (...rests: unknown[]): Surface
+  static create (skia: Skia.Surface): Surface {
+    return new Surface(skia) as Surface
+  }
+
   static fromSkia (skia: Surface) {
     return new Surface(skia)
   }
