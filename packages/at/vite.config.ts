@@ -7,8 +7,8 @@ export default defineConfig({
     'process.env': {
       NODE_ENV: 'development',
       SKIA_URI: '/canvaskit.wasm',
-      ROOT_DIR: '/assets',
-      BASE_URI: '/'
+      ASSETS_ROOT_DIR: '/assets',
+      ASSETS_BASE_URI: '/'
     },
   },
   build: {

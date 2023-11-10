@@ -28,7 +28,8 @@ export class EventEmitter<T extends string> {
   }
 
   // 触发事件
-  emit (event: T, ...args: unknown[]) {
+  emit (...rests: unknown[]): boolean
+  emit (event: T, ...rests: unknown[]) {
     if (this.events.has(event)) {
       const listeners = this.events.get(event)
 
@@ -38,7 +39,7 @@ export class EventEmitter<T extends string> {
             this.removeListener(event, listener.handler, undefined, true)
           }
 
-          Reflect.apply(listener.handler, listener.context, args)
+          Reflect.apply(listener.handler, listener.context, rests)
         }
       }
       

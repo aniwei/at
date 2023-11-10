@@ -2,8 +2,10 @@ import { defineReadOnly } from '@at/utils'
 import { EventEmitter } from './events'
 import { SubscribeHandle } from './subscribable'
 import { Subscribable } from './subscribable'
+import { nextTick } from './microtask'
 import { MessageContent, MessageOwner, MessageTransport } from './transport'
 
+//// => Api 类型定义
 // Api 参数
 export interface ApiParameter {
   name: string,
@@ -38,6 +40,14 @@ export interface ApiJSON {
   domains: ApiDomain[]
 }
 
+
+//// => 
+ export class ParameterError extends Error {
+  constructor (parameter: ApiParameter) {
+    super(`The parameter "${parameter.name}" expected "${parameter.type}" type.`)
+  }
+ }
+
 /**
  * 检查 API 参数是否合法
  * @param {unknown[]} args
@@ -55,17 +65,17 @@ const checkApiParameters = (args: unknown[], parameters: ApiParameter[]) => {
     switch (type.toLowerCase()) {
       case 'array':
         if (!Array.isArray(args[i])) {
-          throw new TypeError(`Expected "${type}" type.`)
+          throw new ParameterError(parameter)
         }
         break
       case 'enum':
         if (typeof args[i] !== 'string' || !parameter.enum?.includes(args[i] as string)) {
-          throw new TypeError(`Expected "${type}" type.`)
+          throw new ParameterError(parameter)
         }
         break
       default:
         if (typeof args[i] !== type) {
-          throw new TypeError(`Expected "${type}" type.`)
+          throw new ParameterError(parameter)
         }
         break
     }
@@ -115,6 +125,7 @@ export class ApiSubscribables extends Map<string, Subscribable> {
     return this
   }
 
+  async publish(...rests: unknown[]): Promise<unknown>
   async publish(name: string, ...rests: unknown[]) {
     const subscribable = this.get(name) as Subscribable ?? null
     if (subscribable !== null) {
@@ -187,24 +198,49 @@ export abstract class BaseApi<T extends string> extends EventEmitter<T | string>
       type: 'Command' | 'Event',
       actions: ApiAction[]
     ) => {
-      const proxy = type === 'Command' 
-        ? new ApiSubscribables()
-        : new EventEmitter<string>()
+      const isEvent = type === 'Event'
+
+      const proxy = isEvent
+        ? new EventEmitter<string>()
+        : new ApiSubscribables()
 
       for (const action of actions) {
-        const name = `${domain.name}.${action.name}`
+        const api = `${domain.name}.${type}.${action.name}`
         
-        this.on(name, (...rests: unknown[]) => (proxy as EventEmitter<string>).emit(action.name, ...rests))
-        this.subscribe(name, (...rests: unknown[]) => (proxy as ApiSubscribables).publish(action.name, ...rests))
+        this.on(api, (api: string, ...rests: unknown[]) => (proxy as EventEmitter<string>).emit(api, ...rests[0] as unknown[]))
+        this.subscribe(api, (api, ...rests: unknown[]) => (proxy as ApiSubscribables).publish(api, ...rests[0] as unknown[]))
 
         const func = async (...parameters: unknown[]) => {
           checkApiParameters(parameters, action.parameters)
 
+          if (isEvent) {
+            nextTick(() => (proxy as EventEmitter<string>).emit(...parameters[0] as unknown[]))
+
+            const result = await this.send({
+              command: 'message::api',
+              payload: {
+                name: api,
+                type,
+                parameters
+              }
+            })
+  
+            return result?.payload
+          }
+
+          if ((proxy as ApiSubscribables).has(parameters[0] as string)) {
+            const result = await nextTick(() => {
+              return (proxy as ApiSubscribables).publish(...parameters[0] as unknown[])
+            })
+
+            return result
+          }
+          
           const result = await this.send({
             command: 'message::api',
             payload: {
+              name: api,
               type,
-              name,
               parameters
             }
           })

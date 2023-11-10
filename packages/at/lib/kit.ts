@@ -1,9 +1,13 @@
 import { invariant } from '@at/utils'
-import { Size } from '@at/geometry'
-import { AtEngine, Rasterizer, Skia } from '@at/engine'
-import { tryCatch } from '@at/utils'
 import { ApiService } from '@at/api'
 import { AtManifest } from './manifest'
+import { nextTick } from '@at/basic'
+import { 
+  AtEngine, 
+  AtEngineLifecycleKind,
+  AtEngineConfiguration
+} from '@at/engine'
+import { Size } from '@at/geometry'
 
 export enum AtEnvKind {
   Dev = 'development',
@@ -18,42 +22,17 @@ export interface Environments {
   ROOT_DIR: string
 }
 
-///// => AtRasterizer
-// 光栅器
-export interface AtRasterizerElement {
-  width: number,
-  height: number,
-  style?: CSSStyleDeclaration | null
-}
-
-export interface AtRasterizerOptions {
-  size: Size,
-  devicePixelRatio: number
-}
-
-export class AtRasterizer extends Rasterizer {
-  static create (
-    surface: Skia.Surface,
-    devicePixelRatio: number
-  ) {
-    return super.create(surface, devicePixelRatio) as AtRasterizer
-  }
-}
-
-export interface AtKitConfiguration extends AtRasterizerOptions {
-  
-}
 
 export interface AtKitFactory<T> {
-  new (element: AtRasterizerElement, configuration: AtKitConfiguration): T
-  create (element: AtRasterizerElement, configuration: AtKitConfiguration): T
+  new (configuration?: AtEngineConfiguration): T
+  create (configuration?: AtEngineConfiguration): T
 }
 export abstract class AtKit extends AtEngine {
   // 创建 At 全局对象
   static create <T extends AtKit> (...rests: unknown[]): AtKit
-  static create <T extends AtKit> (element: AtRasterizerElement, options: AtKitConfiguration): AtKit {
+  static create <T extends AtKit> (configuration?: AtEngineConfiguration): AtKit {
     const AtKitFactory = this as unknown as AtKitFactory<T>
-    return new AtKitFactory(element, options) as AtKit
+    return new AtKitFactory(configuration) as AtKit
   }
 
   /**
@@ -64,10 +43,10 @@ export abstract class AtKit extends AtEngine {
    */
   static env (key: string, defaultEnv?: string) {
     if (Reflect.has(process.env, key)) {
-      return Reflect.get(process.env, key)
+      return Reflect.get(process.env, key) as string
     }
 
-    return defaultEnv
+    return defaultEnv as string
   }
 
   // => isDev
@@ -85,55 +64,40 @@ export abstract class AtKit extends AtEngine {
     return AtKit.env('AT_ENV', AtEnvKind.Production) === AtEnvKind.Production
   }
 
-  // => rasterizer
-  public _rasterizer: AtRasterizer | null = null
-  public get rasterizer () {
-    if (this._rasterizer === null) {
-      const size = this.configuration.size
-      const devicePixelRatio = this.configuration.devicePixelRatio
-
-      tryCatch(() => {
-        if (this.element.style) {
-          const width = size.width / devicePixelRatio
-          const height = size.height / devicePixelRatio
-    
-          this.element.style.position = 'absolute'
-          this.element.style.width = `${width}px`
-          this.element.style.height = `${height}px`
-        }
-      })
-
-      const surface = AtKit.tryCreateSurface(
-        size, 
-        this.element as unknown as HTMLCanvasElement
-      ) 
-
-      invariant(surface)
-      this._rasterizer = AtRasterizer.create(surface, devicePixelRatio)
+  // => state
+  public get state () {
+    return super.state
+  }
+  public set state (state: AtEngineLifecycleKind) {
+    if (super.state !== state) {
+      nextTick(() => this.api.Engine.events.publish('runtime.lifecycle.change',[{
+        state: state
+      }]))
+      
+      super.state = state
     }
-
-    return this._rasterizer
   }
 
   public api: ApiService = ApiService.create()
-  public element: AtRasterizerElement
   public environments: Environments
-  public configuration: AtKitConfiguration
 
-  constructor (
-    element: AtRasterizerElement, 
-    configuration: AtKitConfiguration
-  ) {
+  constructor (configuration?: AtEngineConfiguration) {
     const env = process.env
 
-    invariant(env.BASE_URI)
-    invariant(env.ROOT_DIR)
+    invariant(env.ASSETS_BASE_URI)
+    invariant(env.ASSETS_ROOT_DIR)
     invariant(env.SKIA_URI)
 
-    super(env.SKIA_URI, env.BASE_URI, env.ROOT_DIR)
+    super({
+      size: configuration?.size ?? Size.create(300, 300),
+      devicePixelRatio: configuration?.devicePixelRatio ?? 2.0,
+      uri: AtKit.env('SKIA_URI', '/canvaskit.wasm'),
+      assets: {
+        baseURI: AtKit.env('ASSETS_BASE_URI', '/'),
+        rootDir: AtKit.env('ASSETS_ROOT_DIR', '/assets')
+      }
+    })
 
-    this.element = element
-    this.configuration = configuration
     this.environments = process.env as unknown as  Environments
   }
 
@@ -145,8 +109,8 @@ export abstract class AtKit extends AtEngine {
 
     const { fonts } = manifest
 
-    this.api.Engine.events.publish('Resource.Fonts.Loader.Update', [{
-      state: 'Loading'
+    this.api.Engine.events.publish('resource.fonts.loader.change', [{
+      state: 'loading'
     }])
     .then(() => {
       return Promise.all(fonts.map(font => {
@@ -155,8 +119,8 @@ export abstract class AtKit extends AtEngine {
           .then(data => this.fonts.register(data, font.family))
       }))
     })
-    .then(() => this.api.Engine.events.publish('Resource.Fonts.Loader.Update', [{
-      state: 'Loaded'
+    .then(() => this.api.Engine.events.publish('resource.fonts.loader.change', [{
+      state: 'loaded'
     }]))
   }
 
@@ -179,29 +143,25 @@ export abstract class AtKit extends AtEngine {
   }
 
   ensure () {
-    return this.api.Engine.events.publish('Runtime.Lifecycle.Update', [{
-      state: 'Loading'
-    }])
-    .then(() => this.bindings())
-    .then(() => this.api.Engine.events.publish('Resource.CanvasKit.Loader.Update', [{
-        state: 'Loading'
+    return this.bindings()
+      .then(() => {
+      this.api.Engine.events.publish('resource.canvaskit.loader.change', [{
+        state: 'loading'
       }])
-      .then(() => super.ensure())
-      .then(() => this.api.Engine.events.publish('Resource.CanvasKit.Loader.Update', [{
-        state: 'Loaded'
-      }]))
-    )
+
+      return super.ensure().then(() => {
+        this.api.Engine.events.publish('resource.canvaskit.loader.change', [{
+          state: 'loaded'
+        }])
+      })
+    })
     .then(() => this.prepare())
-    .then(() => this.api.Engine.events.publish('Runtime.Lifecycle.Update', [{
-      state: 'Ready'
-    }]))
+    .then(() => this.state = AtEngineLifecycleKind.Ready)
     .then(() => AtEngine.skia)
   }
 
   dispose () {
     this.rasterizer.dispose()
-    this.api.Engine.events.publish('Runtime.Lifecycle.Update', [{
-      state: 'Destroy'
-    }])
+    this.state = AtEngineLifecycleKind.Destory
   }
 }

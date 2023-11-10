@@ -1,3 +1,14 @@
-import { WorkTransport } from '@at/basic'
+import { WorkPort, WorkTransport } from '@at/basic'
 
-export class ApiTransport extends WorkTransport { }
+export class ApiTransport extends WorkTransport { 
+  static connect (port: MessagePort) {
+    const transport = new ApiTransport()
+    transport.connect(port)
+    return transport
+  }
+
+
+  connect (port: MessagePort) {
+    super.connect(new WorkPort(port))
+  }
+}

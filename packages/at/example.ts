@@ -1,18 +1,15 @@
 import { Paint, Canvas } from '@at/engine'
-import { Offset, Size } from '@at/geometry'
+import { Size } from '@at/geometry'
 import { ProxyApp } from './lib/index'
 
 const proxy = ProxyApp.create(document.getElementById('webgl') as HTMLCanvasElement, {
   size: Size.create(400, 400),
-  devicePixelRatio: 2
-})
-
-proxy.api.Engine.events.on('Runtime.Lifecycle.Update', () => {
-  debugger
+  devicePixelRatio: 2.0
 })
 
 proxy.start(() => {
-
+  // proxy.getDocument()
+  // debugger
 })
 
 

@@ -10,6 +10,7 @@ import ApiManifestJSON from './manifest.json'
 
 import { ApiTransport } from './transport'
 import { EngineApiService } from './engine'
+import { ClientApiService } from './client'
 
 
 export type ApiEventKind = ''
@@ -27,6 +28,7 @@ export enum ApiStateKind {
 // Api 服务
 export interface ApiService extends BaseApi<ApiEventKind> {
   Engine: EngineApiService,
+  Client: ClientApiService
 }
 
 export class ApiService extends BaseApi<ApiEventKind> {
@@ -78,18 +80,14 @@ export class ApiService extends BaseApi<ApiEventKind> {
     this.state |= ApiStateKind.Created
 
     transport.on('error', () => {
-      this.state &= ~ApiStateKind.Connecting
       this.state = ApiStateKind.Error
       this.emit('error', this.state)
-    }).on('open', () => {
-      this.state &= ~ApiStateKind.Connecting
-      this.state = ApiStateKind.Connected
-      this.emit('connected', this.state)
     }).on('close', () => {
       this.state = ApiStateKind.Disconnected | ApiStateKind.Connected
       this.emit('disconnected', this.state)
     })
 
+    this.state |= ApiStateKind.Connecting
     this.transport = transport
   }
 

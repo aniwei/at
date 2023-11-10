@@ -34,7 +34,7 @@ export class MicroTaskQueue {
 
   enqueue <T = unknown> (tick: VoidFunction, resolve: (value: unknown) => void, context: T) {
     this.queue.push({
-      handler: () => resolve(tick),
+      handler: () => resolve(tick()),
       context,
       resolve
     })

@@ -5,5 +5,7 @@ ManifestApiJSON.version = pkg.version
 
 export { ManifestApiJSON }
 
+export * from './client'
+export * from './engine'
 export * from './transport'
 export * from './at'

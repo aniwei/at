@@ -1,26 +1,49 @@
 import CanvasKitInit, { CanvasKit } from 'canvaskit-wasm'
-import { defineReadOnly, invariant } from '@at/utils'
 import { fetch } from '@at/basic'
 import { Size } from '@at/geometry'
+import { defineReadOnly, invariant, tryCatch } from '@at/utils'
 import { AssetError, AssetsManager } from '@at/asset'
+
 import { RefsRegistry } from './refs'
 import { WebGLMajorKind } from './basic'
 import { Fonts } from './font'
+import { Rasterizer } from './rasterizer'
 
 import * as Skia from './skia'
 
 
-// extend canvaskit
+// => AtRasterizer
+export class AtRasterizer extends Rasterizer {
+  static create (
+    surface: Skia.Surface,
+    devicePixelRatio: number
+  ) {
+    return super.create(
+      surface, 
+      devicePixelRatio
+    ) as AtRasterizer
+  }
+}
+
+
+//// => basic types
+// 基础类型定义
 export interface AtEngineSkia extends CanvasKit {
   FilterQuality: typeof Skia.FilterQuality,
   Clip: typeof Skia.Clip
 }
 
-//// => AtInit
-export enum AtEngineStateKind {
-  Uninitialized,
-  Initializing,
-  Initialized,
+export interface AtEnvironments {
+  SKIA_URI: string,
+  AT_ENV: AtEnvKind
+}
+
+export enum AtEngineLifecycleKind {
+  Created = 'created',
+  Initializing = 'initializing',
+  Ready = 'ready',
+  Running = 'running',
+  Destory = 'destroy'
 }
 
 export enum AtEnvKind {
@@ -29,13 +52,18 @@ export enum AtEnvKind {
   Production = 'producation'
 }
 
-export interface AtEnvironments {
-  SKIA_URI: string,
-  AT_ENV: AtEnvKind
+export interface AtEngineConfiguration {
+  size: Size,
+  devicePixelRatio: number,
+  uri: string,  
+  assets: {
+    baseURI: string,
+    rootDir: string
+  }
 }
 
-
 export abstract class AtEngine extends AssetsManager {
+  
   
   // => engine
   // Skia Runtime 对象
@@ -62,20 +90,17 @@ export abstract class AtEngine extends AssetsManager {
    * @param size 
    * @param canvas 
    */
-  static tryCreateSurface (size: Size, canvas: HTMLCanvasElement) {
+  static tryCreateSurface (size: Size, canvas: OffscreenCanvas) {
     try {
-      return AtEngine.skia.MakeWebGLCanvasSurface(canvas)
+      return AtEngine.skia.MakeWebGLCanvasSurface(canvas as unknown as HTMLCanvasElement)
     } catch (error: any) {
       console.warn(`Caught ProgressEvent with target: ${error.message}`)
     }
 
-    const versions = [
-      WebGLMajorKind.WebGL1,
-      WebGLMajorKind.WebGL2
-    ]
+    const versions = [ WebGLMajorKind.WebGL1, WebGLMajorKind.WebGL2 ]
 
     for (const ver of versions) {
-      const glContext = AtEngine.skia.GetWebGLContext(canvas, {
+      const glContext = AtEngine.skia.GetWebGLContext(canvas as unknown as HTMLCanvasElement, {
         antialias: 1,
         majorVersion: ver
       })
@@ -98,7 +123,7 @@ export abstract class AtEngine extends AssetsManager {
     }
 
     console.warn(`Caught ProgressEvent with target: Cannot create WebGL context.`)
-    return AtEngine.skia.MakeSWCanvasSurface(canvas)
+    return AtEngine.skia.MakeSWCanvasSurface(canvas as unknown as HTMLCanvasElement)
   }
 
   // => fonts
@@ -112,21 +137,67 @@ export abstract class AtEngine extends AssetsManager {
     return this._fonts
   }
 
-  // skia 对象加载状态
-  public state: AtEngineStateKind = AtEngineStateKind.Uninitialized
+  //  Engine 生命周期
+  // => 
+  public _state: AtEngineLifecycleKind = AtEngineLifecycleKind.Created
+  public get state () {
+    return this._state
+  }
+  public set state (state: AtEngineLifecycleKind) {
+    if (this._state !== state) {
+      this._state = state
+    }
+  }
+
+  // => rasterizer
+  public _rasterizer: AtRasterizer | null = null
+  public get rasterizer () {
+    if (this._rasterizer === null) {
+      const size = this.configuration.size
+      const devicePixelRatio = this.configuration.devicePixelRatio
+
+      tryCatch(() => {
+        if (this.element) {
+          const width = size.width / devicePixelRatio
+          const height = size.height / devicePixelRatio
+
+          this.element.width = width
+          this.element.height = height
+        }
+      })
+
+      const surface = AtEngine.tryCreateSurface(
+        size, 
+        this.element
+      ) 
+
+      invariant(surface)
+      this._rasterizer = AtRasterizer.create(surface, devicePixelRatio)
+    }
+
+    return this._rasterizer
+  } 
+
+  // => element
+  // 离屏绘制
+  protected _element: OffscreenCanvas | null = null
+  public get element () {
+    invariant(this._element)
+    return this._element
+  }
+  public set element (element: OffscreenCanvas) {
+    this._element = element
+  }
 
   // skia 队列
-  protected queue: VoidFunction[] = []
-  protected uri: string
+  protected queue: VoidFunction[] = []  
+  public configuration: AtEngineConfiguration
 
-  constructor (
-    uri: string, 
-    baseURI: string, 
-    rootDir: string
-  ) {
-    super(baseURI, rootDir)
+  constructor (configuration: AtEngineConfiguration) {
+    const assets = configuration.assets
+    super(assets.baseURI, assets.rootDir)
 
-    this.uri = uri
+    this.configuration = configuration
   } 
 
   /**
@@ -151,18 +222,18 @@ export abstract class AtEngine extends AssetsManager {
    * @returns {CanvasKit}
    */
   ensure (): Promise<AtEngineSkia> {
-    if (this.state === AtEngineStateKind.Initialized) {
+    if (this.state === AtEngineLifecycleKind.Ready) {
       invariant(AtEngine.skia !== null)
       return Promise.resolve(AtEngine.skia as AtEngineSkia)
-    } else if (this.state === AtEngineStateKind.Initializing) {
+    } else if (this.state === AtEngineLifecycleKind.Initializing) {
       return new Promise((resolve) => this.queue.push(() => resolve(AtEngine.skia as AtEngineSkia)))
     } else {
-      this.state = AtEngineStateKind.Initializing
+      this.state = AtEngineLifecycleKind.Initializing
       return CanvasKitInit({
-        locateFile: () => this.uri
+        locateFile: () => this.configuration.uri
       }).then((skia: CanvasKit) => {
         AtEngine.skia = skia as AtEngineSkia
-        this.state = AtEngineStateKind.Initialized
+        this.state = AtEngineLifecycleKind.Ready
 
         do {
           const callback = this.queue.shift() ?? null

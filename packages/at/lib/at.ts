@@ -1,4 +1,5 @@
-import { AtKit, AtKitConfiguration, AtRasterizerElement } from './kit'
+import { AtEngineConfiguration } from '@at/engine'
+import { AtKit } from './kit'
 
 export enum AssetsStateKind {
   Unload,
@@ -9,14 +10,14 @@ export enum AssetsStateKind {
 //// => AtInstance
 export interface AtInstanceFactory<T> {
   new (...rests: unknown[]): T
-  create <T extends AtInstance> (): T
+  create <T extends AtInstance> (configuration?: AtEngineConfiguration): T
 } 
 
 export abstract class AtInstance extends AtKit {
   static create <T extends AtInstance> (...rests: unknown[]): AtInstance
-  static create <T extends AtInstance> (element: AtRasterizerElement, options: AtKitConfiguration): AtInstance {
+  static create <T extends AtInstance> (configuration?: AtEngineConfiguration): AtInstance {
     const AtKitFactory = this as unknown as AtInstanceFactory<T>
-    return new AtKitFactory(element, options) as AtInstance
+    return new AtKitFactory(configuration) as AtInstance
   }
 
   // => skia
