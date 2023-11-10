@@ -44,6 +44,9 @@ importers:
       '@at/basic':
         specifier: workspace:^
         version: link:../basic
+      '@at/engine':
+        specifier: workspace:^
+        version: link:../engine
       '@at/utils':
         specifier: workspace:^
         version: link:../utils

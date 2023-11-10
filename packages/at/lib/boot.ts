@@ -53,7 +53,7 @@ app.start(() => {
 
   const canvas = surface.canvas
 
-  canvas.drawCircle(Offset.create(100, 100), 100, Paint.create())
+  canvas.drawCircle(Offset.create(200, 200), 100, Paint.create())
 
   surface.skia.flush()
 })
