@@ -1,7 +1,7 @@
 import { ApiStateKind, ApiTransport } from '@at/api'
 import { AtEngineConfiguration, Paint, Skia, Surface } from '@at/engine'
-import { AtInstance } from './at'
 import { Offset, Size } from '@at/geometry'
+import { AtInstance } from './at'
 
 //// => ConnectionPayload
 interface ConnectionPayload {
