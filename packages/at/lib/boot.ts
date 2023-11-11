@@ -1,5 +1,5 @@
 import { ApiStateKind, ApiTransport } from '@at/api'
-import { AtEngineConfiguration, Paint, Skia, Surface } from '@at/engine'
+import { AtEngineConfiguration, Skia, Surface } from '@at/engine'
 import { Offset, Rect, Size } from '@at/geometry'
 import { Color } from '@at/basic'
 import { BorderSide, BorderStyle, DecorationImage, ImageConfiguration, NetworkImage, Painting, Shadow } from '@at/painting'

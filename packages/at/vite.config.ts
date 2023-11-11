@@ -21,11 +21,11 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       external: [
-        '@at/api',
-        '@at/engine',
-        '@at/geometry',
-        '@at/utils',
-        'canvaskit-wasm',
+        // '@at/api',
+        // '@at/engine',
+        // '@at/geometry',
+        // '@at/utils',
+        // 'canvaskit-wasm',
       ]
     }
   },
