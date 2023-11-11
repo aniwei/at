@@ -1,10 +1,30 @@
-import { Canvas, Paint, Path, AtEngine } from '@at/engine'
-import { Rect } from '@at/geometry'
+import { Canvas, Paint, Path, AtEngine, Image, ColorFilter, Skia, ImageFilter } from '@at/engine'
+import { Offset, Rect, Size } from '@at/geometry'
+import { invariant } from '@at/utils'
+import { Color } from '@at/basic'
 
 import { BorderSide, BorderStyle } from './border'
+import { ImageCache } from './image-cache'
+import { Alignment } from './alignment'
+import { BoxFit, applyBoxFit } from './box-fit'
+import { ImageRepeat } from './decoration-image'
+import { scaleRect } from './transform'
 
+
+//// => PaintingCached
+// 绘制缓存
+export class PaintingCached {
+  static create () {
+    return new PaintingCached()
+  }
+
+  public images: ImageCache = ImageCache.create()
+}
 
 export class Painting {
+  static cached: PaintingCached = PaintingCached.create()
+
+  // 绘制矩形
   static paintBorderWithRectangle (
     canvas: Canvas,
     rect: Rect, 
@@ -16,6 +36,8 @@ export class Painting {
     const paint = Paint.create()
     paint.stroke.width = 0
 
+    // @TODO
+    // paint.effect = PathDashEffect.create([15, 5, 5, 10], 10)
     const path = Path.create()
 
     switch (top.style) {
@@ -25,7 +47,7 @@ export class Painting {
         path.moveTo(rect.left, rect.top)
         path.lineTo(rect.right, rect.top)
 
-        if (top.width == 0.0) {
+        if (top.width === 0.0) {
           paint.style = AtEngine.skia.PaintStyle.Stroke
         } else {
           paint.style = AtEngine.skia.PaintStyle.Fill
@@ -35,6 +57,7 @@ export class Painting {
         canvas.drawPath(path, paint)
         break
       }
+      
       case BorderStyle.None:
         break
     }
@@ -47,7 +70,7 @@ export class Painting {
         path.moveTo(rect.right, rect.top)
         path.lineTo(rect.right, rect.bottom)
         
-        if (right.width === 0)  {
+        if (right.width === 0.0)  {
           paint.style = AtEngine.skia.PaintStyle.Stroke
         } else {
           paint.style = AtEngine.skia.PaintStyle.Fill
@@ -69,7 +92,7 @@ export class Painting {
         path.moveTo(rect.right, rect.bottom)
         path.lineTo(rect.left, rect.bottom)
 
-        if (bottom.width === 0) {
+        if (bottom.width === 0.0) {
           paint.style = AtEngine.skia.PaintStyle.Stroke
         } else {
           paint.style = AtEngine.skia.PaintStyle.Fill
@@ -89,7 +112,7 @@ export class Painting {
         path.moveTo(rect.left, rect.bottom)
         path.lineTo(rect.left, rect.top)
 
-        if (left.width === 0) {
+        if (left.width === 0.0) {
           paint.style = AtEngine.skia.PaintStyle.Stroke
         } else {
           paint.style = AtEngine.skia.PaintStyle.Fill
@@ -103,6 +126,7 @@ export class Painting {
     }
   }
 
+  // 绘制不规则图形
   static paintBorderWithIrregular (
     canvas: Canvas,
     shape: Path, 
@@ -126,175 +150,166 @@ export class Painting {
     }
   }
 
-  // TODO
-  // static paintImage (
-  //   canvas: Canvas,
-  //   rect: Rect,
-  //   image: Image,
-  //   scale: number = 1.0,
-  //   opacity: number = 1.0,
-  //   colorFilter: ColorFilter | null = null,
-  //   fit: BoxFit | null = null,
-  //   alignment: Alignment = Alignment.CENTER,
-  //   centerSlice: Rect | null = null,
-  //   repeat: ImageRepeat = ImageRepeat.NoRepeat,
-  //   flipHorizontally: boolean = false,
-  //   invertColors: boolean = false,
-  //   filterQuality: Skia.FilterQuality = AtEngine.skia.FilterQuality.Low,
-  //   isAntiAlias: boolean = false,
-  // ) {
-  //   if (rect.isEmpty) {
-  //     return
-  //   }
+  static paintWithImage (
+    canvas: Canvas,
+    rect: Rect,
+    image: Image,
+    scale: number = 1.0,
+    opacity: number = 1.0,
+    filter: ColorFilter | null = null,
+    fit: BoxFit | null = null,
+    alignment: Alignment = Alignment.CENTER,
+    center: Rect | null = null,
+    repeat: ImageRepeat = ImageRepeat.NoRepeat,
+    flipHorizontally: boolean = false,
+    invertColors: boolean = false,
+    quality: Skia.FilterQuality = AtEngine.skia.FilterQuality.Low,
+    isAntiAlias: boolean = false,
+  ) {
+    if (rect.isEmpty) {
+      return
+    }
 
-  //   let outputSize = rect.size
-  //   let inputSize = new Size(image.width, image.height)
-  //   let sliceBorder: Size | null  
+    let output = rect.size
+    let input = Size.create(image.width, image.height)
+    let slice: Size | null  
 
-  //   if (centerSlice !== null) {
-  //     sliceBorder = inputSize.divide(scale).subtract(centerSlice.size) as Size
-  //     outputSize = outputSize.subtract(sliceBorder) as Size
-  //     inputSize = inputSize.subtract(sliceBorder.multiply(scale)) as Size
-  //   }
+    if (center !== null) {
+      slice = input.divide(scale).subtract(center.size)
+      output = output.subtract(slice)
+      input = input.subtract(slice.multiply(scale))
+    }
 
-  //   fit ??= centerSlice == null ? BoxFit.ScaleDown : BoxFit.Fill
-  //   invariant(centerSlice === null || (fit !== BoxFit.None && fit !== BoxFit.Cover))
+    fit ??= center == null ? BoxFit.ScaleDown : BoxFit.Fill
+    invariant(center === null || (fit !== BoxFit.None && fit !== BoxFit.Cover))
 
-  //   const fittedSizes = applyBoxFit(fit, inputSize.divide(scale), outputSize)
-  //   const sourceSize = fittedSizes.source.multiply(scale)
-  //   let destinationSize = fittedSizes.destination
+    const fittedSizes = applyBoxFit(fit, input.divide(scale), output)
+    const source = fittedSizes.source.multiply(scale)
+    let destination = fittedSizes.destination
     
-  //   if (centerSlice !== null) {
-  //     outputSize = outputSize.add(sliceBorder!)
-  //     destinationSize = destinationSize.add(sliceBorder!)
+    if (center !== null) {
+      output = output.add(slice!)
+      destination = destination.add(slice!)
     
-  //     invariant(sourceSize.equal(inputSize), 'centerSlice was used with a BoxFit that does not guarantee that the image is fully visible.')
-  //   }
+      invariant(source.equal(input), 'centerSlice was used with a BoxFit that does not guarantee that the image is fully visible.')
+    }
 
-  //   if (repeat !== ImageRepeat.NoRepeat && destinationSize.equal(outputSize)) {
-  //     repeat = ImageRepeat.NoRepeat
-  //   }
+    if (repeat !== ImageRepeat.NoRepeat && destination.equal(output)) {
+      repeat = ImageRepeat.NoRepeat
+    }
     
 
-  //   const paint = new AtPaint()
-  //   paint.isAntiAlias = isAntiAlias
+    const paint = Paint.create()
+    paint.isAntiAlias = isAntiAlias
 
-  //   // paint.imageFilter = At.AtImageFilter.blur(9, 9, At.TileMode.Clamp)
+    // @TODO
+    //paint.filter.image = ImageFilter.blur(9, 9, AtEngine.skia.TileMode.Clamp)
+    ImageFilter.blur(9, 9, AtEngine.skia.TileMode.Clamp)
 
-  //   if (colorFilter !== null) {
-  //     paint.colorFilter = colorFilter
-  //   }
+    if (filter !== null) {
+      // @TODO
+      // paint.filter.color = filter
+    }
 
-  //   paint.color = Color.fromRGBO(0, 0, 0, opacity)
-  //   paint.filterQuality = filterQuality
-  //   paint.invertColors = invertColors
+    paint.color = Color.fromRGBO(0, 0, 0, opacity)
+    paint.filter.quality = quality
+    // @TODO
+    // paint.invertColors = invertColors
 
-  //   const halfWidthDelta = (outputSize.width - destinationSize.width) / 2;
-  //   const halfHeightDelta = (outputSize.height - destinationSize.height) / 2;
-  //   const dx = halfWidthDelta + (flipHorizontally ? -alignment.x : alignment.x) * halfWidthDelta;
-  //   const dy = halfHeightDelta + alignment.y * halfHeightDelta;
-  //   const destinationPosition: Offset = rect.topLeft.translate(dx, dy)
-  //   const destinationRect = destinationPosition.and(destinationSize)
+    const halfWidthDelta = (output.width - destination.width) / 2
+    const halfHeightDelta = (output.height - destination.height) / 2
 
-  //   const invertedCanvas = false
+    const dx = halfWidthDelta + (flipHorizontally ? -alignment.x : alignment.x) * halfWidthDelta
+    const dy = halfHeightDelta + alignment.y * halfHeightDelta
 
-  //   const needSave = (
-  //     centerSlice !== null || 
-  //     repeat !== ImageRepeat.NoRepeat || 
-  //     flipHorizontally
-  //   )
+    const destinationPosition: Offset = rect.topLeft.translate(dx, dy)
+    const destinationRect = destinationPosition.and(destination)
+
+    const invertedCanvas = false
+
+    const saved = (
+      center !== null || 
+      repeat !== ImageRepeat.NoRepeat || 
+      flipHorizontally
+    )
   
-  //   if (needSave) {
-  //     canvas.save()
-  //   }
+    if (saved) {
+      canvas.save()
+    }
     
-  //   if (repeat !== ImageRepeat.NoRepeat) {
-  //     canvas.clipRect(rect)
-  //   }
+    if (repeat !== ImageRepeat.NoRepeat) {
+      canvas.clipRect(rect, AtEngine.skia.ClipOp.Intersect)
+    }
   
-  //   if (flipHorizontally) {
-  //     const dx = -(rect.left + rect.width / 2)
-  //     canvas.translate(-dx, 0)
-  //     canvas.scale(-1, 1)
-  //     canvas.translate(dx, 0)
-  //   }
+    if (flipHorizontally) {
+      const dx = -(rect.left + rect.width / 2)
+      canvas.translate(-dx, 0)
+      canvas.scale(-1, 1)
+      canvas.translate(dx, 0)
+    }
   
-  //   if (centerSlice === null) {
-  //     const sourceRect = alignment.inscribe(sourceSize, Offset.zero.and(inputSize))
+    if (center === null) {
+      const sourceRect = alignment.inscribe(source, Offset.ZERO.and(input))
   
-  //     if (repeat === ImageRepeat.NoRepeat) {
-  //       canvas.drawImageRect(image, sourceRect, destinationRect, paint)
-  //     } else {
-  //       for (const tileRect of createImageTileRects(rect, destinationRect, repeat)) {
-  //         canvas.drawImageRect(image, sourceRect, tileRect, paint)
-  //       }
-  //     }
-  //   } else {
-  //     canvas.scale(1 / scale, 1)
-  //     if (repeat === ImageRepeat.NoRepeat) {
-  //       canvas.drawImageNine(image, scaleRect(centerSlice, scale), scaleRect(destinationRect, scale), paint)
-  //     } else {
-  //       for (const tileRect of createImageTileRects(rect, destinationRect, repeat)) {
-  //         canvas.drawImageNine(image, scaleRect(centerSlice, scale), scaleRect(tileRect, scale), paint)
-  //       }
-  //     }
-  //   }
+      if (repeat === ImageRepeat.NoRepeat) {
+        canvas.drawImageRect(image, sourceRect, destinationRect, paint)
+      } else {
+        for (const tileRect of createImageTileRects(rect, destinationRect, repeat)) {
+          canvas.drawImageRect(image, sourceRect, tileRect, paint)
+        }
+      }
+    } else {
+      canvas.scale(1 / scale, 1)
+      if (repeat === ImageRepeat.NoRepeat) {
+        canvas.drawImageNine(image, scaleRect(center, scale), scaleRect(destinationRect, scale), paint)
+      } else {
+        for (const tileRect of createImageTileRects(rect, destinationRect, repeat)) {
+          canvas.drawImageNine(image, scaleRect(center, scale), scaleRect(tileRect, scale), paint)
+        }
+      }
+    }
   
-  //   if (needSave) {
-  //     canvas.restore()
-  //   }
+    if (saved) {
+      canvas.restore()
+    }
   
-  //   if (invertedCanvas) {
-  //     canvas.restore()
-  //   }
-  // }
+    if (invertedCanvas) {
+      canvas.restore()
+    }
+  }
 }
 
 
-// export function createImageTileRects (
-//   outputRect: Rect, 
-//   fundamentalRect: Rect, 
-//   repeat: ImageRepeat
-// ): Rect[] {
-//   let startX = 0
-//   let startY = 0
-//   let stopX = 0
-//   let stopY = 0
-//   const strideX = fundamentalRect.width
-//   const strideY = fundamentalRect.height
+export function createImageTileRects (
+  output: Rect, 
+  fundamental: Rect, 
+  repeat: ImageRepeat
+): Rect[] {
+  let startX = 0
+  let startY = 0
+  let stopX = 0
+  let stopY = 0
+  const strideX = fundamental.width
+  const strideY = fundamental.height
 
-//   if (repeat === ImageRepeat.Repeat || repeat === ImageRepeat.RepeatX) {
-//     startX = Math.floor(((outputRect.left - fundamentalRect.left) / strideX))
-//     stopX = Math.ceil(((outputRect.right - fundamentalRect.right) / strideX))
-//   }
+  if (repeat === ImageRepeat.Repeat || repeat === ImageRepeat.RepeatX) {
+    startX = Math.floor(((output.left - fundamental.left) / strideX))
+    stopX = Math.ceil(((output.right - fundamental.right) / strideX))
+  }
 
-//   if (repeat === ImageRepeat.Repeat || repeat === ImageRepeat.RepeatY) {
-//     startY = Math.floor(((outputRect.top - fundamentalRect.top) / strideY))
-//     stopY = Math.ceil(((outputRect.bottom - fundamentalRect.bottom) / strideY))
-//   }
+  if (repeat === ImageRepeat.Repeat || repeat === ImageRepeat.RepeatY) {
+    startY = Math.floor(((output.top - fundamental.top) / strideY))
+    stopY = Math.ceil(((output.bottom - fundamental.bottom) / strideY))
+  }
 
-//   const rects: Rect[] = []
+  const rects: Rect[] = []
 
-//   for (let i = startX; i <= stopX; ++i) {
-//     for (let j = startY; j <= stopY; ++j) {
-//       rects.push(fundamentalRect.shift(new Offset(i * strideX, j * strideY)))
-//     }
-//   }
+  for (let i = startX; i <= stopX; ++i) {
+    for (let j = startY; j <= stopY; ++j) {
+      rects.push(fundamental.shift(new Offset(i * strideX, j * strideY)))
+    }
+  }
 
-//   return rects
-// }
-
-/**
- * @description: 
- * @param {Rect} rect
- * @param {number} scale
- * @return {*}
- */
-export function scaleRect(rect: Rect, scale: number): Rect {
-  return Rect.fromLTRB(
-    rect.left * scale, 
-    rect.top * scale, 
-    rect.right * scale, 
-    rect.bottom * scale
-  )
+  return rects
 }
+

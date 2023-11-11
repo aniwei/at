@@ -54,7 +54,7 @@ export class AtPainting {
         path.moveTo(rect.left, rect.top)
         path.lineTo(rect.right, rect.top)
 
-        if (top.width == 0.0) {
+        if (top.width === 0.0) {
           paint.style = At.PaintStyle.Stroke
         } else {
           paint.style =  At.PaintStyle.Fill

@@ -2,7 +2,7 @@ import { ApiStateKind, ApiTransport } from '@at/api'
 import { AtEngineConfiguration, Paint, Skia, Surface } from '@at/engine'
 import { Offset, Rect, Size } from '@at/geometry'
 import { Color } from '@at/basic'
-import { BorderSide, BorderStyle, Painting } from '@at/painting'
+import { BorderSide, BorderStyle, DecorationImage, ImageConfiguration, NetworkImage, Painting, Shadow } from '@at/painting'
 import { AtInstance } from './at'
 
 
@@ -56,7 +56,7 @@ app.start(() => {
   const surface = Surface.create(App.tryCreateSurface(size, app.element) as Skia.Surface)
 
   const canvas = surface.canvas
-  const rect = Rect.fromLTWH(10, 10, 100, 100)
+  const rect = Rect.fromLTWH(10, 10, 400, 400)
 
   Painting.paintBorderWithRectangle(
     canvas,
@@ -67,5 +67,33 @@ app.start(() => {
     BorderSide.create(Color.BLACK, 1.0, BorderStyle.Solid)
   )
 
-  surface.skia.flush()
+  const image = NetworkImage.create({
+    url: '/assets/medal.png'
+  })
+
+  const decoration = DecorationImage.create({
+    image,
+    isAntiAlias: true
+  })
+
+  
+  
+  const painter = decoration.createPainter(() => {
+    painter.paint(canvas, rect, null, ImageConfiguration.EMPTY)
+    
+    const shadow = Shadow.create({
+      color: Color.create(0xff0f0ff0),
+      offset: Offset.create(10, 10),
+      blurRadius: 10
+    })
+  
+    const paint = shadow.toPaint()
+    canvas.drawRect(rect, paint)
+
+    surface.skia.flush()
+  })
+
+  
+  painter.paint(canvas, rect, null, ImageConfiguration.EMPTY)
+
 })

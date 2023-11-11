@@ -132,7 +132,7 @@ export class ProxyApp extends EventEmitter<string> {
 
       const passage = new Worker(new URL('boot', import.meta.url).href, { 
         type: 'module',
-        name: 'AtKitRuntime'
+        name: 'AtKit'
       })
       
       this.api.connect(ApiTransport.connect(port1))

@@ -50,6 +50,20 @@ export type {
 } from 'canvaskit-wasm'
 
 //// => extend Skia
+export enum Axis {
+  Horizontal,
+  Vertical
+}
+
+// => Clip
+// 裁剪方式
+export enum Clip {
+  None,
+  HardEdge,
+  AntiAlias,
+  AntiAliasWithSaveLayer,
+}
+
 export enum FilterQuality {
   None,
   Low,
@@ -57,11 +71,15 @@ export enum FilterQuality {
   High,
 }
 
-export enum Clip {
-  None,
-  HardEdge,
-  AntiAlias,
-  AntiAliasWithSaveLayer,
+
+
+// =>
+// 位图格式
+export enum ImageByteFormat {
+  RawRGBA,
+  RawStraightRGBA,
+  RawUnmodified,
+  PNG
 }
 
 //// => SkiaRef

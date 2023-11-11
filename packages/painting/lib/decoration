@@ -1,12 +1,11 @@
-/*
- * @author: Aniwei
- * @date: 2022-07-04 12:10:21
- */
 import { invariant } from '@at/utils'
 import { Offset, Size } from '@at/geometry'
 import { Subscribable, Color } from '@at/basic'
 import { Path, Paint, Canvas, Skia } from '@at/engine'
 import { Gradient } from './gradient'
+import { ImageConfiguration } from './image-provider'
+import { DecorationImage } from './decoration-image'
+import { ShapeShadows } from './shadow'
 
 
 export enum DecorationShape {
@@ -15,12 +14,8 @@ export enum DecorationShape {
   Irregular
 }
 
-export type DecorationPainterOptions<
-  B extends Decoration<B>,
-  S extends ShapeShadow<S>,
-  T extends Decoration<B, S, T>
-> = {
-  decoration: Decoration<B, S, T>, 
+export type DecorationPainterOptions = {
+  decoration: Decoration, 
   onChange: VoidFunction | null
 }
 
@@ -31,8 +26,7 @@ export abstract class DecorationPainter {
     decoration: unknown, 
     shape: unknown,
     textDirection: Skia.TextDirection,
-    // @TODO
-    // configuration: AtImageConfiguration
+    configuration: ImageConfiguration
   ): void
 
   abstract draw (
@@ -47,11 +41,7 @@ export abstract class DecorationPainter {
 }
 
 
-export abstract class DecorationCompositePainter<
-  B extends Decoration<B>,
-  S extends ShapeShadow<S>,
-  T extends Decoration<B, S, T>
-> {
+export abstract class DecorationCompositePainter {
   // => painters
   public get painters (): DecorationPainter[] {
     this.cachedBuiltInPainters ??= this.createBuiltInPainters()
@@ -62,9 +52,9 @@ export abstract class DecorationCompositePainter<
   private cachedBuiltInPainters: DecorationPainter[] | null = null
 
   public onChange: VoidFunction | null
-  public decoration: T
+  public decoration: Decoration
 
-  constructor (dectoration: T, onChange: VoidFunction | null) {
+  constructor (dectoration: Decoration, onChange: VoidFunction | null) {
     this.onChange = onChange
     this.decoration = dectoration
   }
@@ -97,11 +87,10 @@ export abstract class DecorationCompositePainter<
 
   paint (
     canvas: Canvas, 
-    decoration: Decoration<B, S, T>, 
+    decoration: Decoration, 
     shape: unknown,
     textDirection: Skia.TextDirection, 
-    // TODO
-    // configuration: AtImageConfiguration
+    configuration: ImageConfiguration
   ) {
     for (const painter of this.painters) {
       painter.paint(
@@ -109,8 +98,7 @@ export abstract class DecorationCompositePainter<
         decoration, 
         shape,
         textDirection, 
-        // TODO
-        // configuration
+        configuration
       )
     }
   }
@@ -120,15 +108,10 @@ export abstract class DecorationCompositePainter<
   }
 }
 
-export abstract class Decoration<
-  B extends Decoration<B>,
-  S extends ShapeShadow<S>,
-  T extends Decoration<B, S, T>
-> extends Subscribable {
+export abstract class Decoration extends Subscribable {
   // => isComplex
   public get isComplex () {
-    throw new Error('')
-    // return this.shadows !== null
+    return this.shadows !== null
   } 
 
   // => color
@@ -156,30 +139,28 @@ export abstract class Decoration<
   }
   
   // => image
-  // @TODO
-  // private _image: DecorationImage | null
-  // public get image (): DecorationImage | null {
-  //   return this._image
-  // }
-  // public set image (image: DecorationImage | null) {
-  //   if (this._image === null || this._image?.notEqual(image)) {
-  //     this._image = image
-  //     this.publish(`image`, image)
-  //   }
-  // }
+  private _image: DecorationImage | null
+  public get image (): DecorationImage | null {
+    return this._image
+  }
+  public set image (image: DecorationImage | null) {
+    if (this._image === null || this._image?.notEqual(image)) {
+      this._image = image
+      this.publish('image', image)
+    }
+  }
 
   // => shadows
-  // @TODO
-  // private _shadows: ShapeShadows<S> | null
-  // public get shadows (): ShapeShadows<S> | null {
-  //   return this._shadows
-  // }
-  // public set shadows (shadows: ShapeShadows<S> | null) {
-  //   if (this._shadows === null || this._shadows?.notEqual(shadows)) {
-  //     this._shadows = shadows
-  //     this.publish(`shadows`, shadows)
-  //   }
-  // }
+  private _shadows: ShapeShadows | null
+  public get shadows (): ShapeShadows | null {
+    return this._shadows
+  }
+  public set shadows (shadows: ShapeShadows | null) {
+    if (this._shadows === null || this._shadows?.notEqual(shadows)) {
+      this._shadows = shadows
+      this.publish('shadows', shadows)
+    }
+  }
 
   // => gradient
   private _gradient: Gradient | null
@@ -189,7 +170,7 @@ export abstract class Decoration<
   public set gradient (gradient: Gradient | null) {
     if (this._gradient === null || this._gradient?.notEqual(gradient)) {
       this._gradient = gradient
-      this.publish(`gradient`, gradient)
+      this.publish('gradient', gradient)
     }
   }
 
@@ -201,7 +182,7 @@ export abstract class Decoration<
   public set backgroundBlendMode (blendMode: Skia.BlendMode | null) {
     if (this.backgroundBlendMode !== blendMode) {
       this._backgroundBlendMode = blendMode
-      this.publish(`backgroundBlendMode`, blendMode)
+      this.publish('backgroundBlendMode', blendMode)
     }
   }
 
@@ -216,9 +197,8 @@ export abstract class Decoration<
    */
   constructor (
     color: Color | null = null,
-    // @TODO
-    // image: DecorationImage | null = null,
-    // shadows: ShapeShadows<S> | null = null,
+    image: DecorationImage | null = null,
+    shadows: ShapeShadows | null = null,
     gradient: Gradient | null = null,
     backgroundBlendMode: Skia.BlendMode | null,
     shape: DecorationShape = DecorationShape.Rectangle
@@ -226,31 +206,31 @@ export abstract class Decoration<
     super()
 
     this._color = color
-    // this._image = image
-    // this._shadows = shadows
-    this._gradient = gradient
-    this._backgroundBlendMode = backgroundBlendMode
-    this._shape = shape
+    this.image = image
+    this.shadows = shadows
+    this.gradient = gradient
+    this.backgroundBlendMode = backgroundBlendMode
+    this.shape = shape
   }
 
-  abstract lerpFrom (a: Decoration<B, S, T> | null, t: number): Decoration<B, S, T> | null 
-  abstract lerpTo (b: Decoration<B, S, T> | null, t: number): Decoration<B, S, T> | null
+  abstract lerpFrom (a: Decoration | null, t: number): Decoration | null 
+  abstract lerpTo (b: Decoration | null, t: number): Decoration | null
 
   abstract clipPath (
     rect: unknown,
     textDirection: Skia.TextDirection
   ): Path
 
-  abstract scale (factor: number): Decoration<B, S, T>
+  abstract scale (factor: number): Decoration
   abstract copyWith (
     color: Color | null,
-    // image: DecorationImage | null,
-    // shadows: ShapeShadows<S> | null,
+    image: DecorationImage | null,
+    shadows: ShapeShadows | null,
     gradient: Gradient | null,
     backgroundBlendMode: Skia.BlendMode | null,
     shape: DecorationShape,
     ...rest: unknown[]
-  ): Decoration<B, S, T>
+  ): Decoration
 
   abstract hitTest (
     size: Size, 
@@ -258,19 +238,19 @@ export abstract class Decoration<
     textDirection: Skia.TextDirection
   ): boolean
 
-  abstract createPainter (onChange: VoidFunction | null): DecorationCompositePainter<B, S, T> 
+  abstract createPainter (onChange: VoidFunction | null): DecorationCompositePainter 
 
-  equal (other: Decoration<B, S, T> | null): boolean {
-    return !!(
+  equal (other: Decoration | null): boolean {
+    return (
       other instanceof Decoration &&
-      other.color?.equal(this.color) &&
-      // other.image === this.image &&
-      other.gradient?.equal(this.gradient) 
-      // other.shadows?.equal(other.shadows)
+      !!other.color?.equal(this.color) &&
+      other.image === this.image &&
+      !!other.gradient?.equal(this.gradient)  &&
+      !!other.shadows?.equal(other.shadows)
     )
   }
 
-  notEqual (other: Decoration<B, S, T> | null) {
+  notEqual (other: Decoration | null) {
     return !this.equal(other)
   }
 }

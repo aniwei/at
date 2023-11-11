@@ -9,13 +9,15 @@ export default defineConfig({
       formats: ['cjs', 'es']
     },
     sourcemap: true,
+    minify: false,
     rollupOptions: {
       external: [
+        '@at/asset',
         '@at/basic',
-        '@at/utils',
-        '@at/math',
         '@at/engine',
         '@at/geometry',
+        '@at/math',
+        '@at/utils',
       ]
     }
   }

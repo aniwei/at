@@ -345,6 +345,9 @@ importers:
 
   packages/painting:
     dependencies:
+      '@at/asset':
+        specifier: workspace:^
+        version: link:../asset
       '@at/basic':
         specifier: workspace:^
         version: link:../basic

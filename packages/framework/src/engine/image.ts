@@ -106,8 +106,8 @@ export class AtImage {
    * @description: 
    * @return {Image}
    */  
-  clone (): AtImage  {
-    return AtImage.cloneOf(this.box)
+  clone (): Image  {
+    return Image.cloneOf(this.box) as Image
   }
 
   /**

@@ -1,3 +1,6 @@
+import bytes from 'bytes'
+import * as idle from './idle'
+
 export * from './api'
 export * from './array-like'
 export * from './color'
@@ -9,4 +12,8 @@ export * from './node'
 export * from './subscribable'
 export * from './transport'
 export * from './work'
-export * as idle from './idle'
+
+export {
+  bytes,
+  idle
+}

@@ -5,21 +5,21 @@ import { nextTick } from '@at/basic'
 import { 
   AtEngine, 
   AtEngineLifecycleKind,
-  AtEngineConfiguration
+  AtEngineConfiguration,
+  AtEngineEnvironments
 } from '@at/engine'
 import { Size } from '@at/geometry'
 
-export enum AtEnvKind {
+
+// 运行时环境
+export enum AtKitEnvKind {
   Dev = 'development',
   Stage = 'stage',
   Production = 'producation'
 }
 
-export interface Environments {
-  SKIA_URI: string,
-  AT_ENV: AtEnvKind,
-  BASE_URI: string,
-  ROOT_DIR: string
+export interface AtKitEnvironments extends AtEngineEnvironments {
+  AT_ENV: AtKitEnvKind,
 }
 
 
@@ -35,33 +35,19 @@ export abstract class AtKit extends AtEngine {
     return new AtKitFactory(configuration) as AtKit
   }
 
-  /**
-   * 获取环境变了
-   * @param {string} key 
-   * @param {string?} defaultEnv 
-   * @returns 
-   */
-  static env (key: string, defaultEnv?: string) {
-    if (Reflect.has(process.env, key)) {
-      return Reflect.get(process.env, key) as string
-    }
-
-    return defaultEnv as string
-  }
-
   // => isDev
   public get isDev () {
-    return AtKit.env('AT_ENV', AtEnvKind.Production) === AtEnvKind.Dev
+    return AtKit.env('AT_ENV', AtKitEnvKind.Production) === AtKitEnvKind.Dev
   }
 
   // => isStage
   public get isStage () {
-    return AtKit.env('AT_ENV', AtEnvKind.Production) === AtEnvKind.Stage
+    return AtKit.env('AT_ENV', AtKitEnvKind.Production) === AtKitEnvKind.Stage
   }
 
   // => isProduction
   public get isProduction () {
-    return AtKit.env('AT_ENV', AtEnvKind.Production) === AtEnvKind.Production
+    return AtKit.env('AT_ENV', AtKitEnvKind.Production) === AtKitEnvKind.Production
   }
 
   // => state
@@ -79,7 +65,7 @@ export abstract class AtKit extends AtEngine {
   }
 
   public api: ApiService = ApiService.create()
-  public environments: Environments
+  public environments: AtKitEnvironments
 
   constructor (configuration?: AtEngineConfiguration) {
     const env = process.env
@@ -98,7 +84,7 @@ export abstract class AtKit extends AtEngine {
       }
     })
 
-    this.environments = process.env as unknown as  Environments
+    this.environments = process.env as unknown as  AtKitEnvironments
   }
 
   

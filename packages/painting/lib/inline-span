@@ -1,0 +1,88 @@
+import { invariant } from '@at/utils'
+import { RenderComparison } from '../at'
+import { AtTextPaintingStyle } from './text-style'
+import { AtPlaceholderDimensions } from './text-painter'
+import { AtParagraphBuilder, AtTextPosition } from '../engine/text'
+
+//// => Accumulator
+export class Accumulator {
+  static create (value: number) {
+    return new Accumulator(value)
+  }
+
+  public value: number
+
+  constructor (value: number = 0) {
+    this.value = value
+  }
+  
+  increment (addend: number) {
+    invariant(addend >= 0)
+    this.value += addend
+  }
+}
+
+export type InlineSpanVisitor = (span: InlineSpan) => boolean
+
+export abstract class InlineSpan {
+  style: AtTextPaintingStyle | null
+
+  constructor (style: AtTextPaintingStyle | null) {
+    this.style = style
+  }
+
+  abstract build (
+    builder: AtParagraphBuilder, 
+    textScaleFactor: number, 
+    dimensions: AtPlaceholderDimensions[] | null
+  ): void
+
+  abstract visit (visitor: InlineSpanVisitor): boolean
+  abstract getSpanForPositionVisitor (position: AtTextPosition, offset: Accumulator): InlineSpan | null
+  abstract computeToPlainText (buffer: string, includePlaceholders: boolean): string
+  abstract codeUnitAtVisitor (index: number, offset: Accumulator): number | null
+  abstract compareTo (other: InlineSpan): RenderComparison
+
+  getSpanForPosition (position: AtTextPosition): InlineSpan | null {
+    const offset = new Accumulator()
+    let result: InlineSpan | null = null
+    this.visit((span: InlineSpan) => {
+      result = span.getSpanForPositionVisitor(position, offset)
+      return result === null
+    })
+
+    return result
+  }
+
+  toPlainText (includePlaceholders = true) {
+    const text = this.computeToPlainText(``, includePlaceholders)
+    return text
+  }
+
+  codeUnitAt (index: number): number | null {
+    if (index < 0) {
+      return null
+    }
+
+    const offset = new Accumulator()
+    let result: number | null = null
+    
+    this.visit((span: InlineSpan) => {
+      result = span.codeUnitAtVisitor(index, offset)
+      return result === null
+    })
+
+    return result
+  }
+  
+  equal (other: InlineSpan | null) {
+    return (
+      other instanceof InlineSpan &&
+      other.style === this.style
+    )
+  }
+
+  notEqual (other: InlineSpan | null) {
+    return !this.equal(other)
+  }
+}

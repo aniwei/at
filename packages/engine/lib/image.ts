@@ -1,3 +1,4 @@
+import { AtEngine } from '.'
 import * as Skia from './skia'
 
 export interface ImageRefBoxFactory<T> {
@@ -7,8 +8,8 @@ export interface ImageRefBoxFactory<T> {
 export abstract class ImageRefBox {
   static create<T> (...rests: unknown[]): T
   static create<T> (box: Skia.Image | Skia.SkiaRefBox<ImageRefBox, Skia.Image>): T {
-    const Factory = this as unknown as ImageRefBoxFactory<T>
-    return new Factory(box)
+    const ImageRefBoxFactory = this as unknown as ImageRefBoxFactory<T>
+    return new ImageRefBoxFactory(box)
   }
 
   /**
@@ -20,6 +21,17 @@ export abstract class ImageRefBox {
     const ref = this.create(box) as ImageRefBox
     return ref
   }
+
+   // => width
+   public get width (): number {
+    return this.skia.width()
+  }
+
+  // => height
+  public get height (): number {
+    return this.skia.height()
+  }
+
 
   // => skia
   public get skia () {
@@ -39,33 +51,78 @@ export abstract class ImageRefBox {
     this.box.ref(this)
   }
 
-  dispose () {
-    this.disposed = true
-    this.box.unref(this)
+  async toByteData (format: Skia.ImageByteFormat = AtEngine.skia.ImageByteFormat.RawRGBA) {
+    return this.readPixelsFromSkiaImage(format)
+  }
+
+  /**
+   * @param {ImageByteFormat} format
+   * @return {ArrayBuffer | Buffer}
+   */
+  readPixelsFromSkiaImage (format: Skia.ImageByteFormat) {
+    const alphaType = AtEngine.skia.ImageByteFormat.RawStraightRGBA 
+      ? AtEngine.skia.AlphaType.Unpremul 
+      : AtEngine.skia.AlphaType.Premul
+
+    let bytes: Uint8Array
+    if (
+      format === AtEngine.skia.ImageByteFormat.RawRGBA || 
+      format === AtEngine.skia.ImageByteFormat.RawStraightRGBA
+    ) {
+      bytes = this.skia.readPixels(0, 0, {
+        width: this.width,
+        height: this.height,
+        alphaType,
+        colorType: AtEngine.skia.ColorType.RGBA_8888,
+        colorSpace: AtEngine.skia.ColorSpace.SRGB
+      }) as Uint8Array
+    } else {
+      bytes = this.skia?.encodeToBytes() as Uint8Array
+    }
+
+    return bytes.buffer
+  }
+
+  /**
+   * @param {Image} other
+   * @return {boolean}
+   */  
+  isCloneOf (other: ImageRefBox) {
+    return (
+      other instanceof ImageRefBox && 
+      other.skia.isAliasOf(this.skia)
+    )
   }
 
   clone (): ImageRefBox {
     return ImageRefBox.cloneOf(this.box)
   }
+
+  dispose () {
+    this.disposed = true
+    this.box.unref(this)
+  }
+
 }
 
 export class Image extends ImageRefBox {
-  // => width
-  public get width (): number {
-    return this.skia!.width()
-  }
-
-  // => height
-  public get height (): number {
-    return this.skia!.height()
-  }
-
   // => image
   public get image () {
     return this.box.skia
   }
 
+  clone (): Image {
+    return super.clone() as Image
+  }
+
+  isCloneOf (other: Image): boolean {
+    return super.isCloneOf(other)
+  }
+
   toString () {
-    return `Image([width: ${this.width}], [height: ${this.height}])`
+    return `Image(
+      [width: ${this.width}], 
+      [height: ${this.height}]
+    )`
   }
 }

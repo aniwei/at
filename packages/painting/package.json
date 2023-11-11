@@ -24,6 +24,7 @@
     "vite": "^4.3.9"
   },
   "dependencies": {
+    "@at/asset": "workspace:^",
     "@at/basic": "workspace:^",
     "@at/engine": "workspace:^",
     "@at/geometry": "workspace:^",

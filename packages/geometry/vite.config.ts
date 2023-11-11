@@ -7,6 +7,7 @@ export default defineConfig({
       name: 'index',
       fileName: 'index'
     },
+    minify: false,
     sourcemap: true,
     rollupOptions: {
       external: [

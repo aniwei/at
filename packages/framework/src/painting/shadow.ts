@@ -6,7 +6,7 @@ import { AtMaskFilter } from '../engine/mask-filter'
 import { convertRadiusToSigma, lerp } from '../basic/helper'
 import { At } from '../at'
 
-export abstract class AtShapeShadow<T extends AtShapeShadow<T>> {
+export abstract class ShapeShadow<T extends ShapeShadow<T>> {
   public color: Color
   public offset: Offset
   public blurRadius: number
@@ -48,20 +48,20 @@ export abstract class AtShapeShadow<T extends AtShapeShadow<T>> {
    * @param {number} factor 
    * @returns {AtShadow}
    */
-  scale (factor: number): AtShapeShadow<T>  {
+  scale (factor: number): ShapeShadow<T>  {
     return new AtShadow(this.color, this.offset.multiply(factor), this.blurRadius * factor)
   }
 
-  equal (other: AtShapeShadow<T> | null) {
+  equal (other: ShapeShadow<T> | null) {
     return (
-      other instanceof AtShapeShadow &&
+      other instanceof ShapeShadow &&
       other.color == this.color &&
       other.offset == this.offset &&
       other.blurRadius == this.blurRadius
     )
   }
 
-  notEqual (other: AtShapeShadow<T> | null) {
+  notEqual (other: ShapeShadow<T> | null) {
     return !this.equal(other)
   }
 
@@ -70,7 +70,7 @@ export abstract class AtShapeShadow<T extends AtShapeShadow<T>> {
    * @returns {string}
    */
   toString () {
-    return `AtShapeShadow(${this.color}, ${this.offset}, ${this.blurRadius})`
+    return `ShapeShadow(${this.color}, ${this.offset}, ${this.blurRadius})`
   }
 }
 
@@ -80,7 +80,7 @@ export type AtShadowOptions = {
   blurRadius: number,
 }
 
-export class AtShadow extends AtShapeShadow<AtShadow> {
+export class AtShadow extends ShapeShadow<AtShadow> {
   static create (options: AtShadowOptions) {
     return new AtShadow(
       options.color,
@@ -151,9 +151,9 @@ export class AtShadow extends AtShapeShadow<AtShadow> {
   }
 }
 
-export class AtShapeShadows<T extends AtShapeShadow<T>> extends Array<T> {
-  equal (shadows: AtShapeShadows<T> | null) {
-    if (shadows instanceof AtShapeShadows) {
+export class ShapeShadows<T extends ShapeShadow<T>> extends Array<T> {
+  equal (shadows: ShapeShadows<T> | null) {
+    if (shadows instanceof ShapeShadows) {
       if (shadows.length !== this.length) {
         return false
       }
@@ -177,12 +177,12 @@ export class AtShapeShadows<T extends AtShapeShadow<T>> extends Array<T> {
    * @param shadows 
    * @returns 
    */
-  notEqual (shadows: AtShapeShadows<T> | null) {
+  notEqual (shadows: ShapeShadows<T> | null) {
     return !this.equal(shadows)
   }
 }
 
-export class AtShadows extends AtShapeShadows<AtShadow> {
+export class AtShadows extends ShapeShadows<AtShadow> {
   static create (shadows: AtShadow[]) {
     return new AtShadows(...shadows)
   }

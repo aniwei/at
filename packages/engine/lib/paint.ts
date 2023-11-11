@@ -115,6 +115,12 @@ export class Stroke extends PaintRefBox {
     }
   }
   protected _join: Skia.StrokeJoin = AtEngine.skia.StrokeJoin.Miter
+
+  constructor (...rests: unknown[])
+  constructor (ref: Skia.Paint)
+  constructor (box: Skia.Paint | Skia.SkiaRefBox<PaintRefBox, Skia.Paint>) {
+    super(box)
+  }
 }
 
 //// => Filter
@@ -202,7 +208,6 @@ export class Filter extends PaintRefBox {
   }
   public set shader (shader: Shader | null) {
     if (this.shader !== shader) {
-      this._shader = shader
       this.skia.setShader(this.shader?.withQuality(this.quality) ?? null)
     }
   }
@@ -215,13 +220,22 @@ export class Filter extends PaintRefBox {
   public set quality (quality: Skia.FilterQuality) {
     if (this.quality !== quality) {
       this._quality = quality
-      invariant(this.shader)
-      this.skia.setShader((this.shader).withQuality(this.quality))
+      if (this.shader !== null) {
+        this.skia.setShader(this.shader.withQuality(this.quality))
+      }
     }
   }
 
   public original: ManagedSkiaColorFilter | null = null
   public effective: ManagedSkiaColorFilter | null = null
+
+  constructor (...rests: unknown[])
+  constructor (ref: Skia.Paint)
+  constructor (box: Skia.Paint | Skia.SkiaRefBox<PaintRefBox, Skia.Paint>) {
+    super(box)
+
+    
+  }
 }
 
 
@@ -256,15 +270,6 @@ export class Paint extends PaintRefBox {
     }
     return this._filter
   }
-  public set filter (filter: Filter | null) {
-    if (this._filter !== filter) {
-      if (this._filter !== null) {
-        this._filter.dispose()
-      }
-      
-      this._filter = filter
-    }
-   }
 
   // => blendMode
   protected _blendMode: Skia.BlendMode = AtEngine.skia.BlendMode.SrcOver
@@ -316,6 +321,7 @@ export class Paint extends PaintRefBox {
   }
 
   // => effect
+  protected _effect: PathDashEffect | null = null
   public get effect () {
     return this._effect
   }
@@ -325,7 +331,7 @@ export class Paint extends PaintRefBox {
       this.skia.setPathEffect(effect?.skia ?? null)
     }
   }
-  private _effect: PathDashEffect | null = null
+  
 
   /**
    * @param {Paint} skia

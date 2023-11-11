@@ -151,7 +151,7 @@ export class AtImageInfo {
   
   clone (): AtImageInfo {
     return new AtImageInfo(
-      this.image.clone(),
+      this.image.clone() as Imag,
       this.scale
     )
   }

@@ -3,8 +3,33 @@ import { Color, Equalable } from '@at/basic'
 import { Offset } from '@at/geometry'
 import { toSigma } from './to'
 import { Paint } from './paint'
+import { AtEngine } from './engine'
+import { MaskFilter } from './mask-filter'
 
+
+//// => Shadow
+// 阴影
+export interface ShadowFactory<T> {
+  new (
+    color: Color,
+    offset: Offset,
+    blurRadius: number
+  ): T
+  create (
+    color: Color,
+    offset: Offset,
+    blurRadius: number
+  ): T
+}
 export class Shadow extends Equalable<Shadow> {
+  static create <T extends Shadow> (
+    color: Color,
+    offset: Offset,
+    blurRadius: number
+  ) {
+    const ShadowFactory = this as unknown as ShadowFactory<T>
+    return new ShadowFactory(color, offset, blurRadius)
+  }
   /**
    * 
    * @param a 
@@ -96,19 +121,6 @@ export class Shadow extends Equalable<Shadow> {
     this.offset = offset ?? Offset.ZERO
     this.blurRadius = blurRadius ?? 0.0
   }
-  
-  /**
-   * 
-   * @returns {Paint}
-   */
-  toPaint (): Paint {
-    const paint = new Paint()
-    
-    paint.color = this.color
-    // paint.filter = AtMaskFilter.blur(AtEngine.skia.BlurStyle.Normal, this.blurSigma)
-
-    return paint
-  }
 
   /**
    * 
@@ -144,6 +156,19 @@ export class Shadow extends Equalable<Shadow> {
    */
   notEqual (other: Shadow | null): boolean {
     return !this.equal(other)
+  }
+
+  /**
+   * 
+   * @returns {Paint}
+   */
+  toPaint (): Paint {
+    const paint = new Paint()
+    
+    paint.color = this.color
+    paint.filter.mask = MaskFilter.blur(AtEngine.skia.BlurStyle.Normal, this.blurSigma)
+
+    return paint
   }
 
   toString () {

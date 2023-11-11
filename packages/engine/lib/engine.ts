@@ -1,18 +1,19 @@
 import CanvasKitInit, { CanvasKit } from 'canvaskit-wasm'
-import { fetch } from '@at/basic'
-import { Size } from '@at/geometry'
 import { defineReadOnly, invariant, tryCatch } from '@at/utils'
 import { AssetError, AssetsManager } from '@at/asset'
+import { fetch } from '@at/basic'
+import { Size } from '@at/geometry'
 
 import { RefsRegistry } from './refs'
 import { WebGLMajorKind } from './basic'
 import { Fonts } from './font'
 import { Rasterizer } from './rasterizer'
+import { AnimatedImage } from './animated-image'
 
 import * as Skia from './skia'
 
 
-// => AtRasterizer
+//// => AtRasterizer
 export class AtRasterizer extends Rasterizer {
   static create (
     surface: Skia.Surface,
@@ -25,31 +26,32 @@ export class AtRasterizer extends Rasterizer {
   }
 }
 
-
 //// => basic types
 // 基础类型定义
 export interface AtEngineSkia extends CanvasKit {
+  Axis: typeof Skia.Axis,
+  Clip: typeof Skia.Clip,
   FilterQuality: typeof Skia.FilterQuality,
-  Clip: typeof Skia.Clip
+  ImageByteFormat: typeof Skia.ImageByteFormat
 }
 
-export interface AtEnvironments {
+// 环境变量
+export interface AtEngineEnvironments {
   SKIA_URI: string,
-  AT_ENV: AtEnvKind
+  BASE_URI: string,
+  ROOT_DIR: string,
+  IMAGE_CACHE_MAXIMUM_BYTES: number,
+  IMAGE_CACHE_MAXIMUM_SIZE: number
 }
 
+
+// 运行时生命周期
 export enum AtEngineLifecycleKind {
   Created = 'created',
   Initializing = 'initializing',
   Ready = 'ready',
   Running = 'running',
   Destory = 'destroy'
-}
-
-export enum AtEnvKind {
-  Dev = 'development',
-  Stage = 'stage',
-  Production = 'producation'
 }
 
 export interface AtEngineConfiguration {
@@ -75,8 +77,11 @@ export abstract class AtEngine extends AssetsManager {
   static set skia (skia: AtEngineSkia) {
     /// => extending skia
     // 扩展 Skia
-    defineReadOnly(skia, 'FilterQuality', Skia.FilterQuality)
+    defineReadOnly(skia, 'Axis', Skia.Axis)
     defineReadOnly(skia, 'Clip', Skia.Clip)
+    defineReadOnly(skia, 'FilterQuality', Skia.FilterQuality)
+    defineReadOnly(skia, 'ImageByteFormat', Skia.ImageByteFormat)
+    
  
     this._skia = skia
   }
@@ -84,6 +89,18 @@ export abstract class AtEngine extends AssetsManager {
   // => refs
   // skia 对象引用管理
   static refs: RefsRegistry = RefsRegistry.create()
+
+  /**
+   * 
+   * @param {string} url 
+   * @param {ImageChunkListener} chunkCallback 
+   * @returns {Promise<AtImage>}
+   */
+  static instantiateImageCodec (uri: string) {
+    return fetch(uri).then(res => res.arrayBuffer()).then((data: ArrayBuffer) => {
+      return AnimatedImage.decodeFromBytes(new Uint8Array(data), uri)
+    })
+  }
 
   /**
    * 
@@ -124,6 +141,20 @@ export abstract class AtEngine extends AssetsManager {
 
     console.warn(`Caught ProgressEvent with target: Cannot create WebGL context.`)
     return AtEngine.skia.MakeSWCanvasSurface(canvas as unknown as HTMLCanvasElement)
+  }
+
+  /**
+   * 获取环境变了
+   * @param {string} key 
+   * @param {string?} defaultEnv 
+   * @returns 
+   */
+  static env (key: string, defaultEnv?: string) {
+    if (Reflect.has(process.env, key)) {
+      return Reflect.get(process.env, key) as string
+    }
+
+    return defaultEnv as string
   }
 
   // => fonts
@@ -192,6 +223,7 @@ export abstract class AtEngine extends AssetsManager {
   // skia 队列
   protected queue: VoidFunction[] = []  
   public configuration: AtEngineConfiguration
+
 
   constructor (configuration: AtEngineConfiguration) {
     const assets = configuration.assets
