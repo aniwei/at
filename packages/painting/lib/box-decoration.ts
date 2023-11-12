@@ -1,39 +1,36 @@
-/*
- * @author: Aniwei
- * @date: 2022-07-04 12:10:21
- */
 import { invariant } from '@at/utils'
 import { Color } from '@at/basic'
+import { Paint, Path, Canvas, Skia } from '@at/engine'
+import { Offset, Rect, Size } from '@at/geometry'
 import { Gradient } from './gradient'
 import { BorderRadius } from './border-radius'
 import { BoxBorder } from './box-border'
-import { Paint, Path, Canvas } from '@at/engine'
-import { Offset, Rect, Size } from '@at/geometry'
 import { ImageConfiguration } from './image-provider'
 import { BoxShadow, BoxShadows } from './box-shadow'
 import { BorderShape } from './border'
 import { Decoration, DecorationCompositePainter, DecorationPainter, DecorationShape } from './decoration'
 
 import type { EdgeInsetsGeometry } from './edge-insets'
-import type { BlendMode, TextDirection } from '../engine/skia'
 import type { DecorationImage } from './decoration-image'
 
 
-export abstract  class BoxDecorationPainter extends DecorationPainter {
+//// => BoxDecorationPainter
+// 盒子画笔
+export abstract class BoxDecorationPainter extends DecorationPainter {
   /**
    * 
    * @param {Canvas} canvas 
    * @param {BoxDecoration} decoration 
    * @param {Rect} rect 
    * @param {Paint} paint 
-   * @param {TextDirection} textDirection 
+   * @param {Skia.TextDirection} textDirection 
    */
-  draw (
+  paint (
     canvas: Canvas, 
     decoration: BoxDecoration, 
     rect: Rect,
+    textDirection: Skia.TextDirection,
     paint: Paint,
-    textDirection: TextDirection
   ): void {
     switch (decoration.shape) {
       case DecorationShape.Circle: {
@@ -54,10 +51,10 @@ export abstract  class BoxDecorationPainter extends DecorationPainter {
       }
     }
   }
-
-  dispose () {}
 }
 
+//// => BoxDecorationShadowsPainter
+// 阴影画笔
 export class BoxDecorationShadowsPainter extends BoxDecorationPainter {
   /**
    * 
@@ -71,8 +68,7 @@ export class BoxDecorationShadowsPainter extends BoxDecorationPainter {
     canvas: Canvas, 
     decoration: BoxDecoration, 
     shape: Rect, 
-    textDirection: TextDirection, 
-    configuration: ImageConfiguration
+    textDirection: Skia.TextDirection, 
   ): void {
     if (decoration.shadows !== null) {
       for (const shadow of decoration.shadows) {
@@ -81,22 +77,22 @@ export class BoxDecorationShadowsPainter extends BoxDecorationPainter {
 
         switch (decoration.shape) {
           case DecorationShape.Rectangle: {
-            this.draw(
+            super.paint(
               canvas, 
               decoration, 
               bounds,
-              paint,
               textDirection,
+              paint,
             )
             break
           }
           case DecorationShape.Circle: {
-            this.draw(
+            super.paint(
               canvas, 
               decoration, 
               bounds,
+              textDirection,
               paint,
-              textDirection
             )
             break
           }
@@ -106,7 +102,8 @@ export class BoxDecorationShadowsPainter extends BoxDecorationPainter {
   }
 }
 
-
+//// => BoxDecorationBackgroundColorPainter
+// 背景色
 export class BoxDecorationBackgroundColorPainter extends BoxDecorationPainter {
   static create () {
     return new BoxDecorationBackgroundColorPainter()
@@ -117,7 +114,7 @@ export class BoxDecorationBackgroundColorPainter extends BoxDecorationPainter {
   createBuiltInPainter (
     rect: Rect, 
     decoration: BoxDecoration,
-    textDirection: TextDirection
+    textDirection: Skia.TextDirection
   ) {
     const paint = Paint.create()
     
@@ -130,7 +127,7 @@ export class BoxDecorationBackgroundColorPainter extends BoxDecorationPainter {
     }
 
     if (decoration.gradient !== null) {
-      paint.shader = decoration.gradient.createShader(rect, textDirection)
+      paint.filter.shader = decoration.gradient.createShader(rect, textDirection)
     }
 
     return paint 
@@ -141,18 +138,16 @@ export class BoxDecorationBackgroundColorPainter extends BoxDecorationPainter {
     canvas: Canvas, 
     decoration: BoxDecoration, 
     shape: Rect, 
-    textDirection: TextDirection, 
-    configuration: ImageConfiguration
+    textDirection: Skia.TextDirection
   ): void {
     if (decoration.color !== null || decoration.gradient !== null) {
       const painter = this.createBuiltInPainter(shape, decoration, textDirection)
-      invariant(painter)
-      this.draw(
+      super.paint(
         canvas, 
         decoration, 
         shape,
-        painter, 
         textDirection, 
+        painter, 
       )
     }
   }
@@ -160,13 +155,13 @@ export class BoxDecorationBackgroundColorPainter extends BoxDecorationPainter {
 
 export class BoxDecorationBackgroundImagePainter extends BoxDecorationPainter {
   
-  static create (onChange: VoidCallback | null) {
+  static create (onChange: VoidFunction | null) {
     return new BoxDecorationBackgroundImagePainter(onChange)
   }
 
-  protected onChange: VoidCallback | null
+  protected onChange: VoidFunction | null
 
-  constructor (onChange: VoidCallback | null = null) {
+  constructor (onChange: VoidFunction | null = null) {
     super()
 
     this.onChange = onChange
@@ -176,29 +171,28 @@ export class BoxDecorationBackgroundImagePainter extends BoxDecorationPainter {
     canvas: Canvas, 
     decoration: BoxDecoration, 
     rect: Rect,
-    textDirection: TextDirection, 
-    configuration: ImageConfiguration
+    textDirection: Skia.TextDirection, 
+    configuration: unknown
   ): void {
     if (decoration.image !== null) {
 
-      const painter = decoration.image.createPainter(this.onChange)
+      const painter = decoration.image.createPainter(this.onChange ?? (() => {}))
       let clipPath: Path | null = null
         
       switch (decoration.shape) {
         case DecorationShape.Circle: {
-          invariant(decoration.borderRadius === null, `The decoration borderRadius cannot be null.`)
           const center = rect.center
           const radius = rect.shortestSide / 2.0
           const square = Rect.fromCircle(center, radius)
-          clipPath = new Path()
+          clipPath = Path.create()
           clipPath.addOval(square)
           break
         }
   
         case DecorationShape.Rectangle: {
-          clipPath = new Path()
+          clipPath = Path.create()
           if (decoration.borderRadius !== null) {
-            clipPath.addRRect(decoration.borderRadius!.resolve(configuration.textDirection).toRRect(rect))
+            clipPath.addRRect(decoration.borderRadius!.resolve((configuration as ImageConfiguration).textDirection).toRRect(rect))
           } else {
             clipPath.addRect(rect)
           }
@@ -206,8 +200,12 @@ export class BoxDecorationBackgroundImagePainter extends BoxDecorationPainter {
         }
       }
       
-      invariant(clipPath !== null)
-      painter.paint(canvas, rect, clipPath, configuration)
+      painter.paint(
+        canvas, 
+        rect, 
+        clipPath, 
+        configuration as ImageConfiguration
+      )
     }
   }
 
@@ -223,9 +221,9 @@ export class BoxDecorationBorderPainter extends BoxDecorationPainter {
     canvas: Canvas, 
     decoration: BoxDecoration, 
     shape: Rect, 
-    textDirection: TextDirection, 
-    configuration: ImageConfiguration): void 
-  {
+    textDirection: Skia.TextDirection, 
+    configuration: unknown
+  ): void {
     if (decoration.border !== null) {
       decoration.border.paint(
         canvas, 
@@ -239,31 +237,25 @@ export class BoxDecorationBorderPainter extends BoxDecorationPainter {
 }
 
 
+//// => BoxDecorationCompositePainter
+// 复合画笔
 export type BoxDecorationCompositePainterOptions = {
   decoration: BoxDecoration, 
-  onChange: VoidCallback | null
+  onChange: VoidFunction | null
 }
 
-/**
- * @description: 盒子画笔
- */
-export class BoxDecorationCompositePainter extends DecorationCompositePainter<
-  BoxBorder,
-  BoxShadow,
-  BoxDecoration
-> {
+export class BoxDecorationCompositePainter extends DecorationCompositePainter<BoxShadow> {
   static create (
     decoration: BoxDecoration,
-    onChange: VoidCallback | null = null
+    onChange: VoidFunction | null = null
   ) {
     return new BoxDecorationCompositePainter(decoration, onChange)
   }
 
-   
   createBuiltInBackgroundColorPainter (): BoxDecorationBackgroundColorPainter {
     return BoxDecorationBackgroundColorPainter.create()
   }
-  createBuiltInBackgroundImagePainter (onChange: VoidCallback | null): BoxDecorationBackgroundImagePainter {
+  createBuiltInBackgroundImagePainter (onChange: VoidFunction | null): BoxDecorationBackgroundImagePainter {
     return BoxDecorationBackgroundImagePainter.create(onChange)
   }
 
@@ -278,9 +270,10 @@ export class BoxDecorationCompositePainter extends DecorationCompositePainter<
   createBuiltInPainters () {
     const painters = super.createBuiltInPainters()
 
-    if (this.decoration.border !== null) {
-      painters.push(this.createBuiltInBorderPainter())
-    }
+    // @TODO
+    // if (this.decoration.border !== null) {
+    //   painters.push(this.createBuiltInBorderPainter())
+    // }
 
     return painters
   }
@@ -289,7 +282,7 @@ export class BoxDecorationCompositePainter extends DecorationCompositePainter<
     canvas: Canvas, 
     decoration: BoxDecoration, 
     shape: Offset, 
-    textDirection: TextDirection, 
+    textDirection: Skia.TextDirection, 
     configuration: ImageConfiguration
   ): void {
     invariant(configuration.size !== null)
@@ -308,15 +301,11 @@ export type BoxDecorationOptions = {
   borderRadius?: BorderRadius | null,
   shadows?: BoxShadows | null,
   gradient?: Gradient | null,
-  backgroundBlendMode?: BlendMode | null,
+  backgroundBlendMode?: Skia.BlendMode | null,
   shape?: DecorationShape | null,
 }
 
-export class BoxDecoration extends Decoration<
-  BoxBorder,
-  BoxShadow,
-  BoxDecoration
-> {
+export class BoxDecoration extends Decoration<BoxShadow> {
   
   static create (options?: BoxDecorationOptions) {
     return new BoxDecoration(
@@ -343,8 +332,6 @@ export class BoxDecoration extends Decoration<
     b: BoxDecoration | null, 
     t: number
   ): BoxDecoration | null {
-    invariant(t !== null, `The argument "t" cannot be null.`)
-
     if (a === null && b === null) {
       return null
     }
@@ -385,7 +372,7 @@ export class BoxDecoration extends Decoration<
   public set border (border: BoxBorder | null) {
     if (this._border?.notEqual(border)) {
       this._border = border
-      this.publish(`border`, border)
+      this.publish('border', border)
     }
   }
 
@@ -397,7 +384,7 @@ export class BoxDecoration extends Decoration<
   public set borderRadius (borderRadius: BorderRadius | null) {
     if (this._borderRadius?.notEqual(borderRadius)) {
       this._borderRadius = borderRadius
-      this.publish(`borderRadius`, borderRadius)
+      this.publish('borderRadius', borderRadius)
     }
   }
 
@@ -411,18 +398,25 @@ export class BoxDecoration extends Decoration<
     image: DecorationImage | null = null,
     shadows: BoxShadows | null = null,
     gradient: Gradient | null = null,
-    backgroundBlendMode: BlendMode | null = null,
+    backgroundBlendMode: Skia.BlendMode | null = null,
     border: BoxBorder | null = null,
     borderRadius: BorderRadius | null = null,
     shape: DecorationShape = DecorationShape.Rectangle,
   ) {
-    super(color, image, shadows, gradient, backgroundBlendMode,  shape)
+    super(
+      color, 
+      image, 
+      shadows, 
+      gradient, 
+      backgroundBlendMode,  
+      shape
+    )
 
     this._border = border
     this._borderRadius = borderRadius
   }
 
-  createPainter (onChange: VoidCallback | null): BoxDecorationCompositePainter {
+  createPainter (onChange: VoidFunction | null): BoxDecorationCompositePainter {
     invariant(onChange !== null || this.image === null)
     return BoxDecorationCompositePainter.create(this, onChange)
   }
@@ -465,12 +459,11 @@ export class BoxDecoration extends Decoration<
 
   clipPath (
     rect: Rect, 
-    textDirection: TextDirection
+    textDirection: Skia.TextDirection
   ): Path {
-    const path = new Path()
+    const path = Path.create()
     switch (this.shape) {
       case DecorationShape.Circle: {
-        invariant(rect instanceof Rect)
         const center = rect.center
         const radius = rect.shortestSide / 2.0
         const square = Rect.fromCircle(center, radius)
@@ -512,7 +505,7 @@ export class BoxDecoration extends Decoration<
    * @param {BorderRadiusGeometry} borderRadius 
    * @param {BoxShadow[]} boxShadow 
    * @param {Gradient | null} gradient 
-   * @param {BlendMode} backgroundBlendMode 
+   * @param {Skia.BlendMode} backgroundBlendMode 
    * @param {DecorationShape | null} shape 
    * @returns {PathDecoration}
    */
@@ -521,7 +514,7 @@ export class BoxDecoration extends Decoration<
     image: DecorationImage | null = null,
     shadows: BoxShadows | null = null,
     gradient: Gradient | null = null,
-    backgroundBlendMode: BlendMode | null = null,
+    backgroundBlendMode: Skia.BlendMode | null = null,
     shape: DecorationShape = DecorationShape.Rectangle,
     border: BoxBorder | null = null,
     borderRadius: BorderRadius | null = null,
@@ -541,21 +534,20 @@ export class BoxDecoration extends Decoration<
   hitTest (
     size: Size, 
     position: Offset , 
-    textDirection: TextDirection
+    textDirection: Skia.TextDirection
   ): boolean {
-    invariant(this.shape !== null, `The argument "shap" cannot be null.`)
-    invariant((Offset.zero.and(size)).contains(position))
+    invariant((Offset.ZERO.and(size)).contains(position))
 
     switch (this.shape) {
       case DecorationShape.Rectangle: {
         if (this.borderRadius !== null) {
-          const bounds = this.borderRadius!.resolve(textDirection).toRRect(Offset.zero.and(size))
+          const bounds = this.borderRadius!.resolve(textDirection).toRRect(Offset.ZERO.and(size))
           return bounds.contains(position)
         }
         return true
       }
       case DecorationShape.Circle: {
-        const center = size.center(Offset.zero)
+        const center = size.center(Offset.ZERO)
         const distance = position.subtract(center).distance
         return distance <= Math.min(size.width, size.height) / 2.0
       }
@@ -568,12 +560,17 @@ export class BoxDecoration extends Decoration<
   }
 
   equal (other: BoxDecoration | null): boolean {
-    return (
+    return !!(
+      other instanceof BoxDecoration && 
       super.equal(other) &&
-      !!other?.borderRadius?.equal(this.borderRadius) &&
-      !!other?.border?.equal(this.border) && 
-      !!other?.backgroundBlendMode === this.backgroundBlendMode
+      other.borderRadius?.equal(this.borderRadius) &&
+      other?.border?.equal(this.border) && 
+      other?.backgroundBlendMode === this.backgroundBlendMode
     )
+  }
+
+  notEqual(other: BoxDecoration | null): boolean {
+    return !this.equal(other)
   }
 }
 

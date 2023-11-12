@@ -201,7 +201,12 @@ export class BorderRadius extends BorderRadiusGeometry {
     bottomRight: Radius = Radius.ZERO,
     bottomLeft: Radius = Radius.ZERO,
   ) {
-    return new BorderRadius(topLeft, topRight, bottomRight, bottomLeft,)
+    return new BorderRadius(
+      topLeft, 
+      topRight, 
+      bottomRight, 
+      bottomLeft
+    )
   }
 
   constructor (

@@ -70,7 +70,11 @@ export class BorderSide {
     invariant(a.color === b.color, `Merged borders must be the same colo.`)
     invariant(a.style === b.style, `Merged borders must be the same style.`)
 
-    return new BorderSide(a.color, a.width + b.width, a.style)
+    return new BorderSide(
+      a.color, 
+      a.width + b.width, 
+      a.style
+    )
   }
 
   /**
@@ -154,9 +158,9 @@ export class BorderSide {
   }
 
   public style: BorderStyle
-  public position: BorderPosition
   public color: Color
   public pettern: number[]
+  public position: BorderPosition
   public width: number = 1.0
 
   constructor (

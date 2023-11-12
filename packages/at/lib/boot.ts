@@ -2,7 +2,16 @@ import { ApiStateKind, ApiTransport } from '@at/api'
 import { AtEngineConfiguration, Skia, Surface } from '@at/engine'
 import { Offset, Rect, Size } from '@at/geometry'
 import { Color } from '@at/basic'
-import { BorderSide, BorderStyle, DecorationImage, ImageConfiguration, NetworkImage, Painting, Shadow } from '@at/painting'
+import { 
+  BoxBorder, 
+  BorderSide, 
+  BorderStyle, 
+  BoxDecoration, 
+  DecorationImage, 
+  ImageConfiguration, 
+  NetworkImage, 
+  Painting 
+} from '@at/painting'
 import { AtInstance } from './at'
 
 
@@ -58,6 +67,8 @@ app.start(() => {
   const canvas = surface.canvas
   const rect = Rect.fromLTWH(10, 10, 400, 400)
 
+
+
   Painting.paintBorderWithRectangle(
     canvas,
     rect,
@@ -67,33 +78,33 @@ app.start(() => {
     BorderSide.create(Color.BLACK, 1.0, BorderStyle.Solid)
   )
 
-  const image = NetworkImage.create({
-    url: '/assets/medal.png'
+  const box = BoxDecoration.create({
+    image: DecorationImage.create({
+      image: NetworkImage.create({
+        url: '/assets/medal.png'
+      }),
+      isAntiAlias: true
+    }),
+    border: BoxBorder.all(
+      Color.BLACK,
+      10,
+      BorderStyle.Solid
+    )
   })
-
-  const decoration = DecorationImage.create({
-    image,
-    isAntiAlias: true
-  })
-
   
   
-  const painter = decoration.createPainter(() => {
-    painter.paint(canvas, rect, null, ImageConfiguration.EMPTY)
-    
-    const shadow = Shadow.create({
-      color: Color.create(0xff0f0ff0),
-      offset: Offset.create(10, 10),
-      blurRadius: 10
-    })
-  
-    const paint = shadow.toPaint()
-    canvas.drawRect(rect, paint)
-
+  const painter = box.createPainter(() => {
     surface.skia.flush()
   })
 
-  
-  painter.paint(canvas, rect, null, ImageConfiguration.EMPTY)
+  painter.paint(
+    canvas,
+    box,
+    Offset.create(10, 10),
+    AtInstance.skia.TextDirection.LTR,
+    ImageConfiguration.create({
+      size: Size.create(400, 400)
+    }),
+  )
 
 })

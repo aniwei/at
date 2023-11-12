@@ -1,10 +1,11 @@
-import { invariant } from '@at/utils'
 import { Offset } from '@at/geometry'
 import { Color } from '@at/basic'
 import * as Engine from '@at/engine'
 
+//// => ShapeShadow
+// 图形引用
 export abstract class ShapeShadow extends Engine.Shadow {
-  static create <T extends ShapeShadow> (...rests: unknown[]): T
+  static create <T extends ShapeShadow> (...rests: unknown[]): ShapeShadow
   static create (
     color: Color,
     offset: Offset,
@@ -51,6 +52,7 @@ export abstract class ShapeShadow extends Engine.Shadow {
   }
 }
 
+//// => Shadow
 export type ShadowOptions = {
   color: Color,
   offset: Offset,
@@ -67,8 +69,14 @@ export class Shadow extends ShapeShadow {
   }
 }
 
-export class ShapeShadows extends Array<ShapeShadow> {
-  equal (shadows: ShapeShadows | null) {
+//// => ShapeShadows
+export class ShapeShadows<T extends ShapeShadow> extends Array<T> {
+  /**
+   * 是否相等
+   * @param {ShapeShadows} shadows 
+   * @returns 
+   */
+  equal (shadows: ShapeShadows<T> | null) {
     if (shadows instanceof ShapeShadows) {
       if (shadows.length !== this.length) {
         return false
@@ -89,43 +97,11 @@ export class ShapeShadows extends Array<ShapeShadow> {
   }
 
   /**
-   * 
-   * @param shadows 
+   * 是否相等
+   * @param {ShapeShadows} shadows 
    * @returns 
    */
-  notEqual (shadows: ShapeShadows | null) {
+  notEqual (shadows: ShapeShadows<T> | null) {
     return !this.equal(shadows)
-  }
-}
-
-export class Shadows extends ShapeShadows {
-  static create (shadows: Shadow[]) {
-    return new Shadows(...shadows)
-  }
-
-  static lerp (a: Shadows | null, b: Shadows | null, t: number ): Shadows | null {
-    invariant(t != null, `The argument "t" cannot be null.`)
-    if (a === null && b === null) {
-      return null
-    }
-
-    a ??= Shadows.create([])
-    b ??= Shadows.create([])
-    const result: Shadow[] = []
-    const size = Math.min(a.length, b.length)
-    
-    for (let i = 0; i < size; i += 1) {
-      result.push(Shadow.lerp(a[i], b[i], t) as Shadow)
-    }
-
-    for (let i = size; i < a.length; i += 1) {
-      result.push(a[i].scale(1.0 - t))
-    }
-
-    for (let i = size; i < b.length; i += 1) {
-      result.push(b[i].scale(t))
-    }
-
-    return Shadows.create(result)
   }
 }

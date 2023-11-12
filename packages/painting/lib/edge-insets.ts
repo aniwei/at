@@ -43,13 +43,13 @@ export abstract class EdgeInsetsGeometry {
     }
 
     return MixedEdgeInsets.fromLRSETB(
-      lerp(a.left, b.left, t)!,
-      lerp(a.right, b.right, t)!,
-      lerp(a.start, b.start, t)!,
-      lerp(a.end, b.end, t)!,
-      lerp(a.top, b.top, t)!,
-      lerp(a.bottom, b.bottom, t)!,
-    );
+      lerp(a.left, b.left, t),
+      lerp(a.right, b.right, t),
+      lerp(a.start, b.start, t),
+      lerp(a.end, b.end, t),
+      lerp(a.top, b.top, t),
+      lerp(a.bottom, b.bottom, t),
+    )
   }
 
   get isNonNegative (): boolean {
@@ -178,7 +178,14 @@ export abstract class EdgeInsetsGeometry {
   }
 
   toString () {
-    return `EdgeInsetsGeometry()`
+    return `EdgeInsetsGeometry(
+      [bottom]: ${this.bottom},
+      [end]: ${this.end},
+      [left]: ${this.left},
+      [right]: ${this.right},
+      [start]: ${this.start},
+      [top]: ${this.top},
+    )`
   }
 }
 
@@ -201,10 +208,10 @@ export class EdgeInsets extends EdgeInsetsGeometry {
     }
 
     return EdgeInsets.fromLTRB(
-      lerp(a.left, b.left, t)!,
-      lerp(a.top, b.top, t)!,
-      lerp(a.right, b.right, t)!,
-      lerp(a.bottom, b.bottom, t)!,
+      lerp(a.left, b.left, t),
+      lerp(a.top, b.top, t),
+      lerp(a.right, b.right, t),
+      lerp(a.bottom, b.bottom, t),
     )
   }
 
@@ -432,10 +439,10 @@ export class EdgeInsetsDirectional extends EdgeInsetsGeometry {
       return a.multiply(1.0 - t)
     }
     return EdgeInsetsDirectional.fromSTEB(
-      lerp(a.start, b.start, t)!,
-      lerp(a.top, b.top, t)!,
-      lerp(a.end, b.end, t)!,
-      lerp(a.bottom, b.bottom, t)!,
+      lerp(a.start, b.start, t),
+      lerp(a.top, b.top, t),
+      lerp(a.end, b.end, t),
+      lerp(a.bottom, b.bottom, t),
     );
   }
 

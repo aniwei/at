@@ -26,9 +26,9 @@ export class Shadow extends Equalable<Shadow> {
     color: Color,
     offset: Offset,
     blurRadius: number
-  ) {
+  ): Shadow {
     const ShadowFactory = this as unknown as ShadowFactory<T>
-    return new ShadowFactory(color, offset, blurRadius)
+    return new ShadowFactory(color, offset, blurRadius) as Shadow
   }
   /**
    * 

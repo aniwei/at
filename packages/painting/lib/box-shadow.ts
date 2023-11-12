@@ -1,8 +1,8 @@
-import { invariant, lerp } from '@at/utils'
+import { UnimplementedError, lerp } from '@at/utils'
 import { Color } from '@at/basic'
 import { Offset } from '@at/geometry'
 import { AtEngine, MaskFilter, Paint, Skia } from '@at/engine'
-import { ShapeShadow } from './shadow'
+import { ShapeShadow, ShapeShadows } from './shadow'
 
 export type BoxShadowOptions = {
   color?: Color
@@ -18,14 +18,14 @@ export class BoxShadow extends ShapeShadow {
    * @param options 
    * @returns 
    */
-  static create <T extends BoxShadow> (options: BoxShadowOptions) {
+  static create (options: BoxShadowOptions) {
     return new BoxShadow(
       options.color,
       options.offset,
       options.blurRadius,
       options.spreadRadius,
       options.blurStyle
-    ) as T
+    ) as BoxShadow
   }
 
   /**
@@ -35,9 +35,7 @@ export class BoxShadow extends ShapeShadow {
    * @param {number} t 
    * @returns {BoxShadow | null}
    */
-  static lerp(a: BoxShadow | null, b: BoxShadow | null, t: number): BoxShadow | null {
-    
-
+  static lerp (a: BoxShadow | null, b: BoxShadow | null, t: number): BoxShadow | null {
     if (a === null && b === null) {
       return null
     }
@@ -47,7 +45,7 @@ export class BoxShadow extends ShapeShadow {
     }
 
     if (b === null) {
-      return a.scale(1.0 - t);
+      return a.scale(1.0 - t)
     }
 
     return new BoxShadow(
@@ -69,18 +67,19 @@ export class BoxShadow extends ShapeShadow {
    * @returns {BoxShadow[] | null}
    */
   static lerpList (
-    a: ArrayLike<BoxShadow> | null, 
-    b: ArrayLike<BoxShadow>,
+    a: BoxShadow[] | null, 
+    b: BoxShadow[],
     t: number
   ): BoxShadow[] | null {
-    if (a === null && b === null) {
-      return null
-    }
-    a ??= []
-    b ??= []
-    const commonLength = Math.min(a.length, b.length)
+    throw new UnimplementedError()
+    // if (a === null && b === null) {
+    //   return null
+    // }
+    // a ??= []
+    // b ??= []
+    // // const commonLength = Math.min(a.length, b.length)
 
-    return []
+    // return []
   }
 
   public spreadRadius: number
@@ -150,11 +149,19 @@ export class BoxShadow extends ShapeShadow {
   }
 
   toString () {
-    return `BoxShadow(${this.color}, ${this.offset}, ${this.blurRadius}, ${this.spreadRadius}, ${this.blurStyle})`
+    return `BoxShadow(
+      [color]: ${this.color}, 
+      [offset]: ${this.offset}, 
+      [blurRadius]: ${this.blurRadius}, 
+      [spreadRadius]: ${this.spreadRadius},
+      [blurStyle]: ${this.blurStyle}
+    )`
   } 
 }
 
-export class BoxShadows extends ShapeShadows { 
+//// => BoxShadows
+// 盒子阴影
+export class BoxShadows extends ShapeShadows<BoxShadow> { 
   static create (shadows: BoxShadow[]) {
     return new BoxShadows(...shadows)
   }
