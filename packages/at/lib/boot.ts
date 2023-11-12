@@ -92,19 +92,24 @@ app.start(() => {
     )
   })
   
+  const configuration =  ImageConfiguration.create({
+    size: Size.create(400, 400)
+  })
   
   const painter = box.createPainter(() => {
+    paint()
     surface.skia.flush()
   })
 
-  painter.paint(
-    canvas,
-    box,
-    Offset.create(10, 10),
-    AtInstance.skia.TextDirection.LTR,
-    ImageConfiguration.create({
-      size: Size.create(400, 400)
-    }),
-  )
+  const paint = () => {
+    painter.paint(
+      canvas,
+      box,
+      Offset.create(10, 10),
+      AtInstance.skia.TextDirection.LTR,
+      configuration,
+    )
+  }
 
+  paint()
 })
