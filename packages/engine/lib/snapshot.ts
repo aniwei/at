@@ -275,7 +275,7 @@ export class DrawImageNineCommand extends PaintCommand {
       this.image.skia,
       this.center,
       this.dest,
-      this.paint.filter?.quality === AtEngine.skia.FilterQuality.None 
+      this.paint.filter?.quality === AtEngine.skia.FilterQualityKind.None 
         ? AtEngine.skia.FilterMode.Nearest 
         : AtEngine.skia.FilterMode.Linear,
       this.paint.skia
@@ -646,8 +646,8 @@ export class SaveLayerWithFilterCommand extends PaintCommand {
 //// => TransformCommand
 // 形变操作
 export class TransformCommand extends PaintCommand {
-  protected matrix4: ArrayLike<number>
-  constructor (matrix4: ArrayLike<number>) {
+  protected matrix4: number[]
+  constructor (matrix4: number[]) {
     super()
 
     this.matrix4 = matrix4

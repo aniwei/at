@@ -1,16 +1,14 @@
 import { ApiStateKind, ApiTransport } from '@at/api'
 import { AtEngineConfiguration, Skia, Surface } from '@at/engine'
-import { Offset, Rect, Size } from '@at/geometry'
+import { Offset, Size } from '@at/geometry'
 import { Color } from '@at/basic'
 import { 
   BoxBorder, 
-  BorderSide, 
   BorderStyle, 
   BoxDecoration, 
   DecorationImage, 
   ImageConfiguration, 
   NetworkImage, 
-  Painting 
 } from '@at/painting'
 import { AtInstance } from './at'
 
@@ -65,19 +63,6 @@ app.start(() => {
   const surface = Surface.create(App.tryCreateSurface(size, app.element) as Skia.Surface)
 
   const canvas = surface.canvas
-  const rect = Rect.fromLTWH(10, 10, 400, 400)
-
-
-
-  Painting.paintBorderWithRectangle(
-    canvas,
-    rect,
-    BorderSide.create(Color.BLACK, 1.0, BorderStyle.Solid),
-    BorderSide.create(Color.BLACK, 1.0, BorderStyle.Solid),
-    BorderSide.create(Color.BLACK, 1.0, BorderStyle.Solid),
-    BorderSide.create(Color.BLACK, 1.0, BorderStyle.Solid)
-  )
-
   const box = BoxDecoration.create({
     image: DecorationImage.create({
       image: NetworkImage.create({

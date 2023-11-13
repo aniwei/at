@@ -254,7 +254,15 @@ export class Color extends ArrayLike<Color> {
     ) >>> 0
   }
 
-  [n: number]: number
+  // => fresh
+  public get fresh () {
+    const color = new Float32Array(4)
+    color[0] = this.red / 255.0
+    color[1] = this.green / 255.0
+    color[2] = this.blue / 255.0
+    color[3] = this.alpha / 255.0
+    return color
+  }
 
   /**
    * 构造函数
@@ -362,6 +370,8 @@ export class Color extends ArrayLike<Color> {
    * @returns {string}
    */
   toString (format?: 'hex' | '') {
-    return `Color([value]: ${this.value})`
+    return `Color(
+      [value]: ${this.value}
+    )`
   }
 }

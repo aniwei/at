@@ -37,17 +37,26 @@ export abstract class AtKit extends AtEngine {
 
   // => isDev
   public get isDev () {
-    return AtKit.env('AT_ENV', AtKitEnvKind.Production) === AtKitEnvKind.Dev
+    return AtKit.env<AtKitEnvKind>(
+      'AT_ENV', 
+      AtKitEnvKind.Production
+    ) === AtKitEnvKind.Dev
   }
 
   // => isStage
   public get isStage () {
-    return AtKit.env('AT_ENV', AtKitEnvKind.Production) === AtKitEnvKind.Stage
+    return AtKit.env<AtKitEnvKind>(
+      'AT_ENV', 
+      AtKitEnvKind.Stage
+    ) === AtKitEnvKind.Stage
   }
 
   // => isProduction
   public get isProduction () {
-    return AtKit.env('AT_ENV', AtKitEnvKind.Production) === AtKitEnvKind.Production
+    return AtKit.env<AtKitEnvKind>(
+      'AT_ENV', 
+      AtKitEnvKind.Production
+    ) === AtKitEnvKind.Production
   }
 
   // => state
@@ -102,7 +111,7 @@ export abstract class AtKit extends AtEngine {
       return Promise.all(fonts.map(font => {
         return this.load(font.dir)
           .then(res => res.arrayBuffer())
-          .then(data => this.fonts.register(data, font.family))
+          .then(data => AtEngine.fonts.register(data, font.family))
       }))
     })
     .then(() => this.api.Engine.events.publish('resource.fonts.loader.change', [{

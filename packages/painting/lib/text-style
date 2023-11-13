@@ -1,18 +1,8 @@
 import { invariant } from '@at/utils' 
-import { At, RenderComparison } from '../at'
-import { Color } from '../basic/color'
-import { AtPaint } from '../engine/paint'
-import { AtShadow } from '../engine/shadow'
+import { Color } from '@at/basic'
+import { Paint, Shadow, Skia } from '@at/engine'
 import { TextOverflow } from './text-painter'
-import { lerp, listEquals, listNotEquals } from '../basic/helper'
-import { 
-  DecorationStyle, 
-  FontSlant, 
-  FontWeight, 
-  TextAlign, 
-  TextBaseline, 
-  TextDirection 
-} from '../engine/skia'
+import { lerp, listEquals, listNotEquals } from '@at/utils'
 import { 
   AtParagraphStyle, 
   AtStrutStyle, 
@@ -24,24 +14,37 @@ import {
 } from '../engine/text'
 
 export type TextPaintingStyleOptions = {
+  // 是否继承
   inherit?: boolean,
+  // 字体颜色
   color?: Color,
+  // 背景颜色
   backgroundColor?: Color,
+  // 字号
   fontSize?: number,
-  fontWeight?: FontWeight,
-  fontStyle?: FontSlant,
+  // 字体
+  fontWeight?: Skia.FontWeight,
+  // 字体样式
+  fontStyle?: Skia.FontSlant,
+  // 字间距
   letterSpacing?: number,
+  // 词间距
   wordSpacing?: number,
-  textBaseline?: TextBaseline,
+  // 基础线
+  textBaseline?: Skia.TextBaseline,
+  // 高度
   height?: number,
   leadingDistribution?: TextLeadingDistribution,
-  foreground?: AtPaint,
-  background?: AtPaint,
-  shadows?: AtShadow[],
+  // 前景画笔
+  foreground?: Paint,
+  // 背景画笔
+  background?: Paint,
+  // 阴影
+  shadows?: Shadow[],
   fontFeatures?: AtFontFeature[],
   decoration?: AtTextDecoration,
   decorationColor?: Color,
-  decorationStyle?: DecorationStyle,
+  decorationStyle?: Skia.DecorationStyle,
   decorationThickness?: number,
   fontFamily?: string,
   fontFamilyFallback?: string[],

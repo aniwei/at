@@ -53,7 +53,7 @@ export class AtCanvas {
     invariant(path !== null, `The path cannot be null.`)
     invariant(doAntiAlias !== null, `The doAntiAlias cannot be null.`)
 
-    this.skia.clipPath(path.skia!, At.ClipOp.Intersect, doAntiAlias)
+    this.Skia.ClipKindPath(path.skia!, At.ClipOp.Intersect, doAntiAlias)
   }
 
   /**
@@ -66,7 +66,7 @@ export class AtCanvas {
     invariant(rrectIsValid(rrect), `The argument rrect is invalid.`)
     invariant(doAntiAlias !== null, `The argument doAntiAlias cannot be null.`)
 
-    this.skia.clipRRect(rrect, At.ClipOp.Intersect, doAntiAlias)
+    this.Skia.ClipKindRRect(rrect, At.ClipOp.Intersect, doAntiAlias)
   }
 
   /**
@@ -80,7 +80,7 @@ export class AtCanvas {
     invariant(clipOp !== null, `The argument clipOp cannot be null.`)
     invariant(doAntiAlias !== null, `The argument doAntiAlias cannot be null.`)
 
-    this.skia.clipRect(rect, clipOp, doAntiAlias)
+    this.Skia.ClipKindRect(rect, clipOp, doAntiAlias)
   }
 
   /**

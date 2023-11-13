@@ -2,85 +2,8 @@ import { invariant, UnimplementedError } from '@at/utils'
 import { Equalable } from '@at/basic'
 import { AtEngine } from './engine'
 
-//// => Skia
-export type {
-  Affinity,
-  AnimatedImage,
-  BlendMode,
-  BlurStyle,
-  Canvas,
-  ClipOp,
-  ColorFilter,
-  DecorationStyle,
-  FillType,
-  FilterMode,
-  FilterOptions,
-  Font,
-  FontWeight,
-  FontSlant,
-  GrDirectContext,
-  Image,
-  ImageFilter,
-  MallocObj,
-  MaskFilter,
-  MipmapMode,
-  Path,
-  Paint,
-  PaintStyle,
-  Paragraph,
-  ParagraphStyle,
-  ParagraphBuilder,
-  PathEffect,
-  PathOp,
-  PlaceholderAlignment,
-  SkPicture as Picture,
-  PictureRecorder,
-  RectHeightStyle,
-  RectWithDirection,
-  Shader,
-  StrokeCap,
-  StrokeJoin,
-  Surface,
-  TextAlign,
-  TextBaseline,
-  TextDirection,
-  TileMode,
-  Typeface,
-  TypefaceFontProvider
-} from 'canvaskit-wasm'
+import type * as CanvasKit from 'canvaskit-wasm'
 
-//// => extend Skia
-export enum Axis {
-  Horizontal,
-  Vertical
-}
-
-// => Clip
-// 裁剪方式
-export enum Clip {
-  None,
-  HardEdge,
-  AntiAlias,
-  AntiAliasWithSaveLayer,
-}
-
-export enum FilterQuality {
-  None,
-  Low,
-  Medium,
-  High,
-}
-
-
-
-// =>
-// 位图格式
-export enum ImageByteFormat {
-  RawRGBA,
-  RawStraightRGBA,
-  RawUnmodified,
-  PNG
-}
 
 //// => SkiaRef
 // WASM 数据结构
@@ -270,4 +193,92 @@ export class SkiaRefBox<R, T extends SkiaRef = SkiaRef> {
     this.delete()
     this.disposed = true
   }
+}
+
+
+//// => Skia
+export type {
+  Affinity,
+  AnimatedImage,
+  BlendMode,
+  BlurStyle,
+  Canvas,
+  ClipOp,
+  ColorFilter,
+  DecorationStyle,
+  FillType,
+  FilterMode,
+  FilterOptions,
+  Font,
+  FontWeight,
+  FontSlant,
+  FontStyle,
+  GrDirectContext,
+  Image,
+  ImageFilter,
+  LineMetrics,
+  MallocObj,
+  MaskFilter,
+  MipmapMode,
+  Path,
+  Paint,
+  PaintStyle,
+  Paragraph,
+  ParagraphBuilder,
+  PathEffect,
+  PathOp,
+  PlaceholderAlignment,
+  SkPicture as Picture,
+  StrutStyle,
+  PictureRecorder,
+  PositionWithAffinity,
+  RectHeightStyle,
+  RectWithDirection,
+  Shader,
+  StrokeCap,
+  StrokeJoin,
+  Surface,
+  TextAlign,
+  TextBaseline,
+  TextDirection,
+  TextHeightBehavior,
+  TileMode,
+  Typeface,
+  TypefaceFontProvider
+} from 'canvaskit-wasm'
+
+
+export interface ParagraphStyle extends CanvasKit.ParagraphStyle, SkiaRef { }
+export interface TextStyle extends CanvasKit.TextStyle, SkiaRef { }
+
+//// => extend Skia
+export enum AxisKind {
+  Horizontal,
+  Vertical
+}
+
+// => Clip
+// 裁剪方式
+export enum ClipKind {
+  None,
+  HardEdge,
+  AntiAlias,
+  AntiAliasWithSaveLayer,
+}
+
+// => FilterQuality
+export enum FilterQualityKind {
+  None,
+  Low,
+  Medium,
+  High,
+}
+
+// =>
+// 位图格式
+export enum ImageByteFormatKind {
+  RawRGBA,
+  RawStraightRGBA,
+  RawUnmodified,
+  PNG
 }

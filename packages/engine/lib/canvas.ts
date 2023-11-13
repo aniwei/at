@@ -136,7 +136,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
     invariant(offsetIsValid(point), `The argument point is invalid.`)
     const quality = paint.filter?.quality
     
-    if (quality === AtEngine.skia.FilterQuality.High) {
+    if (quality === AtEngine.skia.FilterQualityKind.High) {
       this.skia.drawImageCubic(
         image.skia,
         point.dx,
@@ -150,10 +150,10 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
         image.skia,
         point.dx,
         point.dy,
-        quality === AtEngine.skia.FilterQuality.None 
+        quality === AtEngine.skia.FilterQualityKind.None 
           ? AtEngine.skia.FilterMode.Nearest 
           : AtEngine.skia.FilterMode.Linear,
-          quality === AtEngine.skia.FilterQuality.Medium 
+          quality === AtEngine.skia.FilterQualityKind.Medium 
           ? AtEngine.skia.MipmapMode.Linear 
           : AtEngine.skia.MipmapMode.None,
         paint.skia,
@@ -173,7 +173,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
     invariant(rectIsValid(dst), 'The "dst" argument was invalid.')
 
     const quality = paint.filter?.quality
-    if (quality === AtEngine.skia.FilterQuality.High) {
+    if (quality === AtEngine.skia.FilterQualityKind.High) {
       this.skia.drawImageRectCubic(
         image.skia,
         src,
@@ -187,10 +187,10 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
         image.skia,
         src,
         dst,
-        quality === AtEngine.skia.FilterQuality.None 
+        quality === AtEngine.skia.FilterQualityKind.None 
           ? AtEngine.skia.FilterMode.Nearest 
           : AtEngine.skia.FilterMode.Linear,
-          quality === AtEngine.skia.FilterQuality.Medium 
+          quality === AtEngine.skia.FilterQualityKind.Medium 
           ? AtEngine.skia.MipmapMode.Linear 
           : AtEngine.skia.MipmapMode.None,
         paint.skia,
@@ -213,7 +213,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
       image.skia,
       center,
       dist,
-      paint.filter?.quality === AtEngine.skia.FilterQuality.None 
+      paint.filter?.quality === AtEngine.skia.FilterQualityKind.None 
         ? AtEngine.skia.FilterMode.Nearest 
         : AtEngine.skia.FilterMode.Linear,
       paint.skia,

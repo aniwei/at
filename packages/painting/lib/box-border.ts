@@ -30,11 +30,11 @@ export class BoxBorder extends ShapeBorder<BoxBorder> {
     width = 1.0,
     style = BorderStyle.Solid
   ) {
-    const side = new BorderSide(
+    const side = BorderSide.create({
       color,
       width,
       style
-    )
+    })
 
     return BoxBorder.fromBorderSide(side)
   }
@@ -52,6 +52,7 @@ export class BoxBorder extends ShapeBorder<BoxBorder> {
     invariant(side.style !== BorderStyle.None)
     const width = side.width
     const paint = side.toPaint()
+
     const radius = (rect.shortestSide - width) / 2.0
     canvas.drawCircle(rect.center, radius, paint)
   }
@@ -64,6 +65,7 @@ export class BoxBorder extends ShapeBorder<BoxBorder> {
     invariant(side.style !== BorderStyle.None)
     const width = side.width
     const paint = side.toPaint()
+
     canvas.drawRect(rect.deflate(width / 2.0), paint)
   }
 
@@ -132,6 +134,7 @@ export class BoxBorder extends ShapeBorder<BoxBorder> {
   }
 
   // => dimensions
+  // 维度
   public get dimensions (): EdgeInsetsGeometry {
     return EdgeInsets.fromLTRB(
       this.left.width,
@@ -142,6 +145,7 @@ export class BoxBorder extends ShapeBorder<BoxBorder> {
   }
 
   // => isUniform
+  // 是否统一
   public get isUniform () {
     return (
       this.colorIsUniform && 
@@ -282,7 +286,6 @@ export class BoxBorder extends ShapeBorder<BoxBorder> {
         case BorderStyle.Solid: {
           switch (shape) {
             case BorderShape.Circle: {
-              invariant(borderRadius === null, `A borderRadius can only be given for rectangular boxes.`)
               BoxBorder.paintUniformBorderWithCircle(
                 canvas,
                 rect,
