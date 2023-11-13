@@ -6,12 +6,12 @@ import { invariant, tryCatch } from '@at/utils'
 /**
  * @description: 图片下载事件结构
  */
-export type ImageChunk = {
+export interface ImageChunk {
   cumulativeBytesLoaded: number
   expectedTotalBytes: number | null
 }
 
-export type ImageHandle = (image: ImageInfo, synchronous: boolean) => void
+export type ImageEndHandle = (image: ImageInfo, synchronous: boolean) => void
 export type ImageChunkHandle = (chunk: ImageChunk) => void
 export type ImageErrorHandle = (error: any) => void
 

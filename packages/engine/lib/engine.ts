@@ -29,19 +29,21 @@ export class AtRasterizer extends Rasterizer {
 //// => basic types
 // 基础类型定义
 export interface AtEngineSkia extends CanvasKit {
-  Axis: typeof Skia.Axis,
-  Clip: typeof Skia.Clip,
-  FilterQuality: typeof Skia.FilterQuality,
-  ImageByteFormat: typeof Skia.ImageByteFormat
+  AxisKind: typeof Skia.AxisKind,
+  ClipKind: typeof Skia.ClipKind,
+  FilterQualityKind: typeof Skia.FilterQualityKind,
+  ImageByteFormatKind: typeof Skia.ImageByteFormatKind
 }
 
 // 环境变量
 export interface AtEngineEnvironments {
   SKIA_URI: string,
-  BASE_URI: string,
-  ROOT_DIR: string,
-  IMAGE_CACHE_MAXIMUM_BYTES: number,
-  IMAGE_CACHE_MAXIMUM_SIZE: number
+  ATKIT_ASSETS_BASE_URI: string,
+  ATKIT_ASSETS_ROOT_DIR: string,
+  ATKIT_TEXT_FONTSIZE: number,
+  ATKIT_FONT_FAMILY: string,
+  ATKIT_IMAGE_CACHE_MAXIMUM_BYTES: number,
+  ATKIT_IMAGE_CACHE_MAXIMUM_SIZE: number
 }
 
 
@@ -77,13 +79,24 @@ export abstract class AtEngine extends AssetsManager {
   static set skia (skia: AtEngineSkia) {
     /// => extending skia
     // 扩展 Skia
-    defineReadOnly(skia, 'Axis', Skia.Axis)
-    defineReadOnly(skia, 'Clip', Skia.Clip)
-    defineReadOnly(skia, 'FilterQuality', Skia.FilterQuality)
-    defineReadOnly(skia, 'ImageByteFormat', Skia.ImageByteFormat)
+    defineReadOnly(skia, 'AxisKind', Skia.AxisKind)
+    defineReadOnly(skia, 'ClipKind', Skia.ClipKind)
+    defineReadOnly(skia, 'FilterQualityKind', Skia.FilterQualityKind)
+    defineReadOnly(skia, 'ImageByteFormatKind', Skia.ImageByteFormatKind)
     
  
     this._skia = skia
+  }
+
+  // => fonts
+  // 懒创建
+  static _fonts: Fonts | null = null
+  static get fonts () {
+    if (this._fonts === null) {
+      this._fonts = Fonts.create()
+    }
+
+    return this._fonts
   }
 
   // => refs
@@ -104,8 +117,8 @@ export abstract class AtEngine extends AssetsManager {
 
   /**
    * 
-   * @param size 
-   * @param canvas 
+   * @param {Size} size 
+   * @param {OffscreenCanvas} canvas 
    */
   static tryCreateSurface (size: Size, canvas: OffscreenCanvas) {
     try {
@@ -149,23 +162,12 @@ export abstract class AtEngine extends AssetsManager {
    * @param {string?} defaultEnv 
    * @returns 
    */
-  static env (key: string, defaultEnv?: string) {
+  static env <T extends string | number> (key: string, defaultEnv?: T): T {
     if (Reflect.has(process.env, key)) {
-      return Reflect.get(process.env, key) as string
+      return Reflect.get(process.env, key) as T
     }
 
-    return defaultEnv as string
-  }
-
-  // => fonts
-  // 懒创建
-  protected _fonts: Fonts | null = null
-  public get fonts () {
-    if (this._fonts === null) {
-      this._fonts = Fonts.create()
-    }
-
-    return this._fonts
+    return defaultEnv as T
   }
 
   //  Engine 生命周期

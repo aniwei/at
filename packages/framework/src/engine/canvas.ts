@@ -12,7 +12,7 @@ import { Canvas, ClipOp, PointMode, BlendMode, PictureRecorder, Picture, Paint }
 
 
 import type { ArrayLike } from '../at'
-import type { AtPaint } from './paint'
+import type { Paint } from './paint'
 import type { AtImage } from './image'
 import type { AtParagraph } from './text'
 import type { AtImageFilter, AtManagedSkiaImageFilterConvertible } from './image-filter'
@@ -89,14 +89,14 @@ export class AtCanvas {
    * @param {number} startAngle 
    * @param {number} sweepAngle 
    * @param {boolean} useCenter 
-   * @param {AtPaint} paint 
+   * @param {Paint} paint 
    */
   drawArc (
     oval: Rect,
     startAngle: number,
     sweepAngle: number,
     useCenter: boolean,
-    paint: AtPaint
+    paint: Paint
   ) {
     const degree = 180 / Math.PI
     this.skia.drawArc(
@@ -109,7 +109,7 @@ export class AtCanvas {
   }
 
   drawAtlasRaw (
-    paint: AtPaint,
+    paint: Paint,
     atlas: AtImage,
     rstTransforms: Float32Array,
     rects: Float32Array,
@@ -133,7 +133,7 @@ export class AtCanvas {
    * @param {*} paint
    * @return {*}
    */
-  drawCircle (point: Offset, radius: number, paint: AtPaint) {
+  drawCircle (point: Offset, radius: number, paint: Paint) {
     this.skia.drawCircle(
       point[0],
       point[1],
@@ -153,7 +153,7 @@ export class AtCanvas {
     this.skia.drawColorInt(color.value, blendMode)
   }
 
-  drawDRRect (outer: RRect, inner: RRect, paint: AtPaint) {
+  drawDRRect (outer: RRect, inner: RRect, paint: Paint) {
     invariant(rrectIsValid(outer), `The outer is invalid.`)
     invariant(rrectIsValid(inner), `The inner is invalid.`)
     invariant(paint !== null, `The paint cannt be null.`)
@@ -168,7 +168,7 @@ export class AtCanvas {
    * @param {Paint} paint
    * @return {*}
    */
-  drawImage (image: AtImage, point: Offset, paint: AtPaint) {
+  drawImage (image: AtImage, point: Offset, paint: Paint) {
     invariant(image !== null, `The image argument cannot be null.`)
     invariant(paint !== null, `The paint argument cannot be null.`)
     invariant(offsetIsValid(point), `The argument point is invalid.`)
@@ -211,7 +211,7 @@ export class AtCanvas {
    * @param {Paint} paint
    * @return {*}
    */
-  drawImageRect (image: AtImage, src: Rect, dst: Rect, paint: AtPaint) {
+  drawImageRect (image: AtImage, src: Rect, dst: Rect, paint: Paint) {
     invariant(image !== null, `The image argument cannot be null.`)
     invariant(rectIsValid(src), `The src argument was invalid.`)
     invariant(rectIsValid(dst), `The dst argument was invalid.`)
@@ -254,7 +254,7 @@ export class AtCanvas {
    * @param {Paint} paint
    * @return {*}
    */
-  drawImageNine (image: AtImage, center: Rect, dist: Rect, paint: AtPaint) {
+  drawImageNine (image: AtImage, center: Rect, dist: Rect, paint: Paint) {
     invariant(image !== null, `The argument "image" cannot be null`)
     invariant(rectIsValid(center), `The argument "center" is invalid.`)
     invariant(rectIsValid(dist), `The argument "dist" is invalid.`)
@@ -278,7 +278,7 @@ export class AtCanvas {
    * @param {Paint} paint
    * @return {*}
    */
-  drawLine (pointA: Point, pointB: Point, paint: AtPaint) {
+  drawLine (pointA: Point, pointB: Point, paint: Paint) {
     this.skia.drawLine(
       pointA.dx,
       pointA.dy,
@@ -293,7 +293,7 @@ export class AtCanvas {
    * @param {Paint} paint
    * @return {void}
    */
-  drawOval (rect: Rect, paint: AtPaint) {
+  drawOval (rect: Rect, paint: Paint) {
     this.skia.drawOval(rect, paint.skia!)
   }
 
@@ -302,7 +302,7 @@ export class AtCanvas {
    * @param {Paint} paint
    * @return {*}
    */
-  drawPaint (paint: AtPaint) {
+  drawPaint (paint: Paint) {
     this.skia.drawPaint(paint.skia!)
   }
 
@@ -323,9 +323,9 @@ export class AtCanvas {
   /**
    * 绘制路径
    * @param {AtPath} path
-   * @param {AtPaint} paint
+   * @param {Paint} paint
    */
-  drawPath (path: AtPath, paint: AtPaint) {
+  drawPath (path: AtPath, paint: Paint) {
     this.skia.drawPath(path.skia!, paint.skia!)
   }
 
@@ -346,7 +346,7 @@ export class AtCanvas {
    * @param {PointMode} pointMode
    * @param {Offset} points
    */
-  drawPoints (paint: AtPaint, pointMode: PointMode, points: ArrayLike<Offset>) {
+  drawPoints (paint: Paint, pointMode: PointMode, points: ArrayLike<Offset>) {
     invariant(paint !== null, `The paint argument cannot be null.`)
     invariant(pointMode !== null, `The pointMode argument cannot be null.`)
     invariant(points !== null, `The points argument cannot be null.`)
@@ -362,7 +362,7 @@ export class AtCanvas {
    * @param {Paint} paint
    * @return {void}
    */
-  drawRawPoints(pointMode: PointMode, points: ArrayLike<Offset>, paint: AtPaint) {
+  drawRawPoints(pointMode: PointMode, points: ArrayLike<Offset>, paint: Paint) {
     invariant(pointMode !== null, `The argument "pointMode" cannot be null.`)
     invariant(points !== null, `The argument "points" cannot be null.`)
     invariant(paint !== null, `The argument "paint" cannot be null.`)
@@ -380,7 +380,7 @@ export class AtCanvas {
    * @param {Paint} paint
    * @return {*}
    */
-  drawRRect (rrect: RRect, paint: AtPaint ) {
+  drawRRect (rrect: RRect, paint: Paint ) {
     invariant(rrectIsValid(rrect), `The rrect argument was invalid.`)
     invariant(paint !== null, `The paint argument cannot be null.`)
 
@@ -393,7 +393,7 @@ export class AtCanvas {
    * @param {Paint} paint
    * @return {void}
    */
-  drawRect (rect: Rect, paint: AtPaint) {
+  drawRect (rect: Rect, paint: Paint) {
     invariant(rectIsValid(rect), `The "rect" argument was invalid.`)
     invariant(paint !== null, `The "paint" argument cannot be null.`)
 
@@ -484,14 +484,14 @@ export class AtCanvas {
    * @description: 
    * @param {Vertices} vertices
    * @param {BlendMode} blendMode
-   * @param {AtPaint} paint
+   * @param {Paint} paint
    * @return {*}
    */
   // TODO
   // drawVertices  (
   //   vertices: Vertices, 
   //   blendMode: BlendMode, 
-  //   paint: AtPaint
+  //   paint: Paint
   // ) {
   //   invariant(vertices !== null, `The vertices argument cannot be null.`)
   //   invariant(paint !== null, `The paint argument cannot be null.`)
@@ -526,12 +526,11 @@ export class AtCanvas {
 
   /**
    * @param {Rect} bounds
-   * @param {AtPaint} paint
+   * @param {Paint} paint
    * @return {void}
    */
-  saveLayer (bounds: Rect | null = null, paint: AtPaint | null) {
-    invariant(paint !== null, `The paint argument cannot be null.`)
-    this.skia.saveLayer(paint.skia!, bounds, null)
+  saveLayer (bounds: Rect | null = null, paint: Paint) {
+    this.skia.saveLayer(paint.skia, bounds, null)
   }
 
   /**
@@ -541,7 +540,7 @@ export class AtCanvas {
    * @return {*}
    */
   // TODO
-  saveLayerWithFilter (bounds: Rect, filter: AtImageFilter, paint: AtPaint) {
+  saveLayerWithFilter (bounds: Rect, filter: AtImageFilter, paint: Paint) {
     const convertible: AtManagedSkiaImageFilterConvertible = filter
 
     return this.skia.saveLayer(paint.skia as Paint, bounds, convertible.imageFilter.skia, 0)
@@ -625,7 +624,7 @@ export class AtRecorder extends AtCanvas {
     return new AtPicture(picture, this.cullRect, this.snapshot)
   }
 
-  addCommand (command: AtPaintCommand) {
+  addCommand (command: PaintCommand) {
     this.snapshot.commands.push(command)
   }
 
@@ -662,7 +661,7 @@ export class AtRecorder extends AtCanvas {
     startAngle: number,
     sweepAngle: number,
     useCenter: boolean,
-    paint: AtPaint
+    paint: Paint
   ) {
     super.drawArc(oval, startAngle, sweepAngle, useCenter, paint);
     this.addCommand(new AtDrawArcCommand(oval, startAngle, sweepAngle, useCenter, paint))
@@ -678,7 +677,7 @@ export class AtRecorder extends AtCanvas {
    * @param blendMode 
    */
   drawAtlasRaw(
-    paint: AtPaint,
+    paint: Paint,
     atlas: AtImage,
     rstTransforms: Float32Array,
     rects: Float32Array,
@@ -699,7 +698,7 @@ export class AtRecorder extends AtCanvas {
   drawCircle (
     point: Offset,
     radius: number,
-    paint: AtPaint
+    paint: Paint
   ) {
     super.drawCircle(point, radius, paint)
     this.addCommand(new AtDrawCircleCommand(point, radius, paint))
@@ -716,14 +715,14 @@ export class AtRecorder extends AtCanvas {
     // this.addCommand(new AtDrawColorCommand(color, blendMode))
   }
   
-  drawDRRect (outer: RRect, inner: RRect, paint: AtPaint) {
+  drawDRRect (outer: RRect, inner: RRect, paint: Paint) {
     super.drawDRRect(outer, inner, paint)
     // TODO
     // this.addCommand(new AtDrawDRRectCommand(outer, inner, paint))
   }
 
   
-  drawImage (image: AtImage, point: Offset, paint: AtPaint) {
+  drawImage (image: AtImage, point: Offset, paint: Paint) {
     super.drawImage(image, point, paint)
     // TODO
     // this.addCommand(new AtDrawImageCommand(image, point, paint))
@@ -734,7 +733,7 @@ export class AtRecorder extends AtCanvas {
     image: AtImage, 
     src: Rect, 
     dst: Rect, 
-    paint: AtPaint
+    paint: Paint
   ) {
     super.drawImageRect(image, src, dst, paint)
     // TODO
@@ -745,23 +744,23 @@ export class AtRecorder extends AtCanvas {
     image: AtImage, 
     center: Rect, 
     dist: Rect, 
-    paint: AtPaint
+    paint: Paint
   ) {
     super.drawImageNine(image, center, dist, paint)
     this.addCommand(new AtDrawImageNineCommand(image, center, dist, paint))
   }
   
-  drawLine (pointA: Point, pointB: Point, paint: AtPaint) {
+  drawLine (pointA: Point, pointB: Point, paint: Paint) {
     super.drawLine(pointA, pointB, paint)
     this.addCommand(new AtDrawLineCommand(pointA, pointB, paint))
   }
   
-  drawOval (rect: Rect, paint: AtPaint) {
+  drawOval (rect: Rect, paint: Paint) {
     super.drawOval(rect, paint)
     this.addCommand(new AtDrawOvalCommand(rect, paint))
   }
   
-  drawPaint (paint: AtPaint) {
+  drawPaint (paint: Paint) {
     super.drawPaint(paint)
     this.addCommand(new AtDrawPaintCommand(paint))
   }
@@ -775,7 +774,7 @@ export class AtRecorder extends AtCanvas {
     this.addCommand(new AtDrawParagraphCommand(paragraph, point))
   }
   // 
-  // drawPath (path: AtPath, paint: AtPaint) {
+  // drawPath (path: AtPath, paint: Paint) {
   //   super.drawPath(path, paint)
   //   this.addCommand(new AtDrawPathCommand(path, paint))
   // }
@@ -787,7 +786,7 @@ export class AtRecorder extends AtCanvas {
   //
   //
   // drawPoints (
-  //   paint: AtPaint,
+  //   paint: Paint,
   //   pointMode: PointMode, 
   //   points: Point[]
   // ) {
@@ -798,13 +797,13 @@ export class AtRecorder extends AtCanvas {
   
   drawRRect (
     rrect: RRect, 
-    paint: AtPaint 
+    paint: Paint 
   ) {
     super.drawRRect(rrect, paint)
     this.addCommand(new AtDrawRRectCommand(rrect, paint))
   }
   
-  drawRect (rect: Rect, paint: AtPaint) {
+  drawRect (rect: Rect, paint: Paint) {
     super.drawRect(rect, paint)
     this.addCommand(new AtDrawRectCommand(rect, paint))
   }
@@ -849,7 +848,7 @@ export class AtRecorder extends AtCanvas {
   
   saveLayer (
     bounds: Rect | null = null, 
-    paint: AtPaint
+    paint: Paint
   ) {
     super.saveLayer(bounds, paint)
 
@@ -863,7 +862,7 @@ export class AtRecorder extends AtCanvas {
   // saveLayerWithFilter (
   //   bounds: Rect, 
   //   filter: AtImageFilter, 
-  //   paint: AtPaint
+  //   paint: Paint
   // ) {
   //   super.saveLayerWithFilter(bounds, filter, paint)
   //   this.addCommand(new AtSaveLayerWithFilterCommand(bounds, filter, paint))
@@ -894,7 +893,7 @@ export class AtRecorder extends AtCanvas {
 
 export class AtSnapshot {
   private bounds: Rect
-  public commands: AtPaintCommand[] = []
+  public commands: PaintCommand[] = []
 
   constructor (bounds: Rect) {
     this.bounds = bounds
@@ -921,13 +920,13 @@ export class AtSnapshot {
   }
 }
 
-// => AtPaintCommand
-abstract class AtPaintCommand {
+// => PaintCommand
+abstract class PaintCommand {
   abstract apply (canvas: Canvas): void
   dispose () {}
 }
 
-class AtClearCommand extends AtPaintCommand {
+class AtClearCommand extends PaintCommand {
   private color: Color
   constructor (color: Color) {
     super()
@@ -939,7 +938,7 @@ class AtClearCommand extends AtPaintCommand {
   }
 }
 
-class AtClipPathCommand extends AtPaintCommand {
+class AtClipPathCommand extends PaintCommand {
   private path: AtPath
   private doAntiAlias: boolean
 
@@ -958,7 +957,7 @@ class AtClipPathCommand extends AtPaintCommand {
   }
 }
 
-class AtClipRRectCommand extends AtPaintCommand {
+class AtClipRRectCommand extends PaintCommand {
   private rrect: RRect
   private doAntiAlias: boolean
 
@@ -977,7 +976,7 @@ class AtClipRRectCommand extends AtPaintCommand {
   }
 }
 
-class AtClipRectCommand extends AtPaintCommand {
+class AtClipRectCommand extends PaintCommand {
   private rect: Rect
   private clipOp: ClipOp
   private doAntiAlias: boolean
@@ -998,10 +997,10 @@ class AtClipRectCommand extends AtPaintCommand {
   }
 }
 
-class AtDrawOvalCommand extends AtPaintCommand {
+class AtDrawOvalCommand extends PaintCommand {
   private rect: Rect
-  private paint: AtPaint
-  constructor (rect: Rect, paint: AtPaint) {
+  private paint: Paint
+  constructor (rect: Rect, paint: Paint) {
     super()
 
     this.rect = rect
@@ -1013,10 +1012,10 @@ class AtDrawOvalCommand extends AtPaintCommand {
   }
 }
 
-class AtDrawPaintCommand extends AtPaintCommand {
-  private paint: AtPaint
+class AtDrawPaintCommand extends PaintCommand {
+  private paint: Paint
 
-  constructor (paint: AtPaint) {
+  constructor (paint: Paint) {
     super()
 
     this.paint = paint
@@ -1027,7 +1026,7 @@ class AtDrawPaintCommand extends AtPaintCommand {
   }
 }
 
-class AtDrawParagraphCommand extends AtPaintCommand {
+class AtDrawParagraphCommand extends PaintCommand {
   private paragraph: AtParagraph
   private offset: Offset
 
@@ -1048,12 +1047,12 @@ class AtDrawParagraphCommand extends AtPaintCommand {
   }
 }
 
-class AtDrawLineCommand extends AtPaintCommand {
+class AtDrawLineCommand extends PaintCommand {
   private pointA: Point 
   private pointB: Point
-  private paint: AtPaint
+  private paint: Paint
 
-  constructor (pointA: Point, pointB: Point, paint: AtPaint) {
+  constructor (pointA: Point, pointB: Point, paint: Paint) {
     super()
 
     this.pointA = pointA
@@ -1072,17 +1071,17 @@ class AtDrawLineCommand extends AtPaintCommand {
   }
 }
 
-class AtDrawImageNineCommand extends AtPaintCommand {
+class AtDrawImageNineCommand extends PaintCommand {
   private image: AtImage 
   private center: Rect 
   private dist: Rect
-  private paint: AtPaint
+  private paint: Paint
 
   constructor (
     image: AtImage, 
     center: Rect, 
     dist: Rect, 
-    paint: AtPaint
+    paint: Paint
   ) {
     super()
 
@@ -1105,10 +1104,10 @@ class AtDrawImageNineCommand extends AtPaintCommand {
   }
 }
 
-class AtDrawRRectCommand extends AtPaintCommand {
+class AtDrawRRectCommand extends PaintCommand {
   private rrect: RRect
-  private paint: AtPaint
-  constructor (rrect: RRect, paint: AtPaint) {
+  private paint: Paint
+  constructor (rrect: RRect, paint: Paint) {
     super()
 
     this.rrect = rrect
@@ -1120,10 +1119,10 @@ class AtDrawRRectCommand extends AtPaintCommand {
   }
 }
 
-class AtDrawRectCommand extends AtPaintCommand {
+class AtDrawRectCommand extends PaintCommand {
   private rect: Rect
-  private paint: AtPaint
-  constructor (rect: Rect, paint: AtPaint) {
+  private paint: Paint
+  constructor (rect: Rect, paint: Paint) {
     super()
 
     this.rect = rect
@@ -1135,19 +1134,19 @@ class AtDrawRectCommand extends AtPaintCommand {
   }
 }
 
-class AtDrawArcCommand extends AtPaintCommand {
+class AtDrawArcCommand extends PaintCommand {
   private oval: Rect
   private startAngle: number
   private sweepAngle: number
   private useCenter: boolean
-  private paint: AtPaint
+  private paint: Paint
 
   constructor (
     oval: Rect,
     startAngle: number,
     sweepAngle: number,
     useCenter: boolean,
-    paint: AtPaint
+    paint: Paint
   ) {
     super()
     this.oval = oval
@@ -1169,15 +1168,15 @@ class AtDrawArcCommand extends AtPaintCommand {
   }
 }
 
-class AtDrawCircleCommand extends AtPaintCommand {
+class AtDrawCircleCommand extends PaintCommand {
   private point: Point
   private radius: number
-  private paint: AtPaint
+  private paint: Paint
 
   constructor (
     point: Point,
     radius: number,
-    paint: AtPaint
+    paint: Paint
   ) {
     super()
 
@@ -1196,7 +1195,7 @@ class AtDrawCircleCommand extends AtPaintCommand {
   }
 }
 
-class AtDrawShadowCommand extends AtPaintCommand {
+class AtDrawShadowCommand extends PaintCommand {
   private path: AtPath 
   private color: Color
   private elevation: number
@@ -1227,11 +1226,11 @@ class AtDrawShadowCommand extends AtPaintCommand {
   }
 }
 
-class AtSaveLayerCommand extends AtPaintCommand {
+class AtSaveLayerCommand extends PaintCommand {
   private bounds: Rect | null = null
-  private paint: AtPaint
+  private paint: Paint
 
-  constructor (bounds: Rect, paint: AtPaint) {
+  constructor (bounds: Rect, paint: Paint) {
     super()
 
     this.bounds = bounds
@@ -1243,7 +1242,7 @@ class AtSaveLayerCommand extends AtPaintCommand {
   }
 }
 
-class AtRestoreToCountCommand extends AtPaintCommand {
+class AtRestoreToCountCommand extends PaintCommand {
   private count: number
   constructor (count: number) {
     super()
@@ -1256,13 +1255,13 @@ class AtRestoreToCountCommand extends AtPaintCommand {
   }
 }
 
-class AtRestoreCommand extends AtPaintCommand {
+class AtRestoreCommand extends PaintCommand {
   apply (canvas: Canvas): void {
     canvas.restore()
   }
 }
 
-class AtScaleCommand extends AtPaintCommand {
+class AtScaleCommand extends PaintCommand {
   private sx: number
   private sy: number
 
@@ -1278,7 +1277,7 @@ class AtScaleCommand extends AtPaintCommand {
   }
 }
 
-class AtRotateCommand extends AtPaintCommand {
+class AtRotateCommand extends PaintCommand {
   private radians: number
 
   constructor (radians: number) {
@@ -1292,7 +1291,7 @@ class AtRotateCommand extends AtPaintCommand {
   }
 }
 
-class AtSkewCommand extends AtPaintCommand {
+class AtSkewCommand extends PaintCommand {
   private sx: number
   private sy: number
 
@@ -1308,16 +1307,16 @@ class AtSkewCommand extends AtPaintCommand {
   }
 }
 
-class AtSaveCommand extends AtPaintCommand {
+class AtSaveCommand extends PaintCommand {
   apply (canvas: Canvas): void {
     canvas.save()
   }
 }
 
-class AtSaveLayerWithoutBoundsCommand extends AtPaintCommand {
-  private paint: AtPaint
+class AtSaveLayerWithoutBoundsCommand extends PaintCommand {
+  private paint: Paint
 
-  constructor (paint: AtPaint) {
+  constructor (paint: Paint) {
     super()
 
     this.paint = paint
@@ -1328,7 +1327,7 @@ class AtSaveLayerWithoutBoundsCommand extends AtPaintCommand {
   }
 }
 
-class AtTransformCommand extends AtPaintCommand {
+class AtTransformCommand extends PaintCommand {
   private matrix4: ArrayLike<number>
   constructor (matrix4: ArrayLike<number>) {
     super()
@@ -1341,7 +1340,7 @@ class AtTransformCommand extends AtPaintCommand {
   }
 }
 
-class AtTranslateCommand extends AtPaintCommand {
+class AtTranslateCommand extends PaintCommand {
   private dx: number 
   private dy: number
 

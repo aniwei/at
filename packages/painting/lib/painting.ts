@@ -163,7 +163,7 @@ export class Painting {
     repeat: ImageRepeat = ImageRepeat.NoRepeat,
     flipHorizontally: boolean = false,
     invertColors: boolean = false,
-    quality: Skia.FilterQuality = AtEngine.skia.FilterQuality.Low,
+    quality: Skia.FilterQualityKind = AtEngine.skia.FilterQualityKind.Low,
     isAntiAlias: boolean = false,
   ) {
     if (rect.isEmpty) {

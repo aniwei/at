@@ -4,13 +4,15 @@ import { Canvas, Path, Paint, Skia, PathDashEffect, AtEngine } from '@at/engine'
 import { BorderRadius } from './border-radius'
 
 
-//// => BorderSide
+//// => 
+// 边框类型：矩形、圆形、不规则
 export enum BorderShape {
   Rectangle,
   Circle,
   Irregular
 }
 
+// 边框样式
 export enum BorderStyle {
   None,
   Solid,
@@ -18,31 +20,34 @@ export enum BorderStyle {
   Dashed,
 }
 
+// 边框位置
 export enum BorderPosition {
   Outside,
   Center,
   Inside,
 }
 
+
+//// => BorderSide
+export interface BorderSideOptions {
+  color?: Color,
+  width?: number,
+  style?: BorderStyle,
+  position?: BorderPosition,
+  pettern?: number[]
+}
+
 export class BorderSide {
   static NONE = new BorderSide(new Color(0xFF000000), 0, BorderStyle.None)
 
-  /**
-   * 
-   * @param {Color?} color 
-   * @param {number?} width 
-   * @param {BorderStyle?} style 
-   * @param {BorderPosition?} position 
-   * @param {number[]?} pettern 
-   */
-  static create (
-    color?: Color,
-    width?: number,
-    style?: BorderStyle,
-    position?: BorderPosition,
-    pettern?: number[]
-  ) {
-    return new BorderSide(color, width, style, position, pettern)
+  static create (options?: BorderSideOptions) {
+    return new BorderSide(
+      options?.color, 
+      options?.width, 
+      options?.style, 
+      options?.position, 
+      options?.pettern
+    )
   }
 
   /**
@@ -67,7 +72,7 @@ export class BorderSide {
       return a
     }
     
-    invariant(a.color === b.color, `Merged borders must be the same colo.`)
+    invariant(a.color.equal(b.color), `Merged borders must be the same colo.`)
     invariant(a.style === b.style, `Merged borders must be the same style.`)
 
     return new BorderSide(
@@ -86,7 +91,7 @@ export class BorderSide {
   static canMerge (a: BorderSide, b: BorderSide) {
     if (
       (a.style === BorderStyle.None && a.width === 0) ||
-      (b.style == BorderStyle.None && b.width === 0)
+      (b.style === BorderStyle.None && b.width === 0)
     ) {
       return true
     }
@@ -124,7 +129,7 @@ export class BorderSide {
     
     if (a.style === b.style) {
       return new BorderSide(
-        Color.lerp(a.color, b.color, t)!,
+        Color.lerp(a.color, b.color, t) as Color,
         width,
         a.style,
       )
@@ -214,7 +219,7 @@ export class BorderSide {
   }
 
   toPaint (): Paint {
-    const paint = new Paint()
+    const paint = Paint.create()
 
     switch (this.style) {
       case BorderStyle.Solid:
@@ -234,7 +239,7 @@ export class BorderSide {
       }
 
       case BorderStyle.None: {
-        paint.color = new Color(0x00000000)
+        paint.color = Color.create(0x00000000)
         paint.stroke.width = 0
         paint.style = AtEngine.skia.PaintStyle.Stroke
         break
@@ -266,14 +271,24 @@ export class BorderSide {
   }
 }
 
+
+//// => ShapeBorder
+// 
+export interface ShapeBorderFactory<T> {
+  new (...rests: unknown[]): T,
+  create (...rests: unknown[]): T
+}
 export abstract class ShapeBorder<T extends ShapeBorder<T>> {
+  static create <T extends ShapeBorder<T>> (...rests: unknown[]) {
+    const ShapeBorderFactory = this as unknown as ShapeBorderFactory<T>
+    return new ShapeBorderFactory(...rests) as ShapeBorder<T>
+  }
+  
   static lerp<T extends ShapeBorder<T>>(
     a: ShapeBorder<T> | null, 
     b: ShapeBorder<T> | null, 
     t: number
   ): ShapeBorder<T> | null {
-    invariant(t !== null)
-
     let result: ShapeBorder<T> | null = null
 
     if (b !== null) {
@@ -310,6 +325,7 @@ export abstract class ShapeBorder<T extends ShapeBorder<T>> {
     if (a === null) {
       return this.scale(1.0 - t)
     }
+
     return null
   }
 
@@ -317,11 +333,18 @@ export abstract class ShapeBorder<T extends ShapeBorder<T>> {
     if (a === null) {
       return this.scale(1.0 - t)
     }
+
     return null
   }
 }
 
+//// => OutlinedBorder
 export abstract class OutlinedBorder extends ShapeBorder<OutlinedBorder> {
+  static create (...rests: unknown[]): OutlinedBorder
+  static create (side: BorderSide) {
+    return super.create(side) as OutlinedBorder
+  }
+
   public side: BorderSide
 
   constructor (side: BorderSide) {
@@ -340,6 +363,8 @@ export abstract class OutlinedBorder extends ShapeBorder<OutlinedBorder> {
   }
 }
 
+//// => Border
+// 边框
 export type BorderOptions = {
   color?: Color,
   width?: number,
@@ -348,12 +373,7 @@ export type BorderOptions = {
 
 export  class Border extends OutlinedBorder {
   static create (options?: BorderOptions) {
-    const side = BorderSide.create(
-      options?.color,
-      options?.width,
-      options?.style
-    )
-
+    const side = BorderSide.create(options)
     return new Border(side)
   }
 
@@ -425,8 +445,7 @@ export  class Border extends OutlinedBorder {
 
   scale (t: number): ShapeBorder<Border> {
     const side = this.side.scale(t)
-
-    return new Border(side)
+    return Border.create(side)
   }
 
   getOuterPath (

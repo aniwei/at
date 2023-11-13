@@ -28,7 +28,7 @@ export type DecorationImageOptions = {
   matchTextDirection?: boolean,
   scale?: number,
   opacity?: number,
-  filterQuality?: Skia.FilterQuality,
+  filterQuality?: Skia.FilterQualityKind,
   invertColors?: boolean,
   isAntiAlias?: boolean,
 }
@@ -62,7 +62,7 @@ export class DecorationImage extends Equalable<DecorationImage> {
   public matchTextDirection: boolean
   public scale: number
   public opacity: number
-  public quality: Skia.FilterQuality
+  public quality: Skia.FilterQualityKind
   public invertColors: boolean
   public isAntiAlias: boolean
   
@@ -77,7 +77,7 @@ export class DecorationImage extends Equalable<DecorationImage> {
     matchTextDirection: boolean = false,
     scale: number = 1,
     opacity: number = 1,
-    quality: Skia.FilterQuality = AtEngine.skia.FilterQuality.Low,
+    quality: Skia.FilterQualityKind = AtEngine.skia.FilterQualityKind.Low,
     invertColors: boolean = false,
     isAntiAlias: boolean = false,
   ) {

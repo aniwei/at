@@ -7,14 +7,13 @@ import { ImageChunk, ImageStream, ImageStreamRefBox, MultiFrameImageStreamRefBox
 import { Painting } from './painting'
 import { ImageCacheStatus } from './image-cache'
 
-/**
- * @description: 图片解码
- */
+// 图片解码回调
 export type ImageDecodeCallback = (
   uri: string,
 ) => Promise<AnimatedImage>
 
 
+//// => ImageConfiguration
 export interface ImageConfigurationOptions {
   bundle?: AssetBundle | null,
   devicePixelRatio?: number | null,
@@ -22,7 +21,6 @@ export interface ImageConfigurationOptions {
   size?: Size | null,
 }
 
-//// => ImageConfiguration
 // 图片配置
 export class ImageConfiguration extends Equalable<ImageConfiguration> {
   static get EMPTY () {
@@ -236,13 +234,14 @@ export class NetworkImageKey extends ImageProviderKey {
   }
 }
 
+
+//// => NetworkImage
 export type NetworkImageOptions = {
   url: string
   scale?: number,
   headers?: Map<string, string>
 }
 
-// => NetworkImage
 export class NetworkImage extends ImageProvider<NetworkImageKey> {
   static create (options: NetworkImageOptions) {
     return new NetworkImage(

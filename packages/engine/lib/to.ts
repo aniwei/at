@@ -3,9 +3,13 @@ import { Matrix4 } from '@at/math'
 import { Color } from '@at/basic'
 import { AtEngine } from './engine'
 import { TransformError } from './transform-error'
+import { TextPosition } from './text-position'
+import { StrutStyle } from './struct-style'
+import { TextHeightBehavior } from './text-height-behavior'
+import { TextLeadingDistributionKind } from './text-style'
 import * as Skia from './skia'
 // import { TextBox } from '@at/engine'
-
+// 矩阵索引对照
 const kMatrixIndexToMatrix4Index = [
   0, 4, 12, // Row 1
   1, 5, 13, // Row 2
@@ -16,7 +20,7 @@ const kMatrixIndexToMatrix4Index = [
  * @param {Float64Array} matrix4
  * @return {*}
  */
-export function toMatrix (matrix4: ArrayLike<number>): Float32Array {
+export function toMatrix (matrix4: number[]): Float32Array {
   const matrix = new Float32Array(9)
 
   for (let i = 0; i < 9; i++) {
@@ -86,29 +90,29 @@ export function toSigma (radius: number) {
  * @param {FilterQuality} filterQuality
  * @return {*}
  */
-export function toFilterQuality (filterQuality: Skia.FilterQuality): {
+export function toFilterQuality (filterQuality: Skia.FilterQualityKind): {
   filter: Skia.FilterMode,
   mipmap: Skia.MipmapMode
 } | {
   B: number,
   C: number
 } {
-  if (filterQuality === AtEngine.skia.FilterQuality.None) {
+  if (filterQuality === AtEngine.skia.FilterQualityKind.None) {
    return {
      filter: AtEngine.skia.FilterMode.Nearest,
      mipmap: AtEngine.skia.MipmapMode.None
    }
- } else if (filterQuality === AtEngine.skia.FilterQuality.Low) {
+ } else if (filterQuality === AtEngine.skia.FilterQualityKind.Low) {
    return {
      filter: AtEngine.skia.FilterMode.Linear,
      mipmap: AtEngine.skia.MipmapMode.None
    }
- } else if (filterQuality === AtEngine.skia.FilterQuality.Medium) {
+ } else if (filterQuality === AtEngine.skia.FilterQualityKind.Medium) {
    return {
      filter: AtEngine.skia.FilterMode.Linear,
      mipmap: AtEngine.skia.MipmapMode.Linear
    }
- } else if (filterQuality === AtEngine.skia.FilterQuality.High) {
+ } else if (filterQuality === AtEngine.skia.FilterQualityKind.High) {
    return {
      B: 1.0 / 3.0,
      C: 1.0 / 3.0
@@ -120,7 +124,6 @@ export function toFilterQuality (filterQuality: Skia.FilterQuality): {
 
 //// => transform
 // 数据变换
-
 const kPointData = new Float32Array(16)
 const kPointMatrix = Matrix4.fromList(kPointData as unknown as number[])
 
@@ -189,6 +192,14 @@ export function transformRect (transform: Matrix4, rect: Rect) {
   )
 }
 
+export function fromPositionWithAffinity (positionWithAffinity: Skia.PositionWithAffinity) {
+  const affinity = positionWithAffinity.affinity
+  return TextPosition.create({
+    offset: positionWithAffinity.pos,
+    affinity: affinity,
+  })
+}
+
 
 
 /**
@@ -226,8 +237,8 @@ export function toColorStops (stops: number[] | null = null) {
  * @param {FilterQuality} filterQuality
  * @return {*}
  */
-export function toMipmapMode (filterQuality: Skia.FilterQuality) {
-  return filterQuality == AtEngine.skia.FilterQuality.Medium
+export function toMipmapMode (filterQuality: Skia.FilterQualityKind) {
+  return filterQuality == AtEngine.skia.FilterQualityKind.Medium
       ? AtEngine.skia.MipmapMode.Linear
       : AtEngine.skia.MipmapMode.None
 }
@@ -236,8 +247,94 @@ export function toMipmapMode (filterQuality: Skia.FilterQuality) {
  * @param {FilterQuality} filterQuality
  * @return {*}
  */
-export function toFilterMode (filterQuality: Skia.FilterQuality) {
-  return filterQuality == AtEngine.skia.FilterQuality.None
+export function toFilterMode (filterQuality: Skia.FilterQualityKind) {
+  return filterQuality == AtEngine.skia.FilterQualityKind.None
       ? AtEngine.skia.FilterMode.Nearest
       : AtEngine.skia.FilterMode.Linear
+}
+
+
+//// => Text Style 
+// 字体数据转换
+export const toTextStyle = (
+  fontFamily: string | null = null,
+  fontSize: number | null = null,
+  height: number | null = null,
+  fontWeight: Skia.FontWeight | null = null,
+  fontStyle: Skia.FontSlant | null = null,
+): Skia.TextStyle => {
+  const style: Skia.TextStyle = {
+    fontFamilies: fontFamily 
+      ? [fontFamily, AtEngine.env<string>('ATKIT_FONT_FAMILY', 'Rotobo')] 
+      : [AtEngine.env<string>('ATKIT_FONT_FAMILY', 'Rotobo')],
+    fontStyle: toFontStyle(fontWeight, fontStyle),
+    fontSize: fontSize 
+      ? fontSize 
+      : undefined,
+    heightMultiplier: height ? height : undefined,
+  } as Skia.TextStyle
+    
+  return style
+}
+
+export const toFontStyle = (fontWeight: Skia.FontWeight | null, fontStyle: Skia.FontSlant | null) => {
+  return fontWeight || fontStyle 
+    ? {
+      weight: fontWeight ? fontWeight : undefined,
+      slant: fontStyle ? fontStyle : undefined,
+    } : undefined
+}
+
+// => struct style
+export const toStrutStyle = (
+  style: StrutStyle, 
+  paragraphHeightBehavior?: TextHeightBehavior | null
+): Skia.StrutStyle => {
+  const leadingDistribution = style.leadingDistribution ?? paragraphHeightBehavior?.leadingDistribution ?? null
+
+  const struct: Skia.StrutStyle = {
+    fontFamilies: style.fontFamily 
+      ? [style.fontFamily, AtEngine.env<string>('FONT_FAMILY', 'Roboto')] 
+      : [AtEngine.env<string>('FONT_FAMILY', 'ROBOTO')],
+    fontSize: style.fontSize 
+      ? style.fontSize 
+      : undefined,
+    heightMultiplier: style.height 
+      ? style.height 
+      : undefined,
+    halfLeading: leadingDistribution !== null
+      ? leadingDistribution === TextLeadingDistributionKind.Even 
+          ? true
+          : false
+      : undefined,
+    leading: style.leading 
+      ? style.leading 
+      : undefined,
+    fontStyle: toFontStyle(style.fontWeight, style.fontStyle),
+    forceStrutHeight: style.forceStrutHeight 
+      ? style.forceStrutHeight 
+      : undefined,
+    strutEnabled: true
+  }
+
+  return struct
+}
+
+// => 文本高度行为
+let kSkiaTextHeightBehaviors: Skia.TextHeightBehavior[] | null = null
+export function toTextHeightBehavior (behavior: TextHeightBehavior) {
+
+  kSkiaTextHeightBehaviors ??= [
+    AtEngine.skia.TextHeightBehavior.All,
+    AtEngine.skia.TextHeightBehavior.DisableFirstAscent,
+    AtEngine.skia.TextHeightBehavior.DisableLastDescent,
+    AtEngine.skia.TextHeightBehavior.DisableAll,
+  ]
+
+  const index = (
+    (behavior.applyHeightToFirstAscent ? 0 : 1 << 0) |
+    (behavior.applyHeightToLastDescent ? 0 : 1 << 1)
+  )
+  
+  return kSkiaTextHeightBehaviors[index]
 }

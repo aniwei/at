@@ -20,7 +20,7 @@ export abstract class ImageFilter extends Skia.ManagedSkiaRef<Skia.ImageFilter> 
   }
   
   // 矩阵
-  static matrix (matrix: number[], filterQuality: Skia.FilterQuality) {
+  static matrix (matrix: number[], filterQuality: Skia.FilterQualityKind) {
     return new MatrixImageFilter(matrix, filterQuality)
   }
 
@@ -131,10 +131,10 @@ export class MatrixImageFilter extends ImageFilter {
   /**
    * 创建 Skia 对象
    * @param {number[]} matrix 
-   * @param {Skia.FilterQuality} quality 
+   * @param {Skia.FilterQualityKind} quality 
    * @returns {ImageFilter}
    */
-  static resurrect (matrix: number[], quality: Skia.FilterQuality) {
+  static resurrect (matrix: number[], quality: Skia.FilterQualityKind) {
     return AtEngine.skia.ImageFilter.MakeMatrixTransform(
       toMatrix(matrix),
       toFilterQuality(quality)!,
@@ -143,9 +143,9 @@ export class MatrixImageFilter extends ImageFilter {
   }
 
   protected matrix: number[]
-  protected quality: Skia.FilterQuality
+  protected quality: Skia.FilterQualityKind
 
-  constructor (matrix: number[], quality: Skia.FilterQuality) {
+  constructor (matrix: number[], quality: Skia.FilterQualityKind) {
     super(MatrixImageFilter.resurrect(matrix, quality))
 
     this.matrix = matrix

@@ -10,7 +10,7 @@ import { Picture } from './picture'
 import { Image } from './image'
 import { ImageFilter } from './image-filter'
 import { AtEngine } from './engine'
-// import { Paragraph } from './paragraph'
+import { Paragraph } from './paragraph'
 import { 
   ClearCommand, 
   ClipPathCommand, 
@@ -22,6 +22,7 @@ import {
   DrawLineCommand, 
   DrawOvalCommand, 
   DrawPaintCommand, 
+  DrawParagraphCommand, 
   DrawPathCommand, 
   DrawPictureCommand, 
   // DrawParagraphCommand, 
@@ -136,7 +137,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
     invariant(offsetIsValid(point), `The argument point is invalid.`)
     const quality = paint.filter?.quality
     
-    if (quality === AtEngine.skia.FilterQuality.High) {
+    if (quality === AtEngine.skia.FilterQualityKind.High) {
       this.skia.drawImageCubic(
         image.skia,
         point.dx,
@@ -150,10 +151,10 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
         image.skia,
         point.dx,
         point.dy,
-        quality === AtEngine.skia.FilterQuality.None 
+        quality === AtEngine.skia.FilterQualityKind.None 
           ? AtEngine.skia.FilterMode.Nearest 
           : AtEngine.skia.FilterMode.Linear,
-          quality === AtEngine.skia.FilterQuality.Medium 
+          quality === AtEngine.skia.FilterQualityKind.Medium 
           ? AtEngine.skia.MipmapMode.Linear 
           : AtEngine.skia.MipmapMode.None,
         paint.skia,
@@ -173,7 +174,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
     invariant(rectIsValid(dst), 'The "dst" argument was invalid.')
 
     const quality = paint.filter?.quality
-    if (quality === AtEngine.skia.FilterQuality.High) {
+    if (quality === AtEngine.skia.FilterQualityKind.High) {
       this.skia.drawImageRectCubic(
         image.skia,
         src,
@@ -187,10 +188,10 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
         image.skia,
         src,
         dst,
-        quality === AtEngine.skia.FilterQuality.None 
+        quality === AtEngine.skia.FilterQualityKind.None 
           ? AtEngine.skia.FilterMode.Nearest 
           : AtEngine.skia.FilterMode.Linear,
-          quality === AtEngine.skia.FilterQuality.Medium 
+          quality === AtEngine.skia.FilterQualityKind.Medium 
           ? AtEngine.skia.MipmapMode.Linear 
           : AtEngine.skia.MipmapMode.None,
         paint.skia,
@@ -213,7 +214,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
       image.skia,
       center,
       dist,
-      paint.filter?.quality === AtEngine.skia.FilterQuality.None 
+      paint.filter?.quality === AtEngine.skia.FilterQualityKind.None 
         ? AtEngine.skia.FilterMode.Nearest 
         : AtEngine.skia.FilterMode.Linear,
       paint.skia,
@@ -278,13 +279,10 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
    * @param {Offset} offset
    * @return {void}
    */
-  // TODO
-  // drawParagraph (paragraph: Paragraph, offset: Offset) {
-  //   invariant(offsetIsValid(offset), `The offset argument was invalid.`)
-    
-  //   this.skia.drawParagraph(paragraph.skia, offset.dx, offset.dy)
-  //   paragraph.markUsed()
-  // }
+  drawParagraph (paragraph: Paragraph, offset: Offset) {    
+    this.skia.drawParagraph(paragraph.skia, offset.dx, offset.dy)
+    paragraph.markUsed()
+  }
 
   /**
    * 画圆角
@@ -649,15 +647,14 @@ export class Recorder extends Canvas {
     this.addCommand(DrawPaintCommand.create(paint))
   }
   
-  // @TODO
-  // drawParagraph (
-  //   paragraph: Paragraph,
-  //   point: Offset
-  // ) {
-  //   super.drawParagraph(paragraph, point)
-  //   this.addCommand(DrawParagraphCommand.create(paragraph, point))
-  // }
-  // 
+  drawParagraph (
+    paragraph: Paragraph,
+    point: Offset
+  ) {
+    super.drawParagraph(paragraph, point)
+    this.addCommand(DrawParagraphCommand.create(paragraph, point))
+  }
+  
   drawPath (path: Path, paint: Paint) {
     super.drawPath(path, paint)
     this.addCommand(DrawPathCommand.create(path, paint))

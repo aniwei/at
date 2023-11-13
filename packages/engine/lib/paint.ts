@@ -213,11 +213,11 @@ export class Filter extends PaintRefBox {
   }
 
   // => filter quality
-  protected _quality: Skia.FilterQuality = AtEngine.skia.FilterQuality.None
+  protected _quality: Skia.FilterQualityKind = AtEngine.skia.FilterQualityKind.None
   public get quality () {
     return this._quality
   }
-  public set quality (quality: Skia.FilterQuality) {
+  public set quality (quality: Skia.FilterQualityKind) {
     if (this.quality !== quality) {
       this._quality = quality
       if (this.shader !== null) {
