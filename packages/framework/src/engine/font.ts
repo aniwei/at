@@ -113,10 +113,10 @@ export class AtFonts {
           return new AtRegisteredFont(family, buffer, typeface)
         }).catch((error: any) => {
           throw error
-          return null
         })
     } else {
       const typeface = At.Typeface.MakeFreeTypeFaceFromData(url)
+      invariant(typeface)
       return new AtRegisteredFont(family, url, typeface!)
     }
   }

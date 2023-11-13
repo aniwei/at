@@ -1,17 +1,34 @@
 import { invariant, clamp, listEquals } from '@at/utils'
 import { Offset, Rect, Size } from '@at/geometry'
-import { Skia, Canvas, AtEngine } from '@at/engine'
+import { 
+  Skia, 
+  Canvas, 
+  AtEngine, 
+  StrutStyle, 
+  TextHeightBehavior, 
+  Paragraph, 
+  TextBox, 
+  LineMetrics, 
+  TextPosition, 
+  ParagraphStyle, 
+  ParagraphBuilder, 
+  ParagraphConstraints, 
+  TextRange, 
+  TextSelection
+} from '@at/engine'
 import { InlineSpan } from './inline-span'
 
-export enum TextOverflow {
+// => TextOverflowKind
+// 文本
+export enum TextOverflowKind {
   Clip,
   Fade,
   Ellipsis,
   Visible,
 }
 
-
 //// => PlaceholderDimensions
+// 
 export type PlaceholderDimensionsOptions = {
   size: Size,
   alignment: Skia.PlaceholderAlignment,
@@ -143,14 +160,14 @@ export class TextPainter {
       // }
   
       let comparison = value === null
-        ? RenderComparison.Layout
-        : this._text?.compareTo(value) ?? RenderComparison.Layout
+        ? Skia.RenderComparisonKind.Layout
+        : this._text?.compareTo(value) ?? Skia.RenderComparisonKind.Layout
       
       this._text = value
   
-      if (comparison >= RenderComparison.Layout) {
+      if (comparison >= Skia.RenderComparisonKind.Layout) {
         this.markNeedsLayout()
-      } else if (comparison >= RenderComparison.Paint) {
+      } else if (comparison >= Skia.RenderComparisonKind.Paint) {
         this.rebuildParagraphForPaint = true
       }
     }
@@ -408,12 +425,12 @@ export class TextPainter {
     let textStyle = this.text.style?.getTextStyle(this.textScaleFactor) ?? null
     
     if (textStyle !== null) {
-      builder.pushStyle(textStyle)
+      builder.push(textStyle)
     }
 
-    builder.addText(' ')
+    builder.text(' ')
     const paragraph = builder.build()
-    paragraph.layout(new ParagraphConstraints(Infinity))
+    paragraph.layout(ParagraphConstraints.create(Infinity))
     return paragraph
   }
 
@@ -446,7 +463,7 @@ export class TextPainter {
     const builder = new ParagraphBuilder(this.createParagraphStyle())
     text.build(builder, this.textScaleFactor, this._placeholderDimensions)
 
-    this.inlinePlaceholderScales = builder.placeholderScales
+    this.inlinePlaceholderScales = builder.scales
     this.paragraph = builder.build()
     this.rebuildParagraphForPaint = false
   }
@@ -559,7 +576,7 @@ export class TextPainter {
     let boxes: TextBox[] = []
     while (boxes.length === 0) {
       const prevRuneOffset = offset - graphemeClusterLength
-      boxes = this.paragraph.getBoxesForRange(prevRuneOffset, offset, At.RectHeightStyle.Strut)
+      boxes = this.paragraph.getBoxesForRange(prevRuneOffset, offset, AtEngine.skia.RectHeightStyle.Strut)
       
       if (boxes.length === 0) {
         if (!needsSearch && prevCodeUnit == NEWLINE_CODE_UNIT) {
@@ -581,7 +598,7 @@ export class TextPainter {
       }
 
       const caretEnd = box.end
-      const dx = box.direction == At.TextDirection.RTL 
+      const dx = box.direction == AtEngine.skia.TextDirection.RTL 
         ? caretEnd - caretPrototype.width 
         : caretEnd
 
@@ -613,7 +630,7 @@ export class TextPainter {
 
     while (boxes.length === 0) {
       const nextRuneOffset = offset + graphemeClusterLength
-      boxes = this.paragraph.getBoxesForRange(offset, nextRuneOffset, At.RectHeightStyle.Strut)
+      boxes = this.paragraph.getBoxesForRange(offset, nextRuneOffset, AtEngine.skia.RectHeightStyle.Strut)
       
       if (boxes.length === 0) {
         if (!needsSearch) {
@@ -630,7 +647,7 @@ export class TextPainter {
 
       const box = boxes[boxes.length - 1]
       const caretStart = box.start
-      const dx = box.direction === At.TextDirection.RTL 
+      const dx = box.direction === AtEngine.skia.TextDirection.RTL 
         ? caretStart - caretPrototype.width 
         : caretStart
       
@@ -648,32 +665,34 @@ export class TextPainter {
   private get empty (): Offset {
     invariant(this.textAlign !== null)
     switch (this.textAlign) {
-      case At.TextAlign.Left:
-        return Offset.zero
-      case At.TextAlign.Right:
+      case AtEngine.skia.TextAlign.Left:
+        return Offset.ZERO
+      case AtEngine.skia.TextAlign.Right:
         return new Offset(this.width, 0)
-      case At.TextAlign.Center:
+      case AtEngine.skia.TextAlign.Center:
         return new Offset(this.width / 2, 0)
-      case At.TextAlign.Justify:
-      case At.TextAlign.Start:
+      case AtEngine.skia.TextAlign.Justify:
+        break
+      case AtEngine.skia.TextAlign.Start:
         invariant(this.textDirection !== null)
         switch (this.textDirection) {
-          case At.TextDirection.RTL:
+          case AtEngine.skia.TextDirection.RTL:
             return new Offset(this.width, 0)
-          case At.TextDirection.LTR:
-            return Offset.zero
+          case AtEngine.skia.TextDirection.LTR:
+            return Offset.ZERO
         }
-      case At.TextAlign.End:
+        break
+      case AtEngine.skia.TextAlign.End:
         invariant(this.textDirection !== null)
         switch (this.textDirection) {
-          case At.TextDirection.RTL:
-            return Offset.zero
-          case At.TextDirection.LTR:
+          case AtEngine.skia.TextDirection.RTL:
+            return Offset.ZERO
+          case AtEngine.skia.TextDirection.LTR:
             return new Offset(this.width, 0)
         }
     }
 
-    return Offset.zero
+    return Offset.ZERO
   }
 
   
@@ -704,11 +723,11 @@ export class TextPainter {
     let rect: Rect | null = null
     
     switch (position.affinity) {
-      case At.Affinity.Upstream: {
+      case AtEngine.skia.Affinity.Upstream: {
         rect = this.getRectFromUpstream(offset, caretPrototype) ?? this.getRectFromDownstream(offset, caretPrototype)
         break
       }
-      case At.Affinity.Downstream: {
+      case AtEngine.skia.Affinity.Downstream: {
         rect = this.getRectFromDownstream(offset, caretPrototype) ?? this.getRectFromUpstream(offset, caretPrototype)
         break
       }
@@ -730,8 +749,8 @@ export class TextPainter {
 
   getBoxesForSelection (
     selection: TextSelection,
-    boxHeightStyle: RectHeightStyle = At.RectHeightStyle.Tight,
-    boxWidthStyle: RectWidthStyle = At.RectWidthStyle.Tight,
+    boxHeightStyle: Skia.RectHeightStyle = AtEngine.skia.RectHeightStyle.Tight,
+    boxWidthStyle: Skia.RectWidthStyle = AtEngine.skia.RectWidthStyle.Tight,
   ) {
     invariant(boxHeightStyle !== null)
     invariant(boxWidthStyle !== null)
@@ -760,8 +779,9 @@ export class TextPainter {
     return this.paragraph.getLineBoundary(position)
   }
   
-  computeLineMetrics(): AtLineMetrics[] {
+  computeLineMetrics (): LineMetrics[] {
     invariant(this.paragraph)
-    return  this.lineMetricsCache ??= this.paragraph!.computeLineMetrics()
+    // @ts-ignore
+    return this.lineMetricsCache ??= this.paragraph.computeLineMetrics() 
   }
 }

@@ -1,5 +1,5 @@
 import { ApiStateKind, ApiTransport } from '@at/api'
-import { AtEngineConfiguration, Paragraph, ParagraphBuilder, ParagraphStyle, Skia, Surface } from '@at/engine'
+import { AtEngineConfiguration, Paragraph, ParagraphBuilder, ParagraphConstraints, ParagraphStyle, Skia, Surface, TextStyle } from '@at/engine'
 import { Offset, Size } from '@at/geometry'
 import { Color } from '@at/basic'
 import { 
@@ -11,6 +11,7 @@ import {
   NetworkImage, 
 } from '@at/painting'
 import { AtInstance } from './at'
+import { invariant } from '@at/utils'
 
 
 //// => ConnectionPayload
@@ -62,15 +63,21 @@ app.start(() => {
   const surface = Surface.create(App.tryCreateSurface(size, app.element) as Skia.Surface)
 
   const canvas = surface.canvas
-  
-  const style = ParagraphStyle.create()
-  const paragraph = Paragraph.create({
-    paragraph: null,
-    style,
-    commands: []
+  const style = ParagraphStyle.create({
+    
   })
+  const builder = ParagraphBuilder.create(style)
+  builder.push(TextStyle.create({
+    fontFamily: 'Roboto',
+    fontSize: 50
+  }))
+  builder.text('The goove eather')
 
+  const paragraph = builder.build()
+  
+  paragraph.layout(ParagraphConstraints.create(Infinity))
   canvas.drawParagraph(paragraph, Offset.create(10, 10))
 
+  
   surface.skia.flush()
 })

@@ -104,7 +104,7 @@ export abstract class AtKit extends AtEngine {
 
     const { fonts } = manifest
 
-    this.api.Engine.events.publish('resource.fonts.loader.change', [{
+    return this.api.Engine.events.publish('resource.fonts.loader.change', [{
       state: 'loading'
     }])
     .then(() => {
@@ -112,7 +112,7 @@ export abstract class AtKit extends AtEngine {
         return this.load(font.dir)
           .then(res => res.arrayBuffer())
           .then(data => AtEngine.fonts.register(data, font.family))
-      }))
+      })).then(() => AtEngine.fonts.ensure())
     })
     .then(() => this.api.Engine.events.publish('resource.fonts.loader.change', [{
       state: 'loaded'

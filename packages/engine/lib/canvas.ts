@@ -280,6 +280,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
    * @return {void}
    */
   drawParagraph (paragraph: Paragraph, offset: Offset) {    
+    invariant(paragraph.skia)
     this.skia.drawParagraph(paragraph.skia, offset.dx, offset.dy)
     paragraph.markUsed()
   }

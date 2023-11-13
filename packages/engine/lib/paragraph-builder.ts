@@ -66,12 +66,12 @@ export class ParagraphBuilder extends Skia.ManagedSkiaRef<Skia.ParagraphBuilder>
    * @param {ParagraphStyle} style
    * @return {*}
    */  
-  constructor (style: ParagraphStyle) {
-    const skia = ParagraphBuilder.resurrect(style)
+  constructor (paragraphStyle: ParagraphStyle) {
+    const skia = ParagraphBuilder.resurrect(paragraphStyle)
     super(skia)
 
-    this.style = style
-    this.styles.push(style.textStyle)
+    this.style = paragraphStyle
+    this.styles.push(paragraphStyle.style)
   }
   
   /**
@@ -117,13 +117,6 @@ export class ParagraphBuilder extends Skia.ManagedSkiaRef<Skia.ParagraphBuilder>
    * @return {*}
    */
   text (text: string) {
-    const fontFamilies: string[] = []
-    const style = this.peek() as TextStyle
-    
-    if (style.fontFamily !== null) {
-      fontFamilies.push(style.fontFamily!)
-    }
-
     this.commands.push(ParagraphCommand.text(text))
     this.builder.addText(text)
   }
@@ -179,7 +172,7 @@ export class ParagraphBuilder extends Skia.ManagedSkiaRef<Skia.ParagraphBuilder>
    */
   push (style: TextStyle) {
     const peeked = this.peek() as TextStyle
-    const merged = peeked.mergeWith(this.peek() as TextStyle)
+    const merged = peeked.mergeWith(style)
     
     this.styles.push(merged)
     this.commands.push(ParagraphCommand.style(style))

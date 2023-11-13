@@ -17,6 +17,10 @@ import { ParagraphStyle } from './paragraph-style'
 //// => ParagraphConstraints
 // 段落文本约束
 export class ParagraphConstraints extends Equalable<ParagraphConstraints> {
+  static create (width: number) {
+    return new ParagraphConstraints(width)
+  }
+
   // 约束宽度
   public width: number
 
@@ -82,7 +86,6 @@ export class Paragraph extends Skia.ManagedSkiaRef<Skia.Paragraph> {
    */
   static resurrect (
     style: ParagraphStyle,
-    constraints: ParagraphConstraints,
     commands: ParagraphCommand[],
   ): Skia.Paragraph {
     
@@ -128,8 +131,7 @@ export class Paragraph extends Skia.ManagedSkiaRef<Skia.Paragraph> {
 
   // => skia
   public get skia () {
-    invariant(this.constraints)
-    return this.ensure(this.constraints)
+    return super.skia
   }
 
   // => paragraph
@@ -171,12 +173,15 @@ export class Paragraph extends Skia.ManagedSkiaRef<Skia.Paragraph> {
 
     if (paragraph === null) {
       invariant(this.style)
-      invariant(this.constraints)
-      paragraph = Paragraph.resurrect(this.style, this.constraints, this.commands)
+      paragraph = Paragraph.resurrect(this.style, this.commands)
       didRebuild = true
     }
 
-    if (didRebuild || this.constraints?.notEqual(constraints)) {
+    if (
+      didRebuild || 
+      this.constraints === null || 
+      this.constraints.notEqual(constraints)
+    ) {
       this.constraints = constraints
 
       try {
@@ -335,7 +340,7 @@ export class Paragraph extends Skia.ManagedSkiaRef<Skia.Paragraph> {
    * @return {void}
    */  
   layout (constraints: ParagraphConstraints) {
-    if (this.constraints?.notEqual(constraints)) {
+    if (this.constraints === null || this.constraints.notEqual(constraints)) {
       this.ensure(constraints)
       this.markUsed()
     }

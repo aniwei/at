@@ -107,7 +107,7 @@ export class ParagraphStyle extends Skia.ManagedSkiaRef<Skia.ParagraphStyle> {
     * @description: 
     * @return {*}
     */
-  get textStyle () {
+  get style () {
     return TextStyle.create({
       fontWeight: this.fontWeight,
       fontStyle: this.fontStyle,

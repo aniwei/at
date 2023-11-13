@@ -66,9 +66,7 @@ export interface AtEngineConfiguration {
   }
 }
 
-export abstract class AtEngine extends AssetsManager {
-  
-  
+export abstract class AtEngine extends AssetsManager {  
   // => engine
   // Skia Runtime 对象
   static _skia: AtEngineSkia | null = null

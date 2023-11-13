@@ -1,8 +1,8 @@
 import { invariant } from '@at/utils'
-import { RenderComparison } from '../at'
-import { AtTextPaintingStyle } from './text-style'
-import { AtPlaceholderDimensions } from './text-painter'
-import { AtParagraphBuilder, AtTextPosition } from '../engine/text'
+import { Equalable } from '@at/basic'
+import { Skia, TextPosition, ParagraphBuilder } from '@at/engine'
+import { PlaceholderDimensions } from './text-painter'
+import { TextPaintingStyle } from './text-style'
 
 //// => Accumulator
 export class Accumulator {
@@ -24,26 +24,27 @@ export class Accumulator {
 
 export type InlineSpanVisitor = (span: InlineSpan) => boolean
 
-export abstract class InlineSpan {
-  style: AtTextPaintingStyle | null
+export abstract class InlineSpan extends Equalable<InlineSpan> {
+  style: TextPaintingStyle | null
 
-  constructor (style: AtTextPaintingStyle | null) {
+  constructor (style: TextPaintingStyle | null) {
+    super()
     this.style = style
   }
 
   abstract build (
-    builder: AtParagraphBuilder, 
+    builder: ParagraphBuilder, 
     textScaleFactor: number, 
-    dimensions: AtPlaceholderDimensions[] | null
+    dimensions: PlaceholderDimensions[] | null
   ): void
 
   abstract visit (visitor: InlineSpanVisitor): boolean
-  abstract getSpanForPositionVisitor (position: AtTextPosition, offset: Accumulator): InlineSpan | null
+  abstract getSpanForPositionVisitor (position: TextPosition, offset: Accumulator): InlineSpan | null
   abstract computeToPlainText (buffer: string, includePlaceholders: boolean): string
   abstract codeUnitAtVisitor (index: number, offset: Accumulator): number | null
-  abstract compareTo (other: InlineSpan): RenderComparison
+  abstract compareTo (other: InlineSpan): Skia.RenderComparisonKind
 
-  getSpanForPosition (position: AtTextPosition): InlineSpan | null {
+  getSpanForPosition (position: TextPosition): InlineSpan | null {
     const offset = new Accumulator()
     let result: InlineSpan | null = null
     this.visit((span: InlineSpan) => {
@@ -55,7 +56,7 @@ export abstract class InlineSpan {
   }
 
   toPlainText (includePlaceholders = true) {
-    const text = this.computeToPlainText(``, includePlaceholders)
+    const text = this.computeToPlainText('', includePlaceholders)
     return text
   }
 

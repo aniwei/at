@@ -233,6 +233,7 @@ export type {
   PictureRecorder,
   PositionWithAffinity,
   RectHeightStyle,
+  RectWidthStyle,
   RectWithDirection,
   Shader,
   StrokeCap,
@@ -274,11 +275,19 @@ export enum FilterQualityKind {
   High,
 }
 
-// =>
+// => ImageByteFormatKind
 // 位图格式
 export enum ImageByteFormatKind {
   RawRGBA,
   RawStraightRGBA,
   RawUnmodified,
   PNG
+}
+
+// => RenderComparisonKind
+export enum RenderComparisonKind {
+  Identical,
+  Metadata,
+  Paint,
+  Layout,
 }

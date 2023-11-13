@@ -1,4 +1,5 @@
 import { Color } from '@at/basic'
+import { invariant } from '@at/utils'
 import { Offset, RRect, Rect } from '@at/geometry'
 
 import { Path } from './path'
@@ -204,7 +205,7 @@ export class DrawParagraphCommand extends PaintCommand {
   }
 
   apply (canvas: Skia.Canvas) {
-    this.paragraph.skia
+    invariant(this.paragraph.skia)
     canvas.drawParagraph(
       this.paragraph.skia,
       this.offset.dx,

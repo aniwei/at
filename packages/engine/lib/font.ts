@@ -1,5 +1,4 @@
 import { invariant } from '@at/utils'
-import { fetch } from '@at/basic'
 import { AtEngine } from './engine'
 
 
@@ -118,23 +117,12 @@ export class Fonts {
    * @param {string} faimily
    * @return {*}
    */
-  register (data: ArrayBuffer, family: string): Promise<RegisteredFont | null>
-  register (url: string, family: string): Promise<RegisteredFont | null>
-  register (url: ArrayBuffer | string, family: string): Promise<RegisteredFont | null> {
-    if (typeof url === 'string') {
-      return fetch(url)
-        .then(resp => resp.arrayBuffer())
-        .then((buffer: ArrayBuffer) => {
-          const typeface = AtEngine.skia.Typeface.MakeFreeTypeFaceFromData(buffer)
-          invariant(typeface)
-  
-          return new RegisteredFont(family, buffer, typeface)
-        }).catch((error: any) => {
-          throw error
-        })
-    } else {
-      const typeface = AtEngine.skia.Typeface.MakeFreeTypeFaceFromData(url)
-      return Promise.resolve(new RegisteredFont(family, url, typeface as Skia.Typeface))
-    }
+
+  register (data: ArrayBuffer, family: string): Promise<void> {
+    const typeface = AtEngine.skia.Typeface.MakeFreeTypeFaceFromData(data)
+    invariant(typeface)
+    const font = RegisteredFont.create(family, data, typeface)
+    this.registered.push(font)
+    return Promise.resolve()
   }
 }

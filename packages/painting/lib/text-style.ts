@@ -1,17 +1,20 @@
 import { invariant } from '@at/utils' 
 import { Color } from '@at/basic'
-import { Paint, Shadow, Skia } from '@at/engine'
-import { TextOverflow } from './text-painter'
+import { TextOverflowKind } from './text-painter'
 import { lerp, listEquals, listNotEquals } from '@at/utils'
 import { 
-  AtParagraphStyle, 
-  AtStrutStyle, 
-  AtTextDecoration, 
-  AtTextHeightBehavior, 
-  AtTextStyle, 
-  AtFontFeature, 
-  TextLeadingDistribution 
-} from '../engine/text'
+  Skia,
+  Paint, 
+  Shadow, 
+  ParagraphStyle, 
+  StrutStyle, 
+  TextDecoration, 
+  TextHeightBehavior, 
+  TextStyle, 
+  FontFeature, 
+  TextLeadingDistributionKind, 
+  AtEngine
+} from '@at/engine'
 
 export type TextPaintingStyleOptions = {
   // 是否继承
@@ -34,22 +37,22 @@ export type TextPaintingStyleOptions = {
   textBaseline?: Skia.TextBaseline,
   // 高度
   height?: number,
-  leadingDistribution?: TextLeadingDistribution,
+  leadingDistribution?: TextLeadingDistributionKind,
   // 前景画笔
   foreground?: Paint,
   // 背景画笔
   background?: Paint,
   // 阴影
   shadows?: Shadow[],
-  fontFeatures?: AtFontFeature[],
-  decoration?: AtTextDecoration,
+  fontFeatures?: FontFeature[],
+  decoration?: TextDecoration,
   decorationColor?: Color,
   decorationStyle?: Skia.DecorationStyle,
   decorationThickness?: number,
   fontFamily?: string,
   fontFamilyFallback?: string[],
   package?: string,
-  overflow?: TextOverflow,
+  overflow?: TextOverflowKind,
 }
 
 export class TextPaintingStyle {
@@ -86,46 +89,46 @@ export class TextPaintingStyle {
   public fontFamily: string | null
   public fontFamilyFallback: string[] | null
   public fontSize: number | null
-  public fontWeight: FontWeight | null
-  public fontStyle: FontSlant | null
+  public fontWeight: Skia.FontWeight | null
+  public fontStyle: Skia.FontSlant | null
   public letterSpacing: number | null
   public wordSpacing: number | null
-  public textBaseline: TextBaseline | null
+  public textBaseline: Skia.TextBaseline | null
   public height: number | null
-  public leadingDistribution: TextLeadingDistribution | null
-  public foreground: AtPaint | null
-  public background: AtPaint | null
-  public decoration: AtTextDecoration | null
+  public leadingDistribution: TextLeadingDistributionKind | null
+  public foreground: Paint | null
+  public background: Paint | null
+  public decoration: TextDecoration | null
   public decorationColor: Color | null
-  public decorationStyle: DecorationStyle | null
+  public decorationStyle: Skia.DecorationStyle | null
   public decorationThickness: number | null
-  public shadows: AtShadow[] | null
-  public fontFeatures: AtFontFeature[] | null
-  public overflow: TextOverflow | null
+  public shadows: Shadow[] | null
+  public fontFeatures: FontFeature[] | null
+  public overflow: TextOverflowKind | null
 
   constructor (
     inherit: boolean = true,
     color: Color | null = null,
     backgroundColor: Color | null = null,
     fontSize: number | null = null,
-    fontWeight: FontWeight | null = null,
-    fontStyle: FontSlant | null = null,
+    fontWeight: Skia.FontWeight | null = null,
+    fontStyle: Skia.FontSlant | null = null,
     letterSpacing: number | null = null,
     wordSpacing: number | null = null,
-    textBaseline: TextBaseline | null = null,
+    textBaseline: Skia.TextBaseline | null = null,
     height: number | null = null,
-    leadingDistribution: TextLeadingDistribution | null = null,
-    foreground: AtPaint | null = null,
-    background: AtPaint | null = null,
-    shadows: AtShadow[] | null = null,
-    fontFeatures: AtFontFeature[] | null = null,
-    decoration: AtTextDecoration | null = null,
+    leadingDistribution: TextLeadingDistributionKind | null = null,
+    foreground: Paint | null = null,
+    background: Paint | null = null,
+    shadows: Shadow[] | null = null,
+    fontFeatures: FontFeature[] | null = null,
+    decoration: TextDecoration | null = null,
     decorationColor: Color | null = null,
-    decorationStyle: DecorationStyle | null = null,
+    decorationStyle: Skia.DecorationStyle | null = null,
     decorationThickness: number | null = null,
     fontFamily: string | null = null,
     fontFamilyFallback: string[] | null = null,
-    overflow: TextOverflow | null = null,
+    overflow: TextOverflowKind | null = null,
   ) {
     this.inherit = inherit
     this.color = color
@@ -156,24 +159,24 @@ export class TextPaintingStyle {
     color?: Color | null,
     backgroundColor?: Color | null,
     fontSize?: number | null,
-    fontWeight?: FontWeight | null,
-    fontStyle?: FontSlant | null,
+    fontWeight?: Skia.FontWeight | null,
+    fontStyle?: Skia.FontSlant | null,
     letterSpacing?: number | null,
     wordSpacing?: number | null,
-    textBaseline?: TextBaseline | null,
+    textBaseline?: Skia.TextBaseline | null,
     height?: number | null,
-    leadingDistribution?: TextLeadingDistribution | null,
-    foreground?: AtPaint | null,
-    background?: AtPaint | null,
-    shadows?: AtShadow[] | null,
-    fontFeatures?: AtFontFeature[] | null,
-    decoration?: AtTextDecoration | null,
+    leadingDistribution?: TextLeadingDistributionKind | null,
+    foreground?: Paint | null,
+    background?: Paint | null,
+    shadows?: Shadow[] | null,
+    fontFeatures?: FontFeature[] | null,
+    decoration?: TextDecoration | null,
     decorationColor?: Color | null,
-    decorationStyle?: DecorationStyle | null,
+    decorationStyle?: Skia.DecorationStyle | null,
     decorationThickness?: number | null,
     fontFamily?: string | null,
     fontFamilyFallback?: string[] | null,
-    overflow?: TextOverflow | null,
+    overflow?: TextOverflowKind | null,
   ): TextPaintingStyle {
 
     return new TextPaintingStyle(
@@ -215,17 +218,17 @@ export class TextPaintingStyle {
     heightFactor: number = 1.0,
     color: Color | null,
     backgroundColor: Color | null,
-    decoration: AtTextDecoration | null,
+    decoration: TextDecoration | null,
     decorationColor: Color | null,
     fontFamily: string | null,
     fontFamilyFallback: string[] | null,
-    fontStyle: FontSlant | null,
-    decorationStyle: DecorationStyle | null,
-    textBaseline: TextBaseline | null,
-    leadingDistribution: TextLeadingDistribution | null,
-    shadows: AtShadow[] | null,
-    fontFeatures: AtFontFeature[] | null,
-    overflow: TextOverflow | null,
+    fontStyle: Skia.FontSlant | null,
+    decorationStyle: Skia.DecorationStyle | null,
+    textBaseline: Skia.TextBaseline | null,
+    leadingDistribution: TextLeadingDistributionKind | null,
+    shadows: Shadow[] | null,
+    fontFeatures: FontFeature[] | null,
+    overflow: TextOverflowKind | null,
   ) {
     invariant(fontSizeFactor !== null)
     invariant(this.fontSize !== null || (fontSizeFactor === 1.0))
@@ -384,33 +387,33 @@ export class TextPaintingStyle {
       );
     }
 
-    let foregroundPaint: AtPaint | null = null
+    let foregroundPaint: Paint | null = null
 
     if (a.foreground !== null || b.foreground !== null) {
       if (t < 0.5) {
         if (!a.foreground) {
-          foregroundPaint = new AtPaint()
+          foregroundPaint = new Paint()
           foregroundPaint.color = a.color as Color
         } 
       } else {
         if (!b.foreground) {
-          foregroundPaint = new AtPaint()
+          foregroundPaint = new Paint()
           foregroundPaint.color = b.color as Color
         } 
       }
     }
 
-    let backgroundPaint: AtPaint | null = null
+    let backgroundPaint: Paint | null = null
 
     if (a.background !== null || b.background !== null) {
       if (t < 0.5) {
         if (!a.background) {
-          backgroundPaint = new AtPaint()
+          backgroundPaint = new Paint()
           backgroundPaint.color = a.color as Color
         } 
       } else {
         if (!b.background) {
-          backgroundPaint = new AtPaint()
+          backgroundPaint = new Paint()
           backgroundPaint.color = b.color as Color
         } 
       }
@@ -456,17 +459,17 @@ export class TextPaintingStyle {
     )
   }
 
-  getTextStyle (textScaleFactor: number = 1.0): AtTextStyle {
-    let background: AtPaint | null = this.background
+  getTextStyle (textScaleFactor: number = 1.0): TextStyle {
+    let background: Paint | null = this.background
     if (background === null) {
-      background = AtPaint.create()
+      background = Paint.create()
 
       if (this.backgroundColor !== null) {
         background.color = this.backgroundColor
       }
     }
 
-    return AtTextStyle.create({
+    return TextStyle.create({
       color: this.color,
       decoration: this.decoration,
       decorationColor: this.decorationColor,
@@ -477,7 +480,6 @@ export class TextPaintingStyle {
       textBaseline: this.textBaseline,
       leadingDistribution: this.leadingDistribution,
       fontFamily: this.fontFamily,
-      fontFamilyFallback: this.fontFamilyFallback,
       fontSize: this.fontSize === null 
         ? null 
         : this.fontSize * textScaleFactor,
@@ -496,18 +498,18 @@ export class TextPaintingStyle {
   }
   
   getParagraphStyle(
-    textAlign: TextAlign | null,
-    textDirection: TextDirection | null,
+    textAlign: Skia.TextAlign | null,
+    textDirection: Skia.TextDirection | null,
     ellipsis: string | null,
     maxLines: number | null,
     textScaleFactor: number = 1.0,
-    textHeightBehavior: AtTextHeightBehavior | null,
+    textHeightBehavior: TextHeightBehavior | null,
     fontFamily: string | null,
     fontSize: number | null,
-    fontWeight: FontWeight | null,
-    fontStyle: FontSlant | null,
+    fontWeight: Skia.FontWeight | null,
+    fontStyle: Skia.FontSlant | null,
     height: number | null,
-    strutStyle: AtStrutStyle | null,
+    strutStyle: StrutStyle | null,
   ) {
     invariant(maxLines === null || maxLines > 0, `The argument "maxLines" cannot be null or the "maxLines" value must be gather than zero.`)
 
@@ -515,25 +517,23 @@ export class TextPaintingStyle {
     const effectiveTextHeightBehavior = textHeightBehavior ?? (
       leadingDistribution === null 
         ? null 
-        : AtTextHeightBehavior.create({ leadingDistribution })
+        : TextHeightBehavior.create({ leadingDistribution })
     )
 
-    invariant(At.kDefaultFontSize)
-
-    return AtParagraphStyle.create({
+    return ParagraphStyle.create({
       textAlign,
       textDirection,
       fontWeight: fontWeight ?? this.fontWeight,
       fontStyle: fontStyle ?? this.fontStyle,
       fontFamily: fontFamily ?? this.fontFamily,
-      fontSize: (fontSize ?? this.fontSize ?? At.kDefaultFontSize) * textScaleFactor,
+      fontSize: (fontSize ?? this.fontSize ?? AtEngine.env<number>('ATKIT_FONT_SIZE', 12)) * textScaleFactor,
       maxLines: maxLines,
       ellipsis: ellipsis,
       height: height ?? this.height,
       textHeightBehavior: effectiveTextHeightBehavior,
       strutStyle: strutStyle === null 
         ? null 
-        : AtStrutStyle.create({
+        : StrutStyle.create({
           fontFamily: strutStyle.fontFamily,
           fontFamilyFallback: strutStyle.fontFamilyFallback,
           fontSize: strutStyle.fontSize === null 
@@ -549,7 +549,7 @@ export class TextPaintingStyle {
     })
   }
 
-  compareTo (other: TextPaintingStyle): RenderComparison {
+  compareTo (other: TextPaintingStyle): Skia.RenderComparisonKind {
     if (
       this.inherit !== other.inherit ||
       this.fontFamily !== other.fontFamily ||
@@ -568,7 +568,7 @@ export class TextPaintingStyle {
       listNotEquals(this.fontFeatures, other.fontFeatures) ||
       listNotEquals(this.fontFamilyFallback, other.fontFamilyFallback)
     ) {
-      return RenderComparison.Layout
+      return Skia.RenderComparisonKind.Layout
     }
 
     if (
@@ -579,10 +579,10 @@ export class TextPaintingStyle {
       this.color?.notEqual(other.color) ||
       this.backgroundColor?.notEqual(other.backgroundColor) 
     ) {
-      return RenderComparison.Paint
+      return Skia.RenderComparisonKind.Paint
     }
 
-    return RenderComparison.Identical
+    return Skia.RenderComparisonKind.Identical
   }
 
   equal (other: TextPaintingStyle | null) {

@@ -92,6 +92,7 @@ export class TextStyle extends Skia.ManagedSkiaRef<Skia.TextStyle> {
       fontSize: fontSize ? fontSize : undefined,
       letterSpacing: letterSpacing ? letterSpacing : undefined,
       wordSpacing: wordSpacing ? wordSpacing : undefined,
+      heightMultiplier: height ? height : undefined,
       halfLeading: leadingDistribution 
         ? leadingDistribution === TextLeadingDistributionKind.Even ? true : false
         : undefined,
@@ -106,33 +107,9 @@ export class TextStyle extends Skia.ManagedSkiaRef<Skia.TextStyle> {
       })) : undefined
     }) as  unknown as Skia.TextStyle
   }
-  
-  // => skia
+
   public get skia () {
-    if (super.ref === null) {
-      this.ref = TextStyle.resurrect(
-        this.color,
-        this.decoration,
-        this.decorationColor,
-        this.decorationStyle,
-        this.decorationThickness,
-        this.fontWeight,
-        this.fontStyle,
-        this.textBaseline,
-        this.fontFamily,
-        this.fontSize,
-        this.letterSpacing,
-        this.wordSpacing,
-        this.height,
-        this.leadingDistribution,
-        this.background,
-        this.foreground,
-        this.shadows,
-      )
-    }
-
     invariant(super.skia)
-
     return super.skia
   }
 
@@ -190,7 +167,27 @@ export class TextStyle extends Skia.ManagedSkiaRef<Skia.TextStyle> {
     foreground: Paint | null = null,
     shadows: Shadow[] | null = null,
   ) {
-    super()
+    const skia = TextStyle.resurrect(
+      color,
+      decoration,
+      decorationColor,
+      decorationStyle,
+      decorationThickness,
+      fontWeight,
+      fontStyle,
+      textBaseline,
+      fontFamily,
+      fontSize,
+      letterSpacing,
+      wordSpacing,
+      height,
+      leadingDistribution,
+      background,
+      foreground,
+      shadows,
+    )
+
+    super(skia)
     this.color = color 
     this.decoration = decoration 
     this.decorationColor = decorationColor 
@@ -208,6 +205,28 @@ export class TextStyle extends Skia.ManagedSkiaRef<Skia.TextStyle> {
     this.background = background 
     this.foreground = foreground 
     this.shadows = shadows 
+  }
+
+  resurrect (): Skia.TextStyle {
+    return TextStyle.resurrect(
+      this.color,
+      this.decoration,
+      this.decorationColor,
+      this.decorationStyle,
+      this.decorationThickness,
+      this.fontWeight,
+      this.fontStyle,
+      this.textBaseline,
+      this.fontFamily,
+      this.fontSize,
+      this.letterSpacing,
+      this.wordSpacing,
+      this.height,
+      this.leadingDistribution,
+      this.background,
+      this.foreground,
+      this.shadows,
+    )
   }
 
   /**
