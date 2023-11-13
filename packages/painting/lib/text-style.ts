@@ -1,7 +1,5 @@
-import { invariant } from '@at/utils' 
+import { invariant, lerp, listEquals, listNotEquals  } from '@at/utils' 
 import { Color } from '@at/basic'
-import { TextOverflowKind } from './text-painter'
-import { lerp, listEquals, listNotEquals } from '@at/utils'
 import { 
   Skia,
   Paint, 
@@ -15,6 +13,7 @@ import {
   TextLeadingDistributionKind, 
   AtEngine
 } from '@at/engine'
+import { TextOverflowKind } from './text-painter'
 
 export type TextPaintingStyleOptions = {
   // 是否继承
@@ -50,7 +49,6 @@ export type TextPaintingStyleOptions = {
   decorationStyle?: Skia.DecorationStyle,
   decorationThickness?: number,
   fontFamily?: string,
-  fontFamilyFallback?: string[],
   package?: string,
   overflow?: TextOverflowKind,
 }
@@ -78,7 +76,6 @@ export class TextPaintingStyle {
       options?.decorationStyle,
       options?.decorationThickness,
       options?.fontFamily,
-      options?.fontFamilyFallback,
       options?.overflow,
     )
   }
@@ -87,7 +84,6 @@ export class TextPaintingStyle {
   public color: Color | null
   public backgroundColor: Color | null
   public fontFamily: string | null
-  public fontFamilyFallback: string[] | null
   public fontSize: number | null
   public fontWeight: Skia.FontWeight | null
   public fontStyle: Skia.FontSlant | null
@@ -127,7 +123,6 @@ export class TextPaintingStyle {
     decorationStyle: Skia.DecorationStyle | null = null,
     decorationThickness: number | null = null,
     fontFamily: string | null = null,
-    fontFamilyFallback: string[] | null = null,
     overflow: TextOverflowKind | null = null,
   ) {
     this.inherit = inherit
@@ -150,7 +145,6 @@ export class TextPaintingStyle {
     this.decorationStyle = decorationStyle
     this.decorationThickness = decorationThickness
     this.fontFamily = fontFamily
-    this.fontFamilyFallback = fontFamilyFallback
     this.overflow = overflow
   }
 
@@ -175,7 +169,6 @@ export class TextPaintingStyle {
     decorationStyle?: Skia.DecorationStyle | null,
     decorationThickness?: number | null,
     fontFamily?: string | null,
-    fontFamilyFallback?: string[] | null,
     overflow?: TextOverflowKind | null,
   ): TextPaintingStyle {
 
@@ -205,7 +198,6 @@ export class TextPaintingStyle {
       decorationStyle ?? this.decorationStyle,
       decorationThickness ?? this.decorationThickness,
       fontFamily ?? this.fontFamily,
-      fontFamilyFallback ?? this.fontFamilyFallback,
       overflow ?? this.overflow,
     )
   }
@@ -269,9 +261,7 @@ export class TextPaintingStyle {
       leadingDistribution ?? this.leadingDistribution,
       
       this.foreground,
-      
       this.background,
-      
       shadows ?? this.shadows,
       fontFeatures ?? this.fontFeatures,
       decoration ?? this.decoration,
@@ -282,12 +272,11 @@ export class TextPaintingStyle {
         ? null 
         : this.decorationThickness * decorationThicknessFactor,
       fontFamily ?? this.fontFamily,
-      fontFamilyFallback ?? this.fontFamilyFallback,
       overflow ?? this.overflow,
     )
   }
   
-  merge (other: TextPaintingStyle | null) {
+  mergeWith (other: TextPaintingStyle | null) {
     if (other === null) {
       return this
     }
@@ -317,7 +306,6 @@ export class TextPaintingStyle {
       other.decorationStyle,
       other.decorationThickness,
       other.fontFamily,
-      other.fontFamilyFallback,
       other.overflow,
     )
   }
@@ -354,7 +342,6 @@ export class TextPaintingStyle {
         t < 0.5 ? null : b.decorationStyle,
         t < 0.5 ? null : b.decorationThickness,
         t < 0.5 ? null : b.fontFamily,
-        t < 0.5 ? null : b.fontFamilyFallback,
         t < 0.5 ? null : b.overflow,
       )
     }
@@ -382,7 +369,6 @@ export class TextPaintingStyle {
         t < 0.5 ? a.decorationStyle : null,
         t < 0.5 ? a.decorationThickness : null,
         t < 0.5 ? a.fontFamily : null,
-        t < 0.5 ? a.fontFamilyFallback : null,
         t < 0.5 ? a.overflow : null,
       );
     }
@@ -454,7 +440,6 @@ export class TextPaintingStyle {
       t < 0.5 ? a.decorationStyle : b.decorationStyle,
       lerp(a.decorationThickness ?? b.decorationThickness as number, b.decorationThickness ?? a.decorationThickness as number, t),
       t < 0.5 ? a.fontFamily : b.fontFamily,
-      t < 0.5 ? a.fontFamilyFallback : b.fontFamilyFallback,
       t < 0.5 ? a.overflow : b.overflow,
     )
   }
@@ -565,8 +550,7 @@ export class TextPaintingStyle {
       this.background !== other.background ||
       this.overflow !== other.overflow ||
       listNotEquals(this.shadows, other.shadows) ||
-      listNotEquals(this.fontFeatures, other.fontFeatures) ||
-      listNotEquals(this.fontFamilyFallback, other.fontFamilyFallback)
+      listNotEquals(this.fontFeatures, other.fontFeatures) 
     ) {
       return Skia.RenderComparisonKind.Layout
     }
@@ -608,8 +592,7 @@ export class TextPaintingStyle {
       other.backgroundColor?.equal(this.backgroundColor) &&
       other.decorationColor?.equal(this.decorationColor) &&
       listEquals(other.shadows, this.shadows) &&
-      listEquals(other.fontFeatures, this.fontFeatures) &&
-      listEquals(other.fontFamilyFallback, this.fontFamilyFallback) 
+      listEquals(other.fontFeatures, this.fontFeatures) 
     )
   }
 
