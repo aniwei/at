@@ -1,7 +1,3 @@
-/*
- * @author: Aniwei
- * @date: 2022-07-04 12:10:21
- */
 import { invariant } from '@at/utils'
 import { Color } from '../basic/color'
 import { AtGradient } from './gradient'
@@ -291,12 +287,12 @@ export class AtBoxDecorationCompositePainter extends AtDecorationCompositePainte
   paint (
     canvas: AtCanvas, 
     decoration: AtBoxDecoration, 
-    shape: Offset, 
+    offset: Offset, 
     textDirection: TextDirection, 
     configuration: AtImageConfiguration
   ): void {
     invariant(configuration.size !== null)
-    const rect = shape.and(configuration.size)
+    const rect = offset.and(configuration.size)
 
     super.paint(canvas, decoration, rect, textDirection, configuration)  
   }

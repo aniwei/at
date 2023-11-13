@@ -237,7 +237,6 @@ export class DecorationImagePainter {
 
     if (this.image !== null && this.image.isCloneOf(image)) {
       image.dispose()
-      return
     } else {
       this.image?.dispose()
       this.image = image
