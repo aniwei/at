@@ -61,7 +61,21 @@ export class ParagraphConstraints extends Equalable<ParagraphConstraints> {
 }
 
 //// => Paragraph
+export interface ParagraphOptions {
+  paragraph: Skia.Paragraph,
+  style: ParagraphStyle,
+  commands: ParagraphCommand[],
+}
+
 export class Paragraph extends Skia.ManagedSkiaRef<Skia.Paragraph> {
+  static create (options: ParagraphOptions) {
+    return new Paragraph(
+      options.paragraph,
+      options.style,
+      options.commands
+    )
+  }
+
   /**
    * @param {ParagraphConstraints} constraints
    * @return {Skia.Paragraph}
@@ -122,7 +136,6 @@ export class Paragraph extends Skia.ManagedSkiaRef<Skia.Paragraph> {
   public get paragraph () {
     return this.skia
   }
-
 
   public height: number = 0
   public width: number = 0

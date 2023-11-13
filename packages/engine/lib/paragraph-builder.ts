@@ -1,5 +1,5 @@
-import { Color } from '@at/basic'
 import { invariant } from '@at/utils'
+import { Color } from '@at/basic'
 import { Paint } from './paint'
 import { AtEngine } from './engine'
 import { ParagraphCommand } from './paragraph-command'
@@ -133,13 +133,13 @@ export class ParagraphBuilder extends Skia.ManagedSkiaRef<Skia.ParagraphBuilder>
    * @return {*}
    */
   build () {
-    const builtParagraph = this.buildParagraph()
+    const paragraph = this.buildParagraph()
 
-    return Paragraph.create(
-      builtParagraph, 
-      this.style, 
-      this.commands
-    )
+    return Paragraph.create({
+      paragraph, 
+      style: this.style, 
+      commands: this.commands
+    })
   }
 
   /**

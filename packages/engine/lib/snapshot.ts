@@ -8,7 +8,7 @@ import { Picture } from './picture'
 import { toMatrix } from './to'
 import { AtEngine } from './engine'
 import { ImageFilter } from './image-filter'
-// import { Paragraph } from './paragraph'
+import { Paragraph } from './paragraph'
 
 import * as Skia from './skia'
 
@@ -187,28 +187,33 @@ export class DrawPictureCommand extends PaintCommand {
   }
 }
 
-// @TODOs
-// export class DrawParagraphCommand extends PaintCommand {
-//   protected paragraph: Paragraph
-//   protected offset: Offset
+//// => DrawParagraphCommand
+// 绘制段落指令
+export class DrawParagraphCommand extends PaintCommand {
+  static create (paragraph: Paragraph, offset: Offset) {
+    return super.create(paragraph, offset) as DrawParagraphCommand
+  }
 
-//   constructor (paragraph: Paragraph, offset: Offset) {
-//     super()
-//     this.paragraph = paragraph
-//     this.offset = offset
-//   }
+  protected paragraph: Paragraph
+  protected offset: Offset
 
-//   apply (canvas: Skia.Canvas) {
-//     invariant(this.paragraph.skia)
-//     canvas.drawParagraph(
-//       this.paragraph.skia,
-//       this.offset.dx,
-//       this.offset.dy
-//     )
+  constructor (paragraph: Paragraph, offset: Offset) {
+    super()
+    this.paragraph = paragraph
+    this.offset = offset
+  }
 
-//     this.paragraph.markUsed()
-//   }
-// }
+  apply (canvas: Skia.Canvas) {
+    this.paragraph.skia
+    canvas.drawParagraph(
+      this.paragraph.skia,
+      this.offset.dx,
+      this.offset.dy
+    )
+
+    this.paragraph.markUsed()
+  }
+}
 
 //// => DrawLineCommand
 // 绘制线段

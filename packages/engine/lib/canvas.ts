@@ -10,7 +10,7 @@ import { Picture } from './picture'
 import { Image } from './image'
 import { ImageFilter } from './image-filter'
 import { AtEngine } from './engine'
-// import { Paragraph } from './paragraph'
+import { Paragraph } from './paragraph'
 import { 
   ClearCommand, 
   ClipPathCommand, 
@@ -22,6 +22,7 @@ import {
   DrawLineCommand, 
   DrawOvalCommand, 
   DrawPaintCommand, 
+  DrawParagraphCommand, 
   DrawPathCommand, 
   DrawPictureCommand, 
   // DrawParagraphCommand, 
@@ -278,13 +279,10 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
    * @param {Offset} offset
    * @return {void}
    */
-  // TODO
-  // drawParagraph (paragraph: Paragraph, offset: Offset) {
-  //   invariant(offsetIsValid(offset), `The offset argument was invalid.`)
-    
-  //   this.skia.drawParagraph(paragraph.skia, offset.dx, offset.dy)
-  //   paragraph.markUsed()
-  // }
+  drawParagraph (paragraph: Paragraph, offset: Offset) {    
+    this.skia.drawParagraph(paragraph.skia, offset.dx, offset.dy)
+    paragraph.markUsed()
+  }
 
   /**
    * 画圆角
@@ -649,15 +647,14 @@ export class Recorder extends Canvas {
     this.addCommand(DrawPaintCommand.create(paint))
   }
   
-  // @TODO
-  // drawParagraph (
-  //   paragraph: Paragraph,
-  //   point: Offset
-  // ) {
-  //   super.drawParagraph(paragraph, point)
-  //   this.addCommand(DrawParagraphCommand.create(paragraph, point))
-  // }
-  // 
+  drawParagraph (
+    paragraph: Paragraph,
+    point: Offset
+  ) {
+    super.drawParagraph(paragraph, point)
+    this.addCommand(DrawParagraphCommand.create(paragraph, point))
+  }
+  
   drawPath (path: Path, paint: Paint) {
     super.drawPath(path, paint)
     this.addCommand(DrawPathCommand.create(path, paint))
