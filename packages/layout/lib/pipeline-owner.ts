@@ -1,12 +1,12 @@
 import { invariant } from '@at/utils' 
-import { Object, VoidCallback } from './object'
+import type { AtRasterizer } from '@at/engine'
+import { Object } from './object'
 import { AtPaintingContext } from './painting-context'
 import { AtViewConfiguration } from './view'
-import type { AtRasterizer } from '../engine/rasterizer'
 
 export type RequestRasterizeCall = () => void
 
-export class AtNodesNeedingUpdate extends Array<AtLayoutObject> {
+export class AtNodesNeedingUpdate extends Array<Object> {
   static create () {
     return new AtNodesNeedingUpdate()
   }
@@ -18,16 +18,24 @@ export class AtNodesNeedingUpdate extends Array<AtLayoutObject> {
 }
 
 export class PipelineOwner {
-  static create (rasterizer: AtRasterizer, onNeedVisualUpdate: VoidCallback, configuration: AtViewConfiguration) {
-    return new PipelineOwner(rasterizer, onNeedVisualUpdate, configuration)
+  static create (
+    rasterizer: AtRasterizer, 
+    onNeedVisualUpdate: VoidFunction, 
+    configuration: AtViewConfiguration
+  ) {
+    return new PipelineOwner(
+      rasterizer, 
+      onNeedVisualUpdate, 
+      configuration
+    )
   }
 
   // => root
-  private _root: AtLayoutObject | null = null
+  private _root: Object | null = null
   public get root () {
     return this._root
   }
-  public set root (root: AtLayoutObject | null) {
+  public set root (root: Object | null) {
     if (this.root !== root) {
       this._root?.detach()
 
@@ -37,8 +45,7 @@ export class PipelineOwner {
   }
 
   // => needs
-
-  public onNeedVisualUpdate: VoidCallback | null = null
+  public onNeedVisualUpdate: VoidFunction | null = null
   
   public rasterizer: AtRasterizer
   public configuration: AtViewConfiguration
@@ -46,7 +53,7 @@ export class PipelineOwner {
   public nodesNeedingPaint: AtNodesNeedingUpdate = AtNodesNeedingUpdate.create()
   public nodesNeedingCompositingBitsUpdate: AtNodesNeedingUpdate = AtNodesNeedingUpdate.create()
   
-  constructor (rasterizer: AtRasterizer, onNeedVisualUpdate: VoidCallback, configuration: AtViewConfiguration) {
+  constructor (rasterizer: AtRasterizer, onNeedVisualUpdate: VoidFunction, configuration: AtViewConfiguration) {
     this.onNeedVisualUpdate = onNeedVisualUpdate
     this.configuration = configuration
     this.rasterizer = rasterizer
@@ -61,7 +68,7 @@ export class PipelineOwner {
   flushLayout () {
     try {
       while (this.nodesNeedingLayout.length > 0) {
-        const dirtyNodes = this.nodesNeedingLayout.sort((a: AtLayoutObject, b: AtLayoutObject) => {
+        const dirtyNodes = this.nodesNeedingLayout.sort((a: Object, b: Object) => {
           return a.depth - b.depth
         })
         
@@ -76,7 +83,7 @@ export class PipelineOwner {
     }
   }
 
-  enableMutationsToDirtySubtrees (callback: VoidCallback) {
+  enableMutationsToDirtySubtrees (callback: VoidFunction) {
    
   }
   
@@ -94,7 +101,7 @@ export class PipelineOwner {
   
   flushPaint (): boolean {
     try {
-      const dirtyNodes: AtLayoutObject[] = this.nodesNeedingPaint.sort((a: AtLayoutObject, b: AtLayoutObject) => {
+      const dirtyNodes: Object[] = this.nodesNeedingPaint.sort((a: Object, b: Object) => {
         return b.depth - a.depth
       })
 

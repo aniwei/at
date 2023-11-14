@@ -1,6 +1,8 @@
+import { invariant } from '@at/utils'
 import { AbstractNode } from '@at/basic'
-import { Rect } from 'packages/geometry/types/lib'
-import { invariant } from 'packages/utils/types/lib'
+import { Offset, Rect } from '@at/geometry'
+import { PipelineOwner } from './pipeline-owner'
+import { Constraints } from './constraints'
 
 export abstract class Object extends AbstractNode<Object, PipelineOwner> implements HitTestTarget {
   /**
@@ -291,8 +293,6 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
   markParentNeedsLayout () {
     this.needsLayout = true
     invariant(this.parent, `The "this.parent" cannot be null`)
-
-    invariant(this.parent)
     const parent = this.parent as Object
     parent.markNeedsLayout()
   }
@@ -406,9 +406,9 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     }
   }
 
-  paint (context: AtPaintingContext, offset: Offset) { }
+  paint (context: PaintingContext, offset: Offset) { }
 
-  paintWithContext (context: AtPaintingContext, offset: Offset) {
+  paintWithContext (context: PaintingContext, offset: Offset) {
     if (this.needsLayout) {
       return
     }
