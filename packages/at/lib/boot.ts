@@ -1,17 +1,9 @@
 import { ApiStateKind, ApiTransport } from '@at/api'
-import { AtEngineConfiguration, Paragraph, ParagraphBuilder, ParagraphConstraints, ParagraphStyle, Skia, Surface, TextStyle } from '@at/engine'
-import { Offset, Size } from '@at/geometry'
+import { AtEngineConfiguration, Skia, Surface } from '@at/engine'
 import { Color } from '@at/basic'
-import { 
-  BoxBorder, 
-  BorderStyle, 
-  BoxDecoration, 
-  DecorationImage, 
-  ImageConfiguration, 
-  NetworkImage, 
-} from '@at/painting'
+import { Size, Offset } from '@at/geometry'
+import { TextSpan, TextPaintingStyle, TextPainter } from '@at/painting'
 import { AtInstance } from './at'
-import { invariant } from '@at/utils'
 
 
 //// => ConnectionPayload
@@ -63,21 +55,23 @@ app.start(() => {
   const surface = Surface.create(App.tryCreateSurface(size, app.element) as Skia.Surface)
 
   const canvas = surface.canvas
-  const style = ParagraphStyle.create({
-    
+
+  const span = TextSpan.create({
+    text: 'Welcome to Beijing.',
+    style: TextPaintingStyle.create({
+      fontFamily: 'Roboto',
+      color: Color.BLACK,
+      fontSize: 50,
+      letterSpacing: 10,
+    })
   })
-  const builder = ParagraphBuilder.create(style)
-  builder.push(TextStyle.create({
-    fontFamily: 'Roboto',
-    fontSize: 50
-  }))
-  builder.text('The goove eather')
 
-  const paragraph = builder.build()
-  
-  paragraph.layout(ParagraphConstraints.create(Infinity))
-  canvas.drawParagraph(paragraph, Offset.create(10, 10))
+  const painter = TextPainter.create({
+    text: span
+  })
 
+  painter.layout()
+  painter.paint(canvas, Offset.create(40, 40))
   
   surface.skia.flush()
 })

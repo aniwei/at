@@ -22,9 +22,24 @@ export class Accumulator {
   }
 }
 
+// => InlineSpanVisitor
+// 遍历函数类型
 export type InlineSpanVisitor = (span: InlineSpan) => boolean
 
+
+//// => InlineSpan
+// 文本
+interface InlineSpanFactory <T> {
+  new (...rests: unknown[]): T
+  create (...rests: unknown[]): T
+}
 export abstract class InlineSpan extends Equalable<InlineSpan> {
+  static create <T extends InlineSpan> (...rests: unknown[]): InlineSpan {
+    const InlineSpanFactory = this as unknown as InlineSpanFactory<T>
+    return new InlineSpanFactory(...rests)
+  }
+
+  // 文本样式
   style: TextPaintingStyle | null
 
   constructor (style: TextPaintingStyle | null) {

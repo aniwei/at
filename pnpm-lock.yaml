@@ -331,6 +331,19 @@ importers:
         version: 4.3.9(@types/node@20.8.10)
 
   packages/layout:
+    dependencies:
+      '@at/basic':
+        specifier: workspace:^
+        version: link:../basic
+      '@at/geometry':
+        specifier: workspace:^
+        version: link:../geometry
+      '@at/painting':
+        specifier: workspace:^
+        version: link:../painting
+      '@at/utils':
+        specifier: workspace:^
+        version: link:../utils
     devDependencies:
       typescript:
         specifier: ^5.1.3

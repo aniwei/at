@@ -15,6 +15,9 @@ import {
 } from '@at/engine'
 import { TextOverflowKind } from './text-painter'
 
+
+//// => TextPaintingStyle
+// 文本样式
 export type TextPaintingStyleOptions = {
   // 是否继承
   inherit?: boolean,
@@ -43,13 +46,19 @@ export type TextPaintingStyleOptions = {
   background?: Paint,
   // 阴影
   shadows?: Shadow[],
+  // 字体特性
   fontFeatures?: FontFeature[],
+  // 文本装饰
   decoration?: TextDecoration,
+  // 装饰颜色
   decorationColor?: Color,
+  // 装饰样式
   decorationStyle?: Skia.DecorationStyle,
   decorationThickness?: number,
+  // 字体
   fontFamily?: string,
   package?: string,
+  // 溢出类型
   overflow?: TextOverflowKind,
 }
 
@@ -77,6 +86,140 @@ export class TextPaintingStyle {
       options?.decorationThickness,
       options?.fontFamily,
       options?.overflow,
+    )
+  }
+
+  static lerp (a: TextPaintingStyle | null, b: TextPaintingStyle | null, t: number): TextPaintingStyle | null {
+    invariant(t !== null);
+    invariant(a === null || b === null || a.inherit === b.inherit)
+
+    if (a === null && b === null) {
+      return null
+    }
+
+    if (a === null) {
+      invariant(b)
+
+      return new TextPaintingStyle(
+        b.inherit,
+        Color.lerp(null, b.color, t),
+        Color.lerp(null, b.backgroundColor, t),
+        t < 0.5 ? null : b.fontSize,
+        t < 0.5 ? null : b.fontWeight,
+        t < 0.5 ? null : b.fontStyle,
+        t < 0.5 ? null : b.letterSpacing,
+        t < 0.5 ? null : b.wordSpacing,
+        t < 0.5 ? null : b.textBaseline,
+        t < 0.5 ? null : b.height,
+        t < 0.5 ? null : b.leadingDistribution,
+        t < 0.5 ? null : b.foreground,
+        t < 0.5 ? null : b.background,
+        t < 0.5 ? null : b.shadows,
+        t < 0.5 ? null : b.fontFeatures,
+        t < 0.5 ? null : b.decoration,
+        Color.lerp(null, b.decorationColor, t),
+        t < 0.5 ? null : b.decorationStyle,
+        t < 0.5 ? null : b.decorationThickness,
+        t < 0.5 ? null : b.fontFamily,
+        t < 0.5 ? null : b.overflow,
+      )
+    }
+
+    if (b === null) {
+      invariant(a)
+      return new TextPaintingStyle(
+        a.inherit,
+        Color.lerp(a.color, null, t),
+        Color.lerp(null, a.backgroundColor, t),
+        t < 0.5 ? a.fontSize : null,
+        t < 0.5 ? a.fontWeight : null,
+        t < 0.5 ? a.fontStyle : null,
+        t < 0.5 ? a.letterSpacing : null,
+        t < 0.5 ? a.wordSpacing : null,
+        t < 0.5 ? a.textBaseline : null,
+        t < 0.5 ? a.height : null,
+        t < 0.5 ? a.leadingDistribution : null,
+        t < 0.5 ? a.foreground : null,
+        t < 0.5 ? a.background : null,
+        t < 0.5 ? a.shadows : null,
+        t < 0.5 ? a.fontFeatures : null,
+        t < 0.5 ? a.decoration : null,
+        Color.lerp(a.decorationColor, null, t),
+        t < 0.5 ? a.decorationStyle : null,
+        t < 0.5 ? a.decorationThickness : null,
+        t < 0.5 ? a.fontFamily : null,
+        t < 0.5 ? a.overflow : null,
+      );
+    }
+
+    let foregroundPaint: Paint | null = null
+
+    if (a.foreground !== null || b.foreground !== null) {
+      if (t < 0.5) {
+        if (!a.foreground) {
+          foregroundPaint = new Paint()
+          foregroundPaint.color = a.color as Color
+        } 
+      } else {
+        if (!b.foreground) {
+          foregroundPaint = new Paint()
+          foregroundPaint.color = b.color as Color
+        } 
+      }
+    }
+
+    let backgroundPaint: Paint | null = null
+
+    if (a.background !== null || b.background !== null) {
+      if (t < 0.5) {
+        if (!a.background) {
+          backgroundPaint = new Paint()
+          backgroundPaint.color = a.color as Color
+        } 
+      } else {
+        if (!b.background) {
+          backgroundPaint = new Paint()
+          backgroundPaint.color = b.color as Color
+        } 
+      }
+    }
+
+
+    return new TextPaintingStyle(
+      // inherit
+      b.inherit,
+      // foreground
+      a.foreground === null && b.foreground === null 
+        ? Color.lerp(a.color, b.color, t) 
+        : null,
+      // background
+      a.background === null && b.background === null 
+        ? Color.lerp(a.backgroundColor, b.backgroundColor, t) 
+        : null,
+      // fontsize
+      lerp(a.fontSize ?? b.fontSize as number, b.fontSize ?? a.fontSize as number, t),
+      t < 0.5 ? a.fontWeight : b.fontWeight,
+      t < 0.5 ? a.fontStyle : b.fontStyle,
+      // letterSpacing
+      lerp(a.letterSpacing ?? b.letterSpacing as number, b.letterSpacing ?? a.letterSpacing as number, t),
+      // wordSpacing
+      lerp(a.wordSpacing ?? b.wordSpacing as number, b.wordSpacing ?? a.wordSpacing as number, t),
+      // textBaseline
+      t < 0.5 ? a.textBaseline : b.textBaseline,
+      // height
+      lerp(a.height ?? b.height as number, b.height ?? a.height as number, t),
+      // leadingDistribution
+      t < 0.5 ? a.leadingDistribution : b.leadingDistribution,
+      foregroundPaint,
+      backgroundPaint,
+      t < 0.5 ? a.shadows : b.shadows,
+      t < 0.5 ? a.fontFeatures : b.fontFeatures,
+      t < 0.5 ? a.decoration : b.decoration,
+      Color.lerp(a.decorationColor, b.decorationColor, t),
+      t < 0.5 ? a.decorationStyle : b.decorationStyle,
+      lerp(a.decorationThickness ?? b.decorationThickness as number, b.decorationThickness ?? a.decorationThickness as number, t),
+      t < 0.5 ? a.fontFamily : b.fontFamily,
+      t < 0.5 ? a.overflow : b.overflow,
     )
   }
 
@@ -213,7 +356,6 @@ export class TextPaintingStyle {
     decoration: TextDecoration | null,
     decorationColor: Color | null,
     fontFamily: string | null,
-    fontFamilyFallback: string[] | null,
     fontStyle: Skia.FontSlant | null,
     decorationStyle: Skia.DecorationStyle | null,
     textBaseline: Skia.TextBaseline | null,
@@ -221,18 +363,7 @@ export class TextPaintingStyle {
     shadows: Shadow[] | null,
     fontFeatures: FontFeature[] | null,
     overflow: TextOverflowKind | null,
-  ) {
-    invariant(fontSizeFactor !== null)
-    invariant(this.fontSize !== null || (fontSizeFactor === 1.0))
-    invariant(this.fontWeight !== null)
-    invariant(letterSpacingFactor !== null)
-    invariant(this.letterSpacing !== null || (letterSpacingFactor === 1.0))
-    invariant(wordSpacingFactor !== null)
-    invariant(this.wordSpacing !== null || (wordSpacingFactor === 1.0))
-    invariant(heightFactor !== null)
-    invariant(decorationThicknessFactor !== null)
-    invariant(this.decorationThickness !== null || (decorationThicknessFactor === 1.0))
-
+  ) {    
     return new TextPaintingStyle(
       this.inherit,
       this.foreground === null 
@@ -262,6 +393,7 @@ export class TextPaintingStyle {
       
       this.foreground,
       this.background,
+
       shadows ?? this.shadows,
       fontFeatures ?? this.fontFeatures,
       decoration ?? this.decoration,
@@ -307,140 +439,6 @@ export class TextPaintingStyle {
       other.decorationThickness,
       other.fontFamily,
       other.overflow,
-    )
-  }
-  
-  static lerp (a: TextPaintingStyle | null, b: TextPaintingStyle | null, t: number): TextPaintingStyle | null {
-    invariant(t !== null);
-    invariant(a === null || b === null || a.inherit === b.inherit)
-
-    if (a === null && b === null) {
-      return null
-    }
-
-    if (a === null) {
-      invariant(b)
-
-      return new TextPaintingStyle(
-        b.inherit,
-        Color.lerp(null, b.color, t),
-        Color.lerp(null, b.backgroundColor, t),
-        t < 0.5 ? null : b.fontSize,
-        t < 0.5 ? null : b.fontWeight,
-        t < 0.5 ? null : b.fontStyle,
-        t < 0.5 ? null : b.letterSpacing,
-        t < 0.5 ? null : b.wordSpacing,
-        t < 0.5 ? null : b.textBaseline,
-        t < 0.5 ? null : b.height,
-        t < 0.5 ? null : b.leadingDistribution,
-        t < 0.5 ? null : b.foreground,
-        t < 0.5 ? null : b.background,
-        t < 0.5 ? null : b.shadows,
-        t < 0.5 ? null : b.fontFeatures,
-        t < 0.5 ? null : b.decoration,
-        Color.lerp(null, b.decorationColor, t),
-        t < 0.5 ? null : b.decorationStyle,
-        t < 0.5 ? null : b.decorationThickness,
-        t < 0.5 ? null : b.fontFamily,
-        t < 0.5 ? null : b.overflow,
-      )
-    }
-
-    if (b === null) {
-      invariant(a)
-      return new TextPaintingStyle(
-        a.inherit,
-        Color.lerp(a.color, null, t),
-        Color.lerp(null, a.backgroundColor, t),
-        t < 0.5 ? a.fontSize : null,
-        t < 0.5 ? a.fontWeight : null,
-        t < 0.5 ? a.fontStyle : null,
-        t < 0.5 ? a.letterSpacing : null,
-        t < 0.5 ? a.wordSpacing : null,
-        t < 0.5 ? a.textBaseline : null,
-        t < 0.5 ? a.height : null,
-        t < 0.5 ? a.leadingDistribution : null,
-        t < 0.5 ? a.foreground : null,
-        t < 0.5 ? a.background : null,
-        t < 0.5 ? a.shadows : null,
-        t < 0.5 ? a.fontFeatures : null,
-        t < 0.5 ? a.decoration : null,
-        Color.lerp(a.decorationColor, null, t),
-        t < 0.5 ? a.decorationStyle : null,
-        t < 0.5 ? a.decorationThickness : null,
-        t < 0.5 ? a.fontFamily : null,
-        t < 0.5 ? a.overflow : null,
-      );
-    }
-
-    let foregroundPaint: Paint | null = null
-
-    if (a.foreground !== null || b.foreground !== null) {
-      if (t < 0.5) {
-        if (!a.foreground) {
-          foregroundPaint = new Paint()
-          foregroundPaint.color = a.color as Color
-        } 
-      } else {
-        if (!b.foreground) {
-          foregroundPaint = new Paint()
-          foregroundPaint.color = b.color as Color
-        } 
-      }
-    }
-
-    let backgroundPaint: Paint | null = null
-
-    if (a.background !== null || b.background !== null) {
-      if (t < 0.5) {
-        if (!a.background) {
-          backgroundPaint = new Paint()
-          backgroundPaint.color = a.color as Color
-        } 
-      } else {
-        if (!b.background) {
-          backgroundPaint = new Paint()
-          backgroundPaint.color = b.color as Color
-        } 
-      }
-    }
-
-
-    return new TextPaintingStyle(
-      // inherit
-      b.inherit,
-      // foreground
-      a.foreground === null && b.foreground === null 
-        ? Color.lerp(a.color, b.color, t) 
-        : null,
-      // background
-      a.background === null && b.background === null 
-        ? Color.lerp(a.backgroundColor, b.backgroundColor, t) 
-        : null,
-      // fontsize
-      lerp(a.fontSize ?? b.fontSize as number, b.fontSize ?? a.fontSize as number, t),
-      t < 0.5 ? a.fontWeight : b.fontWeight,
-      t < 0.5 ? a.fontStyle : b.fontStyle,
-      // letterSpacing
-      lerp(a.letterSpacing ?? b.letterSpacing as number, b.letterSpacing ?? a.letterSpacing as number, t),
-      // wordSpacing
-      lerp(a.wordSpacing ?? b.wordSpacing as number, b.wordSpacing ?? a.wordSpacing as number, t),
-      // textBaseline
-      t < 0.5 ? a.textBaseline : b.textBaseline,
-      // height
-      lerp(a.height ?? b.height as number, b.height ?? a.height as number, t),
-      // leadingDistribution
-      t < 0.5 ? a.leadingDistribution : b.leadingDistribution,
-      foregroundPaint,
-      backgroundPaint,
-      t < 0.5 ? a.shadows : b.shadows,
-      t < 0.5 ? a.fontFeatures : b.fontFeatures,
-      t < 0.5 ? a.decoration : b.decoration,
-      Color.lerp(a.decorationColor, b.decorationColor, t),
-      t < 0.5 ? a.decorationStyle : b.decorationStyle,
-      lerp(a.decorationThickness ?? b.decorationThickness as number, b.decorationThickness ?? a.decorationThickness as number, t),
-      t < 0.5 ? a.fontFamily : b.fontFamily,
-      t < 0.5 ? a.overflow : b.overflow,
     )
   }
 

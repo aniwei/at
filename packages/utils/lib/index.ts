@@ -1,6 +1,7 @@
 export * from './argument-error'
 export * from './clamp'
 export * from './clone'
+export * from './const'
 export * from './define'
 export * from './is'
 export * from './invariant'

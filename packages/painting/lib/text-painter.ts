@@ -1,4 +1,4 @@
-import { invariant, clamp, listEquals } from '@at/utils'
+import { invariant, clamp, listEquals, kNewLineCodeUnit } from '@at/utils'
 import { Offset, Rect, Size } from '@at/geometry'
 import { 
   Skia, 
@@ -28,7 +28,7 @@ export enum TextOverflowKind {
 }
 
 //// => PlaceholderDimensions
-// 
+// 占位符
 export type PlaceholderDimensionsOptions = {
   size: Size,
   alignment: Skia.PlaceholderAlignment,
@@ -87,7 +87,7 @@ export class PlaceholderDimensions {
 }
 
 /// 类型定义
-export enum TextWidthBasis {
+export enum TextWidthBasisKind {
   Parent,
   LongestLine,
 }
@@ -106,7 +106,7 @@ export type TextPainterOptions = {
   textAlign?: Skia.TextAlign
   textDirection?: Skia.TextDirection
   textScaleFactor?: number
-  textWidthBasis?: TextWidthBasis
+  textWidthBasis?: TextWidthBasisKind
   textHeightBehavior?: TextHeightBehavior | null
 }
 
@@ -255,11 +255,11 @@ export class TextPainter {
   }
 
   // => textWidthBasis
-  private _textWidthBasis: TextWidthBasis
-  public get textWidthBasis (): TextWidthBasis {
+  private _textWidthBasis: TextWidthBasisKind
+  public get textWidthBasis (): TextWidthBasisKind {
     return this._textWidthBasis 
   }
-  public set textWidthBasis (value: TextWidthBasis) {
+  public set textWidthBasis (value: TextWidthBasisKind) {
     invariant(value !== null, `The argument "value" cannot be null.`)
     if (this._textWidthBasis !== value) {
       this._textWidthBasis = value
@@ -312,7 +312,7 @@ export class TextPainter {
   public get width () {
     invariant(this.paragraph)
     return this.applyFloatingPointHack(
-      this.textWidthBasis === TextWidthBasis.LongestLine 
+      this.textWidthBasis === TextWidthBasisKind.LongestLine 
         ? this.paragraph.longestLine 
         : this.paragraph.width
     )
@@ -332,6 +332,39 @@ export class TextPainter {
     return this.paragraph.didExceedMaxLines
   }
 
+  public get empty (): Offset {
+    invariant(this.textAlign !== null)
+    switch (this.textAlign) {
+      case AtEngine.skia.TextAlign.Left:
+        return Offset.ZERO
+      case AtEngine.skia.TextAlign.Right:
+        return new Offset(this.width, 0)
+      case AtEngine.skia.TextAlign.Center:
+        return new Offset(this.width / 2, 0)
+      case AtEngine.skia.TextAlign.Justify:
+        break
+      case AtEngine.skia.TextAlign.Start:
+        invariant(this.textDirection !== null)
+        switch (this.textDirection) {
+          case AtEngine.skia.TextDirection.RTL:
+            return new Offset(this.width, 0)
+          case AtEngine.skia.TextDirection.LTR:
+            return Offset.ZERO
+        }
+        break
+      case AtEngine.skia.TextAlign.End:
+        invariant(this.textDirection !== null)
+        switch (this.textDirection) {
+          case AtEngine.skia.TextDirection.RTL:
+            return Offset.ZERO
+          case AtEngine.skia.TextDirection.LTR:
+            return new Offset(this.width, 0)
+        }
+    }
+
+    return Offset.ZERO
+  }
+
   public paragraph: Paragraph | null = null
   public rebuildParagraphForPaint: ConstrainBoolean = true
   public layoutTemplate: Paragraph | null = null
@@ -342,7 +375,7 @@ export class TextPainter {
   private lastMinWidth: number | null = null
   private lastMaxWidth: number | null = null
   private caretMetrics: CaretMetrics | null = null
-  private lineMetricsCache: LineMetrics[] | null = null
+  private lineMetricsCache: Skia.LineMetrics[] | null = null
 
   private previousCaretPosition: TextPosition | null = null
   private previousCaretPrototype: Rect | null = null
@@ -355,7 +388,7 @@ export class TextPainter {
    * @param {number} maxLines 
    * @param {string | null} ellipsis 
    * @param {StrutStyle | null} strutStyle 
-   * @param {TextWidthBasis} textWidthBasis 
+   * @param {TextWidthBasisKind} textWidthBasis 
    * @param {TextHeightBehavior | null} textHeightBehavior 
    */
   constructor (
@@ -366,7 +399,7 @@ export class TextPainter {
     textAlign: Skia.TextAlign = AtEngine.skia.TextAlign.Start,
     textDirection: Skia.TextDirection = AtEngine.skia.TextDirection.LTR,
     textScaleFactor: number = 1.0,
-    textWidthBasis: TextWidthBasis = TextWidthBasis.Parent,
+    textWidthBasis: TextWidthBasisKind = TextWidthBasisKind.Parent,
     textHeightBehavior: TextHeightBehavior | null = null,
   ) {
     invariant(maxLines === null || maxLines > 0)
@@ -392,8 +425,6 @@ export class TextPainter {
   createParagraphStyle (defaultTextDirection?: Skia.TextDirection) {
     invariant(this.textDirection !== null || defaultTextDirection !== null, 'TextPainter.textDirection must be set to a non-null value before using the TextPainter.')
     invariant(this.text, `The member "this.text" cannot be null.`)
-    // invariant(this.text.style, `The member "this.text.style" cannot be null.`)
-    invariant(AtEngine.env<number>('TEXT_FONTSIZE', 12))
     
     return this.text.style?.getParagraphStyle(
       this.textAlign,
@@ -434,8 +465,8 @@ export class TextPainter {
     return paragraph
   }
 
-  applyFloatingPointHack (layoutValue: number) {
-    return Math.ceil(layoutValue)
+  applyFloatingPointHack (value: number) {
+    return Math.ceil(value)
   }
 
   computeDistanceToActualBaseline (baseline: Skia.TextBaseline) {
@@ -453,14 +484,13 @@ export class TextPainter {
    */
   createParagraph () {
     invariant(this.paragraph === null || this.rebuildParagraphForPaint)
-
     let text = this.text
     
     if (text === null) {
       throw Error('TextPainter.text must be set to a non-null value before using the TextPainter.')
     }
 
-    const builder = new ParagraphBuilder(this.createParagraphStyle())
+    const builder = ParagraphBuilder.create(this.createParagraphStyle())
     text.build(builder, this.textScaleFactor, this._placeholderDimensions)
 
     this.inlinePlaceholderScales = builder.scales
@@ -475,22 +505,22 @@ export class TextPainter {
    */
   layoutParagraph (minWidth: number, maxWidth: number) {
     invariant(this.paragraph)
-    this.paragraph.layout(new ParagraphConstraints(maxWidth))
+    this.paragraph.layout(ParagraphConstraints.create(maxWidth))
     
     if (minWidth !== maxWidth) {
-      let newWidth
+      let width
       switch (this.textWidthBasis) {
-        case TextWidthBasis.LongestLine:
-          newWidth = this.applyFloatingPointHack(this.paragraph.longestLine)
+        case TextWidthBasisKind.LongestLine:
+          width = this.applyFloatingPointHack(this.paragraph.longestLine)
           break
-        case TextWidthBasis.Parent:
-          newWidth = this.maxIntrinsicWidth
+        case TextWidthBasisKind.Parent:
+          width = this.maxIntrinsicWidth
           break
       }
 
-      newWidth = clamp(newWidth, minWidth, maxWidth)
-      if (newWidth !== this.applyFloatingPointHack(this.paragraph.width)) {
-        this.paragraph.layout(new ParagraphConstraints(newWidth))
+      width = clamp(width, minWidth, maxWidth)
+      if (width !== this.applyFloatingPointHack(this.paragraph.width)) {
+        this.paragraph.layout(ParagraphConstraints.create(width))
       }
     }
   }
@@ -500,27 +530,26 @@ export class TextPainter {
     invariant(this.textDirection !== null, 'TextPainter.textDirection must be set to a non-null value before using the TextPainter.')
     
     if (
-      this.paragraph !== null && 
-      minWidth === this.lastMinWidth && 
-      maxWidth === this.lastMaxWidth
+      this.paragraph === null ||
+      minWidth !== this.lastMinWidth ||
+      maxWidth !== this.lastMaxWidth
     ) {
-      return
+      if (this.rebuildParagraphForPaint || this.paragraph === null) {
+        this.createParagraph()
+      }
+  
+      invariant(this.paragraph)
+  
+      this.lastMinWidth = minWidth
+      this.lastMaxWidth = maxWidth
+      
+      this.previousCaretPosition = null
+      this.previousCaretPrototype = null
+  
+      this.layoutParagraph(minWidth, maxWidth)
+      this.inlinePlaceholderBoxes = this.paragraph.getBoxesForPlaceholders()
     }
     
-    if (this.rebuildParagraphForPaint || this.paragraph === null) {
-      this.createParagraph()
-    }
-
-    invariant(this.paragraph)
-
-    this.lastMinWidth = minWidth
-    this.lastMaxWidth = maxWidth
-    
-    this.previousCaretPosition = null
-    this.previousCaretPrototype = null
-
-    this.layoutParagraph(minWidth, maxWidth)
-    this.inlinePlaceholderBoxes = this.paragraph.getBoxesForPlaceholders()
   }
 
   paint (canvas: Canvas, offset: Offset) {
@@ -558,7 +587,7 @@ export class TextPainter {
     return TextPainter.isUtf16Surrogate(prevCodeUnit) ? offset - 2 : offset - 1
   }
 
-  private getRectFromUpstream (offset: number, caretPrototype: Rect): Rect | null {
+  getRectFromUpstream (offset: number, caretPrototype: Rect): Rect | null {
     invariant(this.text)
     
     const flattenedText = this.text.toPlainText(false)
@@ -570,16 +599,21 @@ export class TextPainter {
 
     invariant(this.paragraph)
 
-    const NEWLINE_CODE_UNIT = 10
-    const needsSearch = TextPainter.isUtf16Surrogate(prevCodeUnit) || this.text.codeUnitAt(offset) === TextPainter.zwjUtf16 || TextPainter.isUnicodeDirectionality(prevCodeUnit)
+    const needsSearch = (
+      TextPainter.isUtf16Surrogate(prevCodeUnit) || 
+      this.text.codeUnitAt(offset) === TextPainter.zwjUtf16 || 
+      TextPainter.isUnicodeDirectionality(prevCodeUnit)
+    )
+
     let graphemeClusterLength = needsSearch ? 2 : 1
     let boxes: TextBox[] = []
+
     while (boxes.length === 0) {
       const prevRuneOffset = offset - graphemeClusterLength
       boxes = this.paragraph.getBoxesForRange(prevRuneOffset, offset, AtEngine.skia.RectHeightStyle.Strut)
       
       if (boxes.length === 0) {
-        if (!needsSearch && prevCodeUnit == NEWLINE_CODE_UNIT) {
+        if (!needsSearch && prevCodeUnit == kNewLineCodeUnit) {
           break
         }
 
@@ -593,8 +627,13 @@ export class TextPainter {
 
       let box = boxes[0]
 
-      if (prevCodeUnit == NEWLINE_CODE_UNIT) {
-        return Rect.fromLTRB(this.empty.dx, box.bottom, this.empty.dx, box.bottom + box.bottom - box.top)
+      if (prevCodeUnit == kNewLineCodeUnit) {
+        return Rect.fromLTRB(
+          this.empty.dx, 
+          box.bottom, 
+          this.empty.dx, 
+          box.bottom + box.bottom - box.top
+        )
       }
 
       const caretEnd = box.end
@@ -613,7 +652,7 @@ export class TextPainter {
     return null
   }
 
-  private getRectFromDownstream (offset: number, caretPrototype: Rect): Rect | null {
+  getRectFromDownstream (offset: number, caretPrototype: Rect): Rect | null {
     invariant(this.text)
     const flattenedText = this.text.toPlainText(false)
     const nextCodeUnit = this.text.codeUnitAt(Math.min(offset, flattenedText.length - 1))
@@ -661,40 +700,6 @@ export class TextPainter {
 
     return null
   }
-
-  private get empty (): Offset {
-    invariant(this.textAlign !== null)
-    switch (this.textAlign) {
-      case AtEngine.skia.TextAlign.Left:
-        return Offset.ZERO
-      case AtEngine.skia.TextAlign.Right:
-        return new Offset(this.width, 0)
-      case AtEngine.skia.TextAlign.Center:
-        return new Offset(this.width / 2, 0)
-      case AtEngine.skia.TextAlign.Justify:
-        break
-      case AtEngine.skia.TextAlign.Start:
-        invariant(this.textDirection !== null)
-        switch (this.textDirection) {
-          case AtEngine.skia.TextDirection.RTL:
-            return new Offset(this.width, 0)
-          case AtEngine.skia.TextDirection.LTR:
-            return Offset.ZERO
-        }
-        break
-      case AtEngine.skia.TextAlign.End:
-        invariant(this.textDirection !== null)
-        switch (this.textDirection) {
-          case AtEngine.skia.TextDirection.RTL:
-            return Offset.ZERO
-          case AtEngine.skia.TextDirection.LTR:
-            return new Offset(this.width, 0)
-        }
-    }
-
-    return Offset.ZERO
-  }
-
   
   getOffsetForCaret (position: TextPosition, caretPrototype: Rect): Offset {
     this.computeCaretMetrics(position, caretPrototype)
@@ -708,43 +713,41 @@ export class TextPainter {
     return this.caretMetrics.fullHeight
   }
 
-  private computeCaretMetrics (position: TextPosition, caretPrototype: Rect) {
-    
+  computeCaretMetrics (position: TextPosition, caretPrototype: Rect) {
     if (
-      position.equal(this.previousCaretPosition) && 
-      caretPrototype.equal(this.previousCaretPrototype)
+      position.notEqual(this.previousCaretPosition) ||
+      caretPrototype.notEqual(this.previousCaretPrototype)
     ) {
-      return
-    }
-
-    invariant(position.affinity !== null)
-    
-    const offset = position.offset
-    let rect: Rect | null = null
-    
-    switch (position.affinity) {
-      case AtEngine.skia.Affinity.Upstream: {
-        rect = this.getRectFromUpstream(offset, caretPrototype) ?? this.getRectFromDownstream(offset, caretPrototype)
-        break
+      invariant(position.affinity !== null)
+      
+      const offset = position.offset
+      let rect: Rect | null = null
+      
+      switch (position.affinity) {
+        case AtEngine.skia.Affinity.Upstream: {
+          rect = this.getRectFromUpstream(offset, caretPrototype) ?? this.getRectFromDownstream(offset, caretPrototype)
+          break
+        }
+        case AtEngine.skia.Affinity.Downstream: {
+          rect = this.getRectFromDownstream(offset, caretPrototype) ?? this.getRectFromUpstream(offset, caretPrototype)
+          break
+        }
       }
-      case AtEngine.skia.Affinity.Downstream: {
-        rect = this.getRectFromDownstream(offset, caretPrototype) ?? this.getRectFromUpstream(offset, caretPrototype)
-        break
+  
+      this.caretMetrics = {
+        offset: rect !== null 
+          ? new Offset(rect.left, rect.top) 
+          : this.empty,
+        fullHeight: rect !== null ? 
+          rect.bottom - rect.top 
+          : null,
       }
+  
+      
+      this.previousCaretPosition = position
+      this.previousCaretPrototype = caretPrototype
     }
 
-    this.caretMetrics = {
-      offset: rect !== null 
-        ? new Offset(rect.left, rect.top) 
-        : this.empty,
-      fullHeight: rect !== null ? 
-        rect.bottom - rect.top 
-        : null,
-    }
-
-    
-    this.previousCaretPosition = position
-    this.previousCaretPrototype = caretPrototype
   }
 
   getBoxesForSelection (
@@ -752,16 +755,13 @@ export class TextPainter {
     boxHeightStyle: Skia.RectHeightStyle = AtEngine.skia.RectHeightStyle.Tight,
     boxWidthStyle: Skia.RectWidthStyle = AtEngine.skia.RectWidthStyle.Tight,
   ) {
-    invariant(boxHeightStyle !== null)
-    invariant(boxWidthStyle !== null)
     invariant(this.paragraph)
-
     return this.paragraph.getBoxesForRange(
       selection.start,
       selection.end,
       boxHeightStyle,
       boxWidthStyle,
-    );
+    )
   }
 
   getPositionForOffset (offset: Offset): TextPosition {
@@ -779,9 +779,10 @@ export class TextPainter {
     return this.paragraph.getLineBoundary(position)
   }
   
-  computeLineMetrics (): LineMetrics[] {
+  computeLineMetrics (): Skia.LineMetrics[] {
     invariant(this.paragraph)
-    // @ts-ignore
-    return this.lineMetricsCache ??= this.paragraph.computeLineMetrics() 
+    this.lineMetricsCache ??= this.paragraph.computeLineMetrics() 
+    invariant(this.lineMetricsCache)
+    return this.lineMetricsCache
   }
 }

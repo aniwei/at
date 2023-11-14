@@ -8,6 +8,8 @@ import {
   InlineSpanVisitor 
 } from './inline-span'
 
+//// => TextSpan
+// 文本类
 export type TextSpanOptions = {
   text?: string | null,
   children?: InlineSpan[] | null,
@@ -80,13 +82,14 @@ export class TextSpan extends InlineSpan {
   }
 
   visit (visitor: InlineSpanVisitor) {
+    // 先遍历自身
     if (this.text !== null) {
       if (!visitor(this)) {
         return false
       }
     }
 
-    if (this.children !== null) {
+    if (this.children !== null && this.children.length > 0) {
       for (const child of this.children) {
         if (!child.visit(visitor))
           return false
@@ -97,7 +100,10 @@ export class TextSpan extends InlineSpan {
   }
 
   
-  getSpanForPositionVisitor (position: TextPosition, offset: Accumulator): InlineSpan | null {
+  getSpanForPositionVisitor (
+    position: TextPosition, 
+    offset: Accumulator
+  ): InlineSpan | null {
     if (this.text === null) {
       return null
     }
@@ -105,26 +111,31 @@ export class TextSpan extends InlineSpan {
     const affinity = position.affinity
     const targetOffset = position.offset
     const endOffset = offset.value + this.text.length
+
     if (
-      offset.value === targetOffset && affinity === AtEngine.skia.Affinity.Downstream ||
-      offset.value < targetOffset && targetOffset < endOffset ||
-      endOffset == targetOffset && affinity == AtEngine.skia.Affinity.Upstream
+      offset.value === targetOffset && 
+      affinity === AtEngine.skia.Affinity.Downstream ||
+      offset.value < targetOffset && 
+      targetOffset < endOffset ||
+      endOffset === targetOffset && 
+      affinity === AtEngine.skia.Affinity.Upstream
     ) {
       return this
     }
   
     offset.increment(this.text.length)
+
     return null
   }
 
-  computeToPlainText(
+  computeToPlainText (
     text: string, 
     includePlaceholders: boolean = true,
   ) {
     if (this.text !== null) {
       text += this.text
     }
-    if (this.children !== null) {
+    if (this.children !== null && this.children.length > 0) {
       for (const child of this.children) {
         text = child.computeToPlainText(
           text,
@@ -158,12 +169,12 @@ export class TextSpan extends InlineSpan {
     if (
       textSpan.text !== this.text ||
       this.children?.length !== textSpan.children?.length ||
-      (this.style === null) !== (textSpan.style == null)
+      (this.style === null) !== (textSpan.style === null)
     ) {
       return Skia.RenderComparisonKind.Layout
     }
       
-    let result = Skia.RenderComparisonKind.Metadata
+    let result = Skia.RenderComparisonKind.Identical
     
     if (this.style !== null) {
       invariant(textSpan.style)
@@ -179,7 +190,7 @@ export class TextSpan extends InlineSpan {
     }
 
     
-    if (this.children !== null) {
+    if (this.children !== null && this.children.length > 0) {
       invariant(textSpan.children)
       for (let index = 0; index < this.children.length; index += 1) {
         const candidate = this.children[index].compareTo(textSpan.children[index])

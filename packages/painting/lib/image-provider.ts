@@ -3,9 +3,14 @@ import { Equalable } from '@at/basic'
 import { Size } from '@at/geometry'
 import { AssetBundle } from '@at/asset'
 import { AtEngine, Skia, AnimatedImage } from '@at/engine'
-import { ImageChunk, ImageStream, ImageStreamRefBox, MultiFrameImageStreamRefBox } from './image-stream'
 import { Painting } from './painting'
 import { ImageCacheStatus } from './image-cache'
+import { 
+  ImageChunk, 
+  ImageStream, 
+  ImageStreamRefBox, 
+  MultiFrameImageStreamRefBox 
+} from './image-stream'
 
 // 图片解码回调
 export type ImageDecodeCallback = (
