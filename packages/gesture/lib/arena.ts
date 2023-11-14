@@ -1,4 +1,4 @@
-import invariant from '@at/utils'
+import { invariant } from '@at/utils'
 import { nextTick } from '@at/basic'
 
 // 手势处置枚举
@@ -21,7 +21,7 @@ export type GestureArenaEntryInitOptions = {
 
 // 手势竞技场入口
 export class GestureArenaEntry {
-  static create (...rests: unknown[])
+  static create (...rests: unknown[]): GestureArenaEntry
   static create (options: GestureArenaEntryInitOptions) {
     return new GestureArenaEntry(
       options.arena,
@@ -107,7 +107,9 @@ export class GestureArena {
   }
 
   toString () {
-    return `GestureArena(members: ${this.members.length})`
+    return `GestureArena(
+      [members]: ${this.members.length}
+    )`
   }
 }
 

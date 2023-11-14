@@ -319,6 +319,15 @@ importers:
       '@at/basic':
         specifier: workspace:^
         version: link:../basic
+      '@at/geometry':
+        specifier: workspace:^
+        version: link:../geometry
+      '@at/math':
+        specifier: workspace:^
+        version: link:../math
+      '@at/utils':
+        specifier: workspace:^
+        version: link:../utils
       ts-invariant:
         specifier: ^0.10.3
         version: 0.10.3
@@ -335,6 +344,9 @@ importers:
       '@at/basic':
         specifier: workspace:^
         version: link:../basic
+      '@at/engine':
+        specifier: workspace:^
+        version: link:../engine
       '@at/geometry':
         specifier: workspace:^
         version: link:../geometry

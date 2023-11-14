@@ -1,4 +1,4 @@
-export * from './arean'
+export * from './arena'
 export * from './drag'
 export * from './gesture'
 export * from './hit-test'

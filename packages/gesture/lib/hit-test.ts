@@ -1,8 +1,7 @@
 import { invariant } from '@at/utils'
-import { Offset } from '../basic/geometry'
-import { Matrix4 } from '../basic/matrix4'
+import { Offset } from '@at/geometry'
+import { Matrix4 } from '@at/math'
 
-import type { AtPointerEvent } from './events'
 
 export abstract class HitTestable {
   /**
@@ -18,11 +17,11 @@ export abstract class HitTestDispatcher {
 }
 
 export abstract class HitTestTarget {
-  abstract handleEvent (event: AtPointerEvent, entry: HitTestEntry): void
+  abstract handleEvent (event: PointerEvent, entry: HitTestEntry): void
 }
 
 export class HitTestEntry {
-  static create (...rests: unknown[])
+  static create (...rests: unknown[]): HitTestEntry
   static create (target: HitTestTarget, ...rests: unknown[]) {
     return new HitTestEntry(target, ...rests)
   }
@@ -69,7 +68,7 @@ export class OffsetTransformPart extends TransformPart {
 
   multiply (rhs: Matrix4): Matrix4 {
     const cloned = rhs.clone()
-    cloned.leftTranslate(this.offset.dx, this.offset.dy)
+    cloned.translate(this.offset.dx, this.offset.dy)
     return cloned
   }
 }
@@ -77,7 +76,7 @@ export class OffsetTransformPart extends TransformPart {
 export type HitTestResultOptions = {
   path?: HitTestEntry[],
   transforms?: Matrix4[],
-  localTransforms?: AtTransformPart[]
+  localTransforms?: TransformPart[]
 }
 
 export class HitTestResult {
@@ -105,12 +104,12 @@ export class HitTestResult {
 
   public path: HitTestEntry[]
   public transforms: Matrix4[]
-  public localTransforms: AtTransformPart[]
+  public localTransforms: TransformPart[]
 
   constructor (
     path: HitTestEntry[] = [],
     transforms: Matrix4[] = [Matrix4.identity()],
-    localTransforms: AtTransformPart[] = [],
+    localTransforms: TransformPart[] = [],
   ) {
     this.path = path
     this.transforms = transforms
@@ -147,7 +146,6 @@ export class HitTestResult {
   }
 
   popTransform () {
-    // @TO BE CONFIRM
     if (this.localTransforms.length > 0) {
       this.localTransforms.pop()
     } else {
@@ -156,6 +154,8 @@ export class HitTestResult {
   }
 
   toString () {
-    return `HitTestResult(${this.path.length === 0 ? '<empty path>' : this.path.join(',')})`
+    return `HitTestResult(
+      ${this.path.length === 0 ? '<empty path>' : this.path.join(',')
+    })`
   }
 }
