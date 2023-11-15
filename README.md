@@ -3,4 +3,4 @@
 
 
 ## 架构设计
-<img src="https://github.com/aniwei/at/blob/main/design.png" alt="vant" width="30%" height="30%">
+<img src="https://github.com/aniwei/at/blob/main/design.png" alt="vant" width="100%">
