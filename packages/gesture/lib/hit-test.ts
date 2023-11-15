@@ -2,7 +2,8 @@ import { invariant } from '@at/utils'
 import { Offset } from '@at/geometry'
 import { Matrix4 } from '@at/math'
 
-
+//// => HitTestable
+// 碰撞
 export abstract class HitTestable {
   /**
    * 碰撞
@@ -12,14 +13,20 @@ export abstract class HitTestable {
   abstract hitTest (result: HitTestResult, position: Offset): void
 }
 
+//// => HitTestDispatcher
+// 碰撞分发
 export abstract class HitTestDispatcher {
   abstract dispatchEvent (event: PointerEvent, result: HitTestResult): void
 }
 
+//// => HitTestTarget
+// 碰撞对象
 export abstract class HitTestTarget {
   abstract handleEvent (event: PointerEvent, entry: HitTestEntry): void
 }
 
+//// => HitTestEntry
+// 碰撞入口
 export class HitTestEntry {
   static create (...rests: unknown[]): HitTestEntry
   static create (target: HitTestTarget, ...rests: unknown[]) {
@@ -35,14 +42,20 @@ export class HitTestEntry {
   }
 
   toString () {
-    return `HitTestEntry(target: ${this.target})`
+    return `HitTestEntry(
+      [target]: ${this.target}
+    )`
   }
 }
 
+//// => TransformPart
+// 矩阵
 export abstract class TransformPart {
   abstract multiply (rhs: Matrix4): Matrix4
 }
 
+//// => MatrixTransformPart
+// 矩阵
 export class MatrixTransformPart extends TransformPart {
   public matrix: Matrix4
 
@@ -57,6 +70,7 @@ export class MatrixTransformPart extends TransformPart {
   }
 }
 
+//// => OffsetTransformPart
 export class OffsetTransformPart extends TransformPart {
   public offset: Offset
 
@@ -73,19 +87,35 @@ export class OffsetTransformPart extends TransformPart {
   }
 }
 
+//// => HitTestResult
+// 碰撞结果
 export type HitTestResultOptions = {
   path?: HitTestEntry[],
   transforms?: Matrix4[],
   localTransforms?: TransformPart[]
 }
 
+
+export interface HitTestResultFactory<T> {
+  new (...rests: unknown[]) : T
+  new (
+    path: HitTestEntry[],
+    transforms: Matrix4[],
+    localTransforms: TransformPart[],
+  ) : T
+  create (...rests: unknown[]) : T
+  create (options?: HitTestResultOptions): T
+}
 export class HitTestResult {
-  static create (options?: HitTestResultOptions) {
-    return new HitTestResult(
+  static create <T extends HitTestResult> (...rests: unknown[]): HitTestResult
+  static create <T extends HitTestResult> (options?: HitTestResultOptions) {
+    const HitTestResultFactory = this as unknown as HitTestResultFactory<T>
+
+    return new HitTestResultFactory(
       options?.path,
       options?.transforms,
       options?.localTransforms
-    )
+    ) as HitTestResult
   }
 
   static wrap (result: HitTestResult ) {
@@ -96,7 +126,7 @@ export class HitTestResult {
     )
   }
 
-  private get lastTransform (): Matrix4 {
+  public get lastTransform (): Matrix4 {
     this.globalizeTransforms()
     invariant(this.localTransforms.length === 0, ``)
     return this.transforms[this.transforms.length - 1]

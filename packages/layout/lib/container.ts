@@ -1,13 +1,13 @@
 import { invariant } from '@at/utils'
 import { Object } from './object'
-import type { LayoutObjectVisitor } from './object'
+import type { ObjectVisitorHandle } from './object'
 import type { PipelineOwner } from './pipeline-owner'
 
 export abstract class Container extends Object {
   /**
    * 
-   * @param {AtLayoutObject} child 
-   * @param {AtLayoutObject | null} afterChild 
+   * @param {Object} child 
+   * @param {Object | null} afterChild 
    */
   insertAfter (
     child: Object, 
@@ -15,9 +15,9 @@ export abstract class Container extends Object {
   ) {
     invariant(child.nextSibling === null, `The "child.nextSibling" cannot be null.`)
     invariant(child.previousSibling === null, `The "child.previousSibling" cannot be null.`)
-    this.childCount += 1
+    this.count += 1
     
-    invariant(this.childCount > 0, `The "children" length must gather than zero.`)
+    invariant(this.count > 0, `The "children" length must gather than zero.`)
     if (afterChild === null) {
       child.nextSibling = this.firstChild
       if (this.firstChild !== null) {
@@ -38,8 +38,8 @@ export abstract class Container extends Object {
         child.nextSibling = afterChild?.nextSibling ?? null
         child.previousSibling = afterChild ?? null
 
-        const previousSibling: AtLayoutObject | null = child.previousSibling as AtLayoutObject
-        const nextSibling: AtLayoutObject | null = child.nextSibling as AtLayoutObject
+        const previousSibling: Object | null = child.previousSibling as Object
+        const nextSibling: Object | null = child.nextSibling as Object
 
         if (previousSibling) {
           previousSibling.nextSibling = child
@@ -56,16 +56,16 @@ export abstract class Container extends Object {
 
   /**
    * 
-   * @param {AtLayoutObject} child 
-   * @param {AtLayoutObject | null}  afterChild 
+   * @param {Object} child 
+   * @param {Object | null}  afterChild 
    */
   appendChild (
-    child: AtLayoutObject, 
-    afterChild?: AtLayoutObject | null
+    child: Object, 
+    afterChild?: Object | null
   ) {
-    invariant(child !== this as unknown as AtLayoutObject, 'A AtLayoutObject cannot be inserted into itself.')
-    invariant(afterChild !== this as unknown as AtLayoutObject, 'A AtLayoutObject cannot simultaneously be both the parent and the sibling of another AtLayoutObject.')
-    invariant(child !== afterChild, 'A AtLayoutObject cannot be inserted after itself.')
+    invariant(child !== this as unknown as Object, 'A Object cannot be inserted into itself.')
+    invariant(afterChild !== this as unknown as Object, 'A Object cannot simultaneously be both the parent and the sibling of another Object.')
+    invariant(child !== afterChild, 'A Object cannot be inserted after itself.')
     invariant(child !== this.firstChild)
     invariant(child !== this.lastChild)
     this.insertAfter(child, afterChild)
@@ -73,18 +73,18 @@ export abstract class Container extends Object {
 
   /**
    * 
-   * @param {AtLayoutObject} child 
+   * @param {Object} child 
    */
-  append (child: AtLayoutObject) {
+  append (child: Object) {
     this.adoptChild(child)
     this.appendChild(child, this.lastChild)
   }
 
   /**
    * 
-   * @param {AtLayoutObject[]} children 
+   * @param {Object[]} children 
    */
-  appendAllChildren (children: AtLayoutObject[]) {
+  appendAllChildren (children: Object[]) {
     for (const child of children) {
       this.append(child)
     }
@@ -92,21 +92,21 @@ export abstract class Container extends Object {
 
   /**
    * 
-   * @param {AtLayoutObject} child 
+   * @param {Object} child 
    */
-  removeChild (child: AtLayoutObject) {
-    invariant(this.childCount >= 0)
+  removeChild (child: Object) {
+    invariant(this.count >= 0)
 
     if (child.previousSibling === null) {
       invariant(this.firstChild === child)
-      this.firstChild = child.nextSibling as AtLayoutObject
+      this.firstChild = child.nextSibling as Object
     } else {
       const previousSibling = child.previousSibling
       previousSibling.nextSibling = child.nextSibling
     }
     if (child.nextSibling === null) {
       invariant(this.lastChild === child)
-      this.lastChild = child.previousSibling as AtLayoutObject
+      this.lastChild = child.previousSibling as Object
     } else {
       const nextSibling = child.nextSibling
       nextSibling.previousSibling = child.previousSibling
@@ -114,14 +114,14 @@ export abstract class Container extends Object {
 
     child.previousSibling = null
     child.nextSibling = null
-    this.childCount -= 1
+    this.count -= 1
   }
 
   /**
    * 
-   * @param {AtLayoutObject} child 
+   * @param {Object} child 
    */
-  remove (child: AtLayoutObject) {
+  remove (child: Object) {
     this.removeChild(child)
     this.dropChild(child)
   }
@@ -129,7 +129,7 @@ export abstract class Container extends Object {
   removeAllChildren () {
     let child = this.firstChild
     while (child !== null) {
-      const next = child.nextSibling as AtLayoutObject
+      const next = child.nextSibling as Object
       child.previousSibling = null
       child.nextSibling = null
       this.dropChild(child)
@@ -137,18 +137,18 @@ export abstract class Container extends Object {
     }
     this.firstChild = null
     this.lastChild = null
-    this.childCount = 0
+    this.count = 0
   }
 
   /**
    * 
-   * @param {AtLayoutObject} child 
-   * @param {AtLayoutObject | null} afterChild 
+   * @param {Object} child 
+   * @param {Object | null} afterChild 
    * @returns 
    */
-  move (child: AtLayoutObject, afterChild?: AtLayoutObject | null) {
-    invariant(child !== this as unknown as AtLayoutObject)
-    invariant(afterChild !== this as unknown as AtLayoutObject)
+  move (child: Object, afterChild?: Object | null) {
+    invariant(child !== this as unknown as Object)
+    invariant(afterChild !== this as unknown as Object)
     invariant(child !== afterChild)
     invariant(child.parent === this)
 
@@ -163,15 +163,15 @@ export abstract class Container extends Object {
 
   /**
    * 
-   * @param {AtPipelineOwner} owner 
+   * @param {PipelineOwner} owner 
    */
-  attach (owner: AtPipelineOwner) {
+  attach (owner: PipelineOwner) {
     super.attach(owner)
     let child = this.firstChild
 
     while (child !== null) {
       child.attach(owner)
-      child = child.nextSibling as AtLayoutObject
+      child = child.nextSibling as Object
     }
   }
 
@@ -181,7 +181,7 @@ export abstract class Container extends Object {
     
     while (child !== null) {
       child.detach()
-      child = child.nextSibling as AtLayoutObject
+      child = child.nextSibling as Object
     }
   }
 
@@ -189,7 +189,7 @@ export abstract class Container extends Object {
     let child = this.firstChild
     while (child !== null) {
       this.redepthChild(child)
-      child = child.nextSibling as AtLayoutObject
+      child = child.nextSibling as Object
     }
   }
 
@@ -197,35 +197,35 @@ export abstract class Container extends Object {
    * 
    * @param {LayoutObjectVisitor} visitor 
    */
-  visit (visitor: LayoutObjectVisitor) {
+  visit (visitor: ObjectVisitorHandle) {
     let child = this.firstChild
     while (child !== null) {
       visitor(child)
-      child = child.nextSibling as AtLayoutObject
+      child = child.nextSibling as Object
     }
   }
 
   /**
    * 
-   * @param {AtLayoutObject} child 
-   * @returns {AtLayoutObject | null}
+   * @param {Object} child 
+   * @returns {Object | null}
    */
-  childBefore (child: AtLayoutObject): AtLayoutObject | null {
+  before (child: Object): Object | null {
     invariant(child != null)
     invariant(child.parent == this)
 
-    return child.previousSibling as AtLayoutObject
+    return child.previousSibling as Object
   }
 
   /**
    * 
-   * @param {AtLayoutObject} child 
-   * @returns {AtLayoutObject | null}
+   * @param {Object} child 
+   * @returns {Object | null}
    */
-  childAfter (child: AtLayoutObject): AtLayoutObject | null {
+  after (child: Object): Object | null {
     invariant(child !== null)
     invariant(child.parent === this)
     
-    return child.nextSibling as AtLayoutObject
+    return child.nextSibling as Object
   }
 }

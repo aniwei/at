@@ -109,6 +109,9 @@ importers:
       '@at/geometry':
         specifier: workspace:^
         version: link:../geometry
+      '@at/layout':
+        specifier: workspace:^
+        version: link:../layout
       '@at/painting':
         specifier: workspace:^
         version: link:../painting
@@ -341,6 +344,9 @@ importers:
 
   packages/layout:
     dependencies:
+      '@at/asset':
+        specifier: workspace:^
+        version: link:../asset
       '@at/basic':
         specifier: workspace:^
         version: link:../basic
@@ -350,6 +356,12 @@ importers:
       '@at/geometry':
         specifier: workspace:^
         version: link:../geometry
+      '@at/gesture':
+        specifier: workspace:^
+        version: link:../gesture
+      '@at/math':
+        specifier: workspace:^
+        version: link:../math
       '@at/painting':
         specifier: workspace:^
         version: link:../painting

@@ -589,6 +589,26 @@ export class RRect extends ArrayLike<RRect> {
   
       return true
     }
+
+    shift (): number
+    shift (offset: Offset): RRect
+    shift (offset?: Offset): number | RRect | undefined  {
+      invariant(offset)
+      return RRect.raw(
+        this.left + offset.dx,
+        this.top + offset.dy,
+        this.right + offset.dx,
+        this.bottom + offset.dy,
+        this.tlRadiusX,
+        this.tlRadiusY,
+        this.trRadiusX,
+        this.trRadiusY,
+        this.blRadiusX,
+        this.blRadiusY,
+        this.brRadiusX,
+        this.brRadiusY,
+      )
+    }
   
     /**
      * @description: 

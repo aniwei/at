@@ -1,2 +1,6 @@
 # At
 基于 CanvasKit 自绘引擎
+
+
+## 架构设计
+<img src="https://github.com/aniwei/at/blob/main/design.jpg" alt="vant" width="30%" height="30%">

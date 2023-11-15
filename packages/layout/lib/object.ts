@@ -1,8 +1,15 @@
 import { invariant } from '@at/utils'
+import { Matrix4 } from '@at/math'
 import { AbstractNode } from '@at/basic'
-import { Offset, Rect } from '@at/geometry'
+import { Offset, Rect, Size } from '@at/geometry'
+import { ContainerLayer, LayerHandle, OffsetLayer } from '@at/engine'
+import { HitTestEntry, HitTestResult, HitTestTarget } from '@at/gesture'
+
 import { PipelineOwner } from './pipeline-owner'
 import { Constraints } from './constraints'
+import { PaintingContext } from './painting-context'
+
+export type ObjectVisitorHandle = (child: Object) => void
 
 export abstract class Object extends AbstractNode<Object, PipelineOwner> implements HitTestTarget {
   /**
@@ -38,18 +45,18 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     invariant(
       this.isRepaintBoundary ||
       this.layerHandle.layer === null ||
-      this.layerHandle.layer instanceof AtOffsetLayer,
+      this.layerHandle.layer instanceof OffsetLayer,
       `Cannot get the layer.`
     )
 
     return this.layerHandle.layer
   }
-  public set layer (layer: AtContainerLayer | null) {
+  public set layer (layer: ContainerLayer | null) {
     invariant(!this.isRepaintBoundary)
     this.layerHandle.layer = layer
   }
 
-  public childCount: number = 0
+  public count: number = 0
   public firstChild: Object | null = null
   public lastChild: Object | null = null
   public previousSibling: Object | null = null
@@ -64,7 +71,7 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
   public isRepaintBoundary: boolean = false
   public alwaysNeedsCompositing: boolean = false
   public needsCompositingBitsUpdate: boolean = false
-  public layerHandle: AtLayerHandle<AtContainerLayer> = new AtLayerHandle<AtContainerLayer>()
+  public layerHandle: LayerHandle<ContainerLayer> = new LayerHandle<ContainerLayer>()
 
   public constraints: Constraints | null = null
   public needsCompositing: boolean = this.isRepaintBoundary || this.alwaysNeedsCompositing
@@ -77,14 +84,14 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
 
   abstract performResize (): void
 
-  abstract hitTest (result: AtHitTestResult, ...rest: unknown[]): void
-  abstract handleEvent(event: AtPointerEvent, entry: AtHitTestEntry): void
+  abstract hitTest (result: HitTestResult, ...rest: unknown[]): void
+  abstract handleEvent(event: PointerEvent, entry: HitTestEntry): void
 
-  layout (constraints: AtConstraints, parentUsesSize = false) {
+  layout (constraints: Constraints, parentUsesSize = false) {
     invariant(constraints !== null)
     invariant(this.parent !== null && this.parent instanceof Object)
 
-    const isRelayoutBoundary = !parentUsesSize || constraints.isTight || this.sizedByParent
+    const isRelayoutBoundary = !parentUsesSize || constraints.tight || this.sizedByParent
     const relayoutBoundary = isRelayoutBoundary ? this : this.parent.relayoutBoundary
 
     if (
@@ -136,7 +143,8 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     this.markNeedsPaint()
   }
 
-  scheduleInitialPaint (root: AtContainerLayer) {
+  // 初始化
+  scheduleInitialPaint (root: ContainerLayer) {
     invariant(root.attached)
     invariant(this.attached)
     invariant(this.isRepaintBoundary)
@@ -225,7 +233,7 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     invariant(child.parent === this, `The argument "child" must be equal `)
   }
 
-  replaceRootLayer (rootLayer: AtOffsetLayer) {
+  replaceRootLayer (rootLayer: OffsetLayer) {
     invariant(rootLayer.attached, `The "rootLayer" must be attached.`)
     invariant(this.attached, `The "Object" must be attached.`)
     invariant(this.isRepaintBoundary, `The "Object" must is "isRepaintBoundary".`)
@@ -352,7 +360,7 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     }
   }
 
-  visit (visitor: LayoutObjectVisitor): void {}
+  visit (visitor: ObjectVisitorHandle): void {}
 
   adoptChild (child: Object) {
     invariant(child !== null, `The argument "child" cannot be null.`)

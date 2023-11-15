@@ -14,8 +14,14 @@ interface ConnectionPayload {
   configuration: AtEngineConfiguration
 }
 
-//// => App
+//// => AtBoot
 export class App extends AtInstance {
+  static ready (readyHandle: VoidFunction) {
+    const boot = App.create()
+    boot.start(readyHandle)
+    return boot
+  }
+
   connect (): Promise<void> {
     return new Promise((resolve) => {
       self.addEventListener('message', async (event: MessageEvent<ConnectionPayload>) => {
@@ -47,15 +53,12 @@ export class App extends AtInstance {
   }
 }
 
-const app = App.create()
-
-app.start(() => {
-
+const app = App.ready(() => {
   const size = Size.create(400, 400)
+  
   const surface = Surface.create(App.tryCreateSurface(size, app.element) as Skia.Surface)
-
   const canvas = surface.canvas
-
+  
   const span = TextSpan.create({
     text: 'Welcome to Beijing.',
     style: TextPaintingStyle.create({
@@ -65,11 +68,11 @@ app.start(() => {
       letterSpacing: 10,
     })
   })
-
+  
   const painter = TextPainter.create({
     text: span
   })
-
+  
   painter.layout()
   painter.paint(canvas, Offset.create(40, 40))
   

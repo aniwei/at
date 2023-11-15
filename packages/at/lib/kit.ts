@@ -1,12 +1,13 @@
 import { invariant } from '@at/utils'
 import { ApiService } from '@at/api'
-import { AtManifest } from './manifest'
 import { nextTick } from '@at/basic'
+import { PipelineOwner, View } from '@at/layout'
+import { AtManifest } from './manifest'
 import { 
   AtEngine, 
   AtEngineLifecycleKind,
   AtEngineConfiguration,
-  AtEngineEnvironments
+  AtEngineEnvironments,
 } from '@at/engine'
 import { Size } from '@at/geometry'
 
@@ -73,6 +74,30 @@ export abstract class AtKit extends AtEngine {
     }
   }
 
+  // => view
+  public _view: View | null = null
+  public get view () {
+    if (this._view === null) {
+      this._view = View.create()
+    }
+    return this._view
+  }
+
+  // => pipeline
+  protected _pipeline: PipelineOwner | null = null
+  public get pipeline (): PipelineOwner {
+    if (this._pipeline === null) {
+      this._pipeline = PipelineOwner.create(
+        this.rasterizer,
+        () => {
+
+        },
+        this.configuration
+      )
+    }
+    return this._pipeline
+  }  
+  
   public api: ApiService = ApiService.create()
   public environments: AtKitEnvironments
 

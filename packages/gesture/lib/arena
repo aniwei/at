@@ -102,7 +102,7 @@ export class GestureArena {
    * @param member 
    */
   add (member: GestureArenaMember) {
-    invariant(this.isOpen)
+    invariant(this.opened)
     this.members.push(member)
   }
 
@@ -153,7 +153,7 @@ export class GestureArenaManager {
     
     this.arenas.delete(pointer)
     
-    for (const rejectedMember of state.members) {
+    for (const rejectedMember of arena.members) {
       if (rejectedMember !== member) {
         rejectedMember.reject(pointer)
       }
@@ -229,7 +229,7 @@ export class GestureArenaManager {
   hold (pointer: number) {
     const arena: GestureArena | null = this.arenas.get(pointer) ?? null
     if (arena !== null) {
-      state.held = true
+      arena.held = true
     }
   }
 
@@ -295,7 +295,7 @@ export class GestureArenaManager {
       const members = arena.members
       invariant(members.length === 1)
       this.arenas.delete(pointer)
-      const member = state.members[0]
+      const member = arena.members[0]
       member.accept(pointer)
     }
   }

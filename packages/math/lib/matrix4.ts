@@ -4,7 +4,7 @@ import { Vector3 } from './vector3'
 
 export class Matrix4 extends ArrayLike<Matrix4> {
   static get ZERO () {
-    return new Matrix4(16)
+    return new Matrix4(...Array(16).fill(0))
   }
   static tryInvert(m4: Matrix4 ): Matrix4 | null {
     const r = Matrix4.ZERO

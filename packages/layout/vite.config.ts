@@ -15,9 +15,9 @@ export default defineConfig({
         '@at/core',
         '@at/asset',
         '@at/basic',
+        '@at/gesture',
         '@at/geometry',
         '@at/math',
-        '@at/utils',
         '@at/utils',
         'canvaskit-wasm'
       ],

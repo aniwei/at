@@ -1,16 +1,17 @@
 import { invariant } from '@at/utils' 
-import type { AtRasterizer } from '@at/engine'
 import { Object } from './object'
-import { AtPaintingContext } from './painting-context'
-import { AtViewConfiguration } from './view'
+import { PaintingContext } from './painting-context'
+import { ViewConfiguration } from './view'
 
-export type RequestRasterizeCall = () => void
+import type { AtRasterizer } from '@at/engine'
 
-export class AtNodesNeedingUpdate extends Array<Object> {
+export type RequestRasterizeHandle = () => void
+export class ObjectNeedingUpdate extends Array<Object> {
   static create () {
-    return new AtNodesNeedingUpdate()
+    return new ObjectNeedingUpdate()
   }
-  add (node: AtLayoutObject) {
+
+  add (node: Object) {
     if (!this.includes(node)) {
       this.push(node)
     }
@@ -21,7 +22,7 @@ export class PipelineOwner {
   static create (
     rasterizer: AtRasterizer, 
     onNeedVisualUpdate: VoidFunction, 
-    configuration: AtViewConfiguration
+    configuration: ViewConfiguration
   ) {
     return new PipelineOwner(
       rasterizer, 
@@ -48,12 +49,12 @@ export class PipelineOwner {
   public onNeedVisualUpdate: VoidFunction | null = null
   
   public rasterizer: AtRasterizer
-  public configuration: AtViewConfiguration
-  public nodesNeedingLayout: AtNodesNeedingUpdate = AtNodesNeedingUpdate.create()
-  public nodesNeedingPaint: AtNodesNeedingUpdate = AtNodesNeedingUpdate.create()
-  public nodesNeedingCompositingBitsUpdate: AtNodesNeedingUpdate = AtNodesNeedingUpdate.create()
+  public configuration: ViewConfiguration
+  public nodesNeedingLayout: ObjectNeedingUpdate = ObjectNeedingUpdate.create()
+  public nodesNeedingPaint: ObjectNeedingUpdate = ObjectNeedingUpdate.create()
+  public nodesNeedingCompositingBitsUpdate: ObjectNeedingUpdate = ObjectNeedingUpdate.create()
   
-  constructor (rasterizer: AtRasterizer, onNeedVisualUpdate: VoidFunction, configuration: AtViewConfiguration) {
+  constructor (rasterizer: AtRasterizer, onNeedVisualUpdate: VoidFunction, configuration: ViewConfiguration) {
     this.onNeedVisualUpdate = onNeedVisualUpdate
     this.configuration = configuration
     this.rasterizer = rasterizer
@@ -72,7 +73,7 @@ export class PipelineOwner {
           return a.depth - b.depth
         })
         
-        this.nodesNeedingLayout = AtNodesNeedingUpdate.create()
+        this.nodesNeedingLayout = ObjectNeedingUpdate.create()
         for (const node of dirtyNodes) {
           if (node.needsLayout && node.owner === this) {
             node.layoutWithoutResize()
@@ -96,7 +97,7 @@ export class PipelineOwner {
       }
     }
 
-    this.nodesNeedingCompositingBitsUpdate = AtNodesNeedingUpdate.create()
+    this.nodesNeedingCompositingBitsUpdate = ObjectNeedingUpdate.create()
   }
   
   flushPaint (): boolean {
@@ -105,13 +106,13 @@ export class PipelineOwner {
         return b.depth - a.depth
       })
 
-      this.nodesNeedingPaint = AtNodesNeedingUpdate.create()
+      this.nodesNeedingPaint = ObjectNeedingUpdate.create()
 
       for (const node of dirtyNodes) {
         invariant(node.layerHandle.layer !== null, `The "node.layerHandle.layer" cannot be null.`)
         if (node.needsPaint && node.owner === this) {
           if (node.layerHandle.layer.attached) {
-            AtPaintingContext.repaintCompositedChild(node)
+            PaintingContext.repaintCompositedChild(node)
             break
           } else {
             node.skippedPaintingOnLayer()

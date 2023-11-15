@@ -9,14 +9,15 @@
   ],
   "main": "dist/index.cjs",
   "module": "dist/index.js",
-  "types": "types/*/**.d.ts",
+  "types": "types/lib",
   "exports": {
-    "types": "./types/*/**.d.ts",
+    "types": "./types/lib/index.d.ts",
     "import": "./dist/index.js",
     "require": "./dist/index.cjs"
   },
   "scripts": {
-    "dev": "vite"
+    "dev": "vite",
+    "build": "tsc && vite build"
   },
   "devDependencies": {
     "typescript": "^5.1.3",

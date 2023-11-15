@@ -1,10 +1,14 @@
 import { UnimplementedError, invariant } from '@at/utils'
 import { Matrix4 } from '@at/math'
-import { Offset, Rect, Size } from '@at/geometry'
-import { Object } from './object'
-import { TransformLayer } from '@at/engine'
-import { BoxConstraints } from './constraints'
 import { Subscribable } from '@at/basic'
+import { HitTestEntry } from '@at/gesture'
+import { Offset, Rect, Size } from '@at/geometry'
+import { LayerScene, TransformLayer } from '@at/engine'
+import { Object } from './object'
+import { BoxConstraints } from './constraints'
+import { Container } from './container'
+import { PaintingContext } from './painting-context'
+import { BoxHitTestResult } from './box-hit-test'
 
 
 export type ViewSceneRasterizeCall = (scene: LayerScene) => void
@@ -15,21 +19,23 @@ export type ViewConfigurationOptions = {
 }
 
 export abstract class ViewConfiguration extends Subscribable {
-  public size: Size
+  public width: number
+  public height: number
   public devicePixelRatio: number
 
   /**
    * 构造函数
-   * @param {Size} size 
    * @param {number} devicePixelRatio 
    */
   constructor (
-    size: Size = Size.ZERO, 
+    width: number,
+    height: number,
     devicePixelRatio: number,
   ) {
     super()
 
-    this.size = size
+    this.width = width
+    this.height = height
     this.devicePixelRatio = devicePixelRatio
   }
 
@@ -55,7 +61,8 @@ export abstract class ViewConfiguration extends Subscribable {
   equal (other: ViewConfiguration | null) {
     return (
       other instanceof ViewConfiguration &&
-      other.size.equal(this.size) &&
+      other.width === this.width &&
+      other.height === this.height &&
       other.devicePixelRatio === this.devicePixelRatio
     )
   }
@@ -81,8 +88,9 @@ export abstract class View extends Container {
   
 
   // => configuration
-  protected _configuration: ViewConfiguration
+  protected _configuration: ViewConfiguration | null = null
   public get configuration () {
+    invariant(this._configuration)
     return this._configuration
   }
   public set configuration (configuration: ViewConfiguration) {    
@@ -112,12 +120,13 @@ export abstract class View extends Container {
 
   // => frames
   public get bounds (): Rect {
-    return Offset.ZERO.and(this.configuration.size)
+    return Offset.ZERO.and(this.size)
   }
 
   // => size
   public get size (): Size {
-    return this.configuration.size
+    const size = Size.create(this.configuration.width, this.configuration.height)
+    return size
   }
   
   public rootTransform: Matrix4 | null = null
@@ -128,33 +137,32 @@ export abstract class View extends Container {
    * @param child 
    * @param configuration 
    */
-  constructor (configuration: AtViewConfiguration | null) {
-    
+  constructor (configuration: ViewConfiguration) {
     super()
-    invariant(configuration !== null, `The argument "configuration" cannot be null.`)
-    this._configuration = configuration  
+
+    this.configuration = configuration  
   }
 
-  handleEvent (event: AtPointerEvent, entry: HitTestEntry): void {
+  handleEvent (event: PointerEvent, entry: HitTestEntry): void {
     
   }
 
   prepareInitial () {
-    invariant(this.owner !== null, `The "this.owner" cannot be null.`)
-    invariant(this.rootTransform === null, `The "this.rootTransform" must be null.`)
+    invariant(this.owner !== null, `The "View.owner" cannot be null.`)
+    invariant(this.rootTransform === null, `The "View.rootTransform" must be null.`)
     
     this.scheduleInitialLayout()
     this.scheduleInitialPaint(this.createNewRootLayer())
-    invariant(this.rootTransform !== null, `The "this.rootTransform" cannot be null.`)
+    invariant(this.rootTransform !== null, `The "View.rootTransform" cannot be null.`)
   }
 
   createNewRootLayer (): TransformLayer {
     this.rootTransform = this.configuration.toMatrix()
     // this.rootTransform?.translate(this.configuration.size.width / 2, this.configuration.size.width / 2)
-    const rootLayer = TransformLayer.create(Offset.ZERO, this.rootTransform)    
-    rootLayer.attach(this)
+    const root = TransformLayer.create(Offset.ZERO, this.rootTransform)    
+    root.attach(this)
 
-    return rootLayer
+    return root
   }
 
   performResize () {
@@ -162,7 +170,7 @@ export abstract class View extends Container {
   }
   
   performLayout () {
-    invariant(this.rootTransform !== null, `The rootTransform cannot be null.`)
+    invariant(this.rootTransform !== null, `The "View.rootTransform" cannot be null.`)
 
     if (this.child !== null) {
       this.child.layout(BoxConstraints.tight(this.size))
@@ -179,10 +187,10 @@ export abstract class View extends Container {
 
   /**
    * 
-   * @param {AtPaintingContext} context 
+   * @param {PaintingContext} context 
    * @param {Offset} offset 
    */
-  paint (context: AtPaintingContext, offset: Offset) {
+  paint (context: PaintingContext, offset: Offset) {
     if (this.firstChild !== null) {
       context.paintChild(this.firstChild, offset)
     }
@@ -194,30 +202,30 @@ export abstract class View extends Container {
    * @param transform 
    */
   applyPaintTransform (
-    child: AtLayoutObject,
+    child: Object,
     transform: Matrix4
   ) {
-    invariant(this.rootTransform !== null, `The "this.rootTransform" cannt be null.`)
+    invariant(this.rootTransform !== null, `The "View.rootTransform" cannt be null.`)
     transform.multiply(this.rootTransform!)
     super.applyPaintTransform(child, transform)
   }
 
   composite () {
-    invariant(this.layer, `The  "this.layer" cannot be null.`)
+    invariant(this.layer, `The  "View.layer" cannot be null.`)
 
     try {
-      this.owner?.rasterizer.draw(AtLayerScene.create(this.layer).tree)
+      this.owner?.rasterizer.draw(LayerScene.create(this.layer).tree)
     } finally {
       // 
     }
   }
 
-  hitTest (result: AtBoxHitTestResult, position: Offset) {
+  hitTest (result: BoxHitTestResult, position: Offset) {
     if (this.child !== null) {
-      this.child.hitTest(AtBoxHitTestResult.wrap(result), position)
+      this.child.hitTest(BoxHitTestResult.wrap(result), position)
     }
 
-    result.add(AtHitTestEntry.create(this))
+    result.add(HitTestEntry.create(this))
     return true
   }
 }
