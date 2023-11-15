@@ -13,7 +13,7 @@ export type ObjectVisitorHandle = (child: Object) => void
 
 export abstract class Object extends AbstractNode<Object, PipelineOwner> implements HitTestTarget {
   /**
-   * 
+   * 清除子节点布局边界
    * @param child 
    */
   static cleanChildRelayoutBoundary (child: Object) {

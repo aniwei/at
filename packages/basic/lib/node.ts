@@ -56,7 +56,7 @@ export abstract class AbstractNode<T extends AbstractNode<T>, U extends unknown 
     child.parent = this
 
     if (this.attached) {
-      child.attach(this.owner!)
+      child.attach(this.owner)
     }
 
     this.redepthChild(child)
