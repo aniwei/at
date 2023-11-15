@@ -12,9 +12,9 @@ import { Picture } from './picture'
 import { Path } from './path'
 import { ImageFilter } from './image-filter'
 import { AtEngine } from './engine'
+import { transformRect } from './to'
 
 import * as Skia from './skia'
-import { transformRect } from './to'
 
 //// => Layer
 // 抽象层
@@ -38,7 +38,8 @@ export abstract class Layer extends AbstractNode<Layer> {
   public depth: number = 0
   // 节点边界
   public bounds: Rect = Rect.ZERO
-  public parentHandle: LayerHandle<Layer> = new LayerHandle<Layer>()
+  // 父层引用
+  public parentRef: LayerRef<Layer> = new LayerRef<Layer>()
   
   // 父节点
   public parent: ContainerLayer | null = null
@@ -96,11 +97,11 @@ export abstract class Layer extends AbstractNode<Layer> {
   }
 }
 
-//// => LayerHandle
+//// => LayerRef
 // 层引用
-export class LayerHandle<T extends Layer> {
+export class LayerRef<T extends Layer> {
   static create <T extends Layer> () {
-    return new LayerHandle<T>()
+    return new LayerRef<T>()
   }
 
   private _layer: T | null = null
@@ -180,7 +181,7 @@ export abstract class ContainerLayer extends Layer {
     invariant(child !== this.lastChild)
     invariant(child.parent === null)
     invariant(!child.attached)
-    invariant(child.parentHandle.layer === null)
+    invariant(child.parentRef.layer === null)
       
     this.adoptChild(child)
     child.previous = this.lastChild
@@ -190,7 +191,7 @@ export abstract class ContainerLayer extends Layer {
 
     this.lastChild = child
     this.firstChild ??= child
-    child.parentHandle.layer = child
+    child.parentRef.layer = child
     invariant(child.attached === this.attached)
   }
 
@@ -200,35 +201,25 @@ export abstract class ContainerLayer extends Layer {
    */
   removeChild (child: Layer) {
     invariant(child.parent === this as unknown as Layer)
-    invariant(child.attached === this.attached)
-    invariant(child.parentHandle.layer !== null)
+    invariant(child.parentRef.layer !== null)
+    
     if (child.previous === null) {
-      invariant(this.firstChild === child)
       this.firstChild = child.next
     } else {
       child.previous.next = child.next
     }
+
     if (child.next === null) {
-      invariant(this.lastChild === child)
       this.lastChild = child.previous
     } else {
       child.next.previous = child.previous
     }
-    invariant((this.firstChild === null) === (this.lastChild === null))
-    invariant(
-      this.firstChild === null || 
-      this.firstChild.attached === this.attached
-    )
-    invariant(
-      this.lastChild === null || 
-      this.lastChild.attached === this.attached
-    )
     
     child.previous = null
     child.next = null
+
     this.dropChild(child)
-    child.parentHandle.layer = null
-    invariant(!child.attached)
+    child.parentRef.layer = null
   }
 
   removeAllChildren () {
@@ -239,9 +230,7 @@ export abstract class ContainerLayer extends Layer {
       child.next = null
 
       this.dropChild(child)
-
-      invariant(child.parentHandle !== null)
-      child.parentHandle.layer = null
+      child.parentRef.layer = null
       child = next
     }
     this.firstChild = null
@@ -304,7 +293,6 @@ export abstract class ContainerLayer extends Layer {
    */  
   paintChildren (context: PaintContext) {
     invariant(this.ignored, `The layer bound cannot be empty.`)
-
     let child: Layer | null = this.firstChild
     
     while (child !== null) {
@@ -359,24 +347,26 @@ export class TransformLayer extends ContainerLayer {
   }
 
    // => offset
-   private _offset: Offset
+   private _offset: Offset | null = null
    public get offset () {
+    invariant(this._offset)
      return this._offset
    }
    public set offset (offset: Offset) {
-     if (this._offset.notEqual(offset)) {
+     if (this._offset === null || this._offset.notEqual(offset)) {
        this._offset = offset
        this.transform = Matrix4.translationValues(offset.dx, offset.dy, 0.0)
      }
    }
 
   // => transform
-  private _transform: Matrix4
+  private _transform: Matrix4 | null = null
   public get transform () {
+    invariant(this._transform)
     return this._transform
   }
   public set transform (transform: Matrix4) {
-    if (transform !== this.transform) {
+    if (this._transform === null || this._transform.notEqual(transform)) {
       this._transform = transform
       this.inverseDirty = true
     }
@@ -389,8 +379,8 @@ export class TransformLayer extends ContainerLayer {
     transform: Matrix4,
   ) {
     super()
-    this._offset = offset
-    this._transform = transform
+    this.offset = offset
+    this.transform = transform
   }
 
   applyTransform (
