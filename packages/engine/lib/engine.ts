@@ -57,9 +57,9 @@ export enum AtEngineLifecycleKind {
 }
 
 export interface AtEngineConfiguration {
+  uri: string,  
   size: Size,
   devicePixelRatio: number,
-  uri: string,  
   assets: {
     baseURI: string,
     rootDir: string

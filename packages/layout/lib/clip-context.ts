@@ -1,9 +1,7 @@
 import { Skia, Canvas, Paint, Path, AtEngine } from '@at/engine'
 import { Rect, RRect } from '@at/geometry'
 
-/**
- * 裁剪上下文
- */
+//// => ClipContext
 export abstract class ClipContext {
   abstract canvas: Canvas | null
 

@@ -13,12 +13,29 @@ import { BoxHitTestResult } from './box-hit-test'
 
 export type ViewSceneRasterizeCall = (scene: LayerScene) => void
 
-export type ViewConfigurationOptions = {
-  size: Size,
+//// => ViewConfiguration
+// 视图配置
+export interface ViewConfigurationOptions {
+  width: number,
+  height: number,
   devicePixelRatio: number
 }
 
+export interface ViewConfigurationFactory<T> {
+  new (
+    width: number,
+    height: number,
+    devicePixelRatio: number,
+  ): T
+  new (...rests: unknown[]): T
+  create (options: ViewConfigurationOptions): T
+}
 export abstract class ViewConfiguration extends Subscribable {
+  static create <T extends ViewConfiguration> (...rests: unknown[]) {
+    const ViewConfigurationFactory = this as unknown as ViewConfigurationFactory<T>
+    return new ViewConfigurationFactory(...rests)
+  }
+
   public width: number
   public height: number
   public devicePixelRatio: number
@@ -27,6 +44,7 @@ export abstract class ViewConfiguration extends Subscribable {
    * 构造函数
    * @param {number} devicePixelRatio 
    */
+  constructor (...rests: unknown[])
   constructor (
     width: number,
     height: number,

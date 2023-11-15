@@ -1,7 +1,7 @@
 import { invariant } from '@at/utils'
 import { ApiService } from '@at/api'
 import { nextTick } from '@at/basic'
-import { PipelineOwner, View } from '@at/layout'
+import { PipelineOwner, View, ViewConfiguration } from '@at/layout'
 import { AtManifest } from './manifest'
 import { 
   AtEngine, 
@@ -20,7 +20,7 @@ export enum AtKitEnvKind {
 }
 
 export interface AtKitEnvironments extends AtEngineEnvironments {
-  AT_ENV: AtKitEnvKind,
+  ATKIT_ENV: AtKitEnvKind,
 }
 
 
@@ -39,7 +39,7 @@ export abstract class AtKit extends AtEngine {
   // => isDev
   public get isDev () {
     return AtKit.env<AtKitEnvKind>(
-      'AT_ENV', 
+      'ATKIT_ENV', 
       AtKitEnvKind.Production
     ) === AtKitEnvKind.Dev
   }
@@ -47,7 +47,7 @@ export abstract class AtKit extends AtEngine {
   // => isStage
   public get isStage () {
     return AtKit.env<AtKitEnvKind>(
-      'AT_ENV', 
+      'ATKIT_ENV', 
       AtKitEnvKind.Stage
     ) === AtKitEnvKind.Stage
   }
@@ -55,7 +55,7 @@ export abstract class AtKit extends AtEngine {
   // => isProduction
   public get isProduction () {
     return AtKit.env<AtKitEnvKind>(
-      'AT_ENV', 
+      'ATKIT_ENV', 
       AtKitEnvKind.Production
     ) === AtKitEnvKind.Production
   }
@@ -78,7 +78,7 @@ export abstract class AtKit extends AtEngine {
   public _view: View | null = null
   public get view () {
     if (this._view === null) {
-      this._view = View.create()
+      this._view = View.create(ViewConfiguration.create())
     }
     return this._view
   }
@@ -113,10 +113,11 @@ export abstract class AtKit extends AtEngine {
       devicePixelRatio: configuration?.devicePixelRatio ?? 2.0,
       uri: AtKit.env('SKIA_URI', '/canvaskit.wasm'),
       assets: {
-        baseURI: AtKit.env('ASSETS_BASE_URI', '/'),
-        rootDir: AtKit.env('ASSETS_ROOT_DIR', '/assets')
+        baseURI: AtKit.env('ATKIT_ASSETS_BASE_URI', '/'),
+        rootDir: AtKit.env('ATKIT_ASSETS_ROOT_DIR', '/assets')
       }
     })
+
 
     this.environments = process.env as unknown as  AtKitEnvironments
   }

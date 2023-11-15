@@ -21,7 +21,7 @@ export abstract class Constraints extends Equalable<Constraints> {
 
 //// => BoxConstraints
 // 盒子模型约束
-export type BoxConstraintsOptions = {
+export interface BoxConstraintsOptions {
   minWidth?: number
   maxWidth?: number
   minHeight?: number
@@ -52,6 +52,7 @@ export class BoxConstraints extends Constraints {
     if (a === null && b === null) {
       return null
     }
+
     if (a === null) {
       return b!.multiply(t)
     }
@@ -133,6 +134,7 @@ export class BoxConstraints extends Constraints {
       this.minHeight <= this.maxHeight
     )
   }
+
   // => flipped
   get flipped () {
     return BoxConstraints.create({
@@ -332,8 +334,7 @@ export class BoxConstraints extends Constraints {
 
   constrainSizeAndAttemptToPreserveAspectRatio (size: Size) {
     if (this.tight) {
-      const result = this.smallest
-      return result
+      return this.smallest
     }
 
     let width = size.width
@@ -362,12 +363,10 @@ export class BoxConstraints extends Constraints {
       width = height * aspectRatio
     }
 
-    const result = new Size(
+    return Size.create(
       this.constrainWidth(width), 
       this.constrainHeight(height)
     )
-    
-    return result
   }
 
   isSatisfiedBy (size: Size) {

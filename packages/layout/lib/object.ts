@@ -78,16 +78,17 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
 
   abstract bounds: Rect
 
-  abstract performLayout (): void
-  abstract performLayout (size: Size): void
-  abstract performLayout (size?: Size): void
-
   abstract performResize (): void
 
+  abstract performLayout (): void
+  abstract performLayout (size?: Size): void
+
+
   abstract hitTest (result: HitTestResult, ...rest: unknown[]): void
+  
   abstract handleEvent(event: PointerEvent, entry: HitTestEntry): void
 
-  layout (constraints: Constraints, parentUsesSize = false) {
+  layout (constraints: Constraints, parentUsesSize: boolean = false) {
     invariant(constraints !== null)
     invariant(this.parent !== null && this.parent instanceof Object)
 
@@ -115,7 +116,7 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     if (this.sizedByParent) {
       try {
         this.performResize()
-      } catch (error) {
+      } catch (error: any) {
         throw error
       }
     }
@@ -273,10 +274,6 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     }
   }
 
-  /**
-   * 
-   * @returns 
-   */
   markNeedsLayout () {
     if (this.needsLayout) {
       return
@@ -442,6 +439,7 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
   }
 
   dispose () {
+    this.layerHandle.dispose()
     this.layerHandle.layer = null
   }
 }

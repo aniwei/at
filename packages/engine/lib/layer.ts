@@ -117,6 +117,11 @@ export class LayerHandle<T extends Layer> {
       }
     }
   }
+
+  dispose () {
+    this.layer?.dispose()
+    this.layer = null
+  }
 }
 
 

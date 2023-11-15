@@ -28,7 +28,7 @@ export enum ApiStateKind {
 // Api 服务
 export interface ApiService extends BaseApi<ApiEventKind> {
   Engine: EngineApiService,
-  Client: ClientApiService
+  Client: ClientApiService,
 }
 
 export class ApiService extends BaseApi<ApiEventKind> {
