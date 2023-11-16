@@ -175,9 +175,9 @@ export class Painting {
     let slice: Size | null  
 
     if (center !== null) {
-      slice = input.divide(scale).subtract(center.size)
-      output = output.subtract(slice)
-      input = input.subtract(slice.multiply(scale))
+      slice = input.divide(scale).substract(center.size)
+      output = output.substract(slice)
+      input = input.substract(slice.multiply(scale))
     }
 
     fit ??= center == null ? BoxFit.ScaleDown : BoxFit.Fill
