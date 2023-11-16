@@ -1,9 +1,11 @@
+import { fetch } from '@at/basic'
 import { ApiStateKind, ApiTransport } from '@at/api'
-import { AtEngineConfiguration, Skia, Surface } from '@at/engine'
-import { Color } from '@at/basic'
-import { Size, Offset } from '@at/geometry'
-import { TextSpan, TextPaintingStyle, TextPainter } from '@at/painting'
+import { AtEngineConfiguration } from '@at/engine'
+import { Image } from '@at/layout'
 import { AtInstance } from './at'
+
+import * as Engine from '@at/engine'
+import { Offset } from '@at/geometry'
 
 
 //// => ConnectionPayload
@@ -16,10 +18,10 @@ interface ConnectionPayload {
 
 //// => AtBoot
 export class App extends AtInstance {
-  static ready (readyHandle: VoidFunction) {
-    const boot = App.create()
-    boot.start(readyHandle)
-    return boot
+  static ready (readyHandle: (instance: App) => void) {
+    const app = App.create()
+    app.start(() => readyHandle(app))
+    return app
   }
 
   connect (): Promise<void> {
@@ -28,11 +30,15 @@ export class App extends AtInstance {
         const payload = event.data
       
         if (payload.type === 'connection') {
-          this.element = payload.element
-          this.configuration = payload.configuration
+          const { element, configuration } = payload
+
+          this.element = element
+          this.baseURI = configuration.assets.baseURI
+          this.rootDir = configuration.assets.rootDir
           
-          const transport = ApiTransport.connect(payload.port)
-          this.api.connect(transport) 
+          this.configuration = configuration
+          
+          this.api.connect(ApiTransport.connect(payload.port)) 
           this.api.state &= ~ApiStateKind.Connecting
           this.api.state |= ApiStateKind.Connected
 
@@ -44,6 +50,19 @@ export class App extends AtInstance {
   }
 
   bindings (): Promise<void> {
+    const api = this.api
+    
+    /// => api 绑定
+    // 窗口大小变化
+    api.Client.events.on('client.viewport.resize', () => {
+      
+    })
+
+    // 点击事件
+    api.Client.events.on('client.pointer.event', () => {
+      
+    })
+
     return Promise.resolve()
   }
 
@@ -53,28 +72,19 @@ export class App extends AtInstance {
   }
 }
 
-const app = App.ready(() => {
-  const size = Size.create(400, 400)
-  
-  const surface = Surface.create(App.tryCreateSurface(size, app.element) as Skia.Surface)
-  const canvas = surface.canvas
-  
-  const span = TextSpan.create({
-    text: 'Welcome to Beijing.',
-    style: TextPaintingStyle.create({
-      fontFamily: 'Roboto',
-      color: Color.BLACK,
-      fontSize: 50,
-      letterSpacing: 10,
+App.ready((instance) => {
+  fetch('/assets/medal.png')
+    .then(res => res.arrayBuffer())
+    .then(data => {
+      const image = Image.create({
+        width: 400,
+        height: 400,
+        image: Engine.Image.create(App.skia.MakeImageFromEncoded(data))
+      })  
+      
+      instance.view.append(image)
+      instance.flush()
     })
-  })
-  
-  const painter = TextPainter.create({
-    text: span
-  })
-  
-  painter.layout()
-  painter.paint(canvas, Offset.create(40, 40))
-  
-  surface.skia.flush()
+ 
+
 })

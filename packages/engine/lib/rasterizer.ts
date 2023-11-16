@@ -55,8 +55,8 @@ export abstract class Rasterizer extends Surface {
       try {
         const frame = this.acquireFrame()
         frame.raster(layerTree, true)
-        // TODO
-        // frame.flush()
+       
+        this.flush(frame.commit())
       } catch (error) {
         throw error
       } finally {

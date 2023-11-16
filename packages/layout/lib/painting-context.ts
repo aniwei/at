@@ -59,23 +59,23 @@ export class PaintingContext extends ClipContext {
 
     childContext = childContext ?? null
 
-    let childLayer = child.layerHandle.layer
+    let childLayer = child.layerRef.layer
     if (childLayer === null) {
-      invariant(child.layerHandle.layer === null)
+      invariant(child.layerRef.layer === null)
       
       const layer = new OffsetLayer()
-      child.layerHandle.layer = childLayer = layer
+      child.layerRef.layer = childLayer = layer
     } else {
       childLayer.removeAllChildren()
     }
 
-    invariant(childLayer === child.layerHandle.layer)
+    invariant(childLayer === child.layerRef.layer)
     invariant(child.owner)
         
     childContext ??= new PaintingContext(child.owner, childLayer, child.bounds)
     child.paintWithContext(childContext, Offset.ZERO)
 
-    invariant(childLayer === child.layerHandle.layer)
+    invariant(childLayer === child.layerRef.layer)
     childContext.stopRecordingIfNeeded()
     childContext.dispose()
   }
@@ -157,8 +157,8 @@ export class PaintingContext extends ClipContext {
       PaintingContext.repaintCompositedChild(child)
     }
     
-    invariant(child.layerHandle.layer instanceof OffsetLayer)
-    const childOffsetLayer = child.layerHandle.layer as OffsetLayer
+    invariant(child.layerRef.layer instanceof OffsetLayer)
+    const childOffsetLayer = child.layerRef.layer as OffsetLayer
     childOffsetLayer.offset = offset
     
     this.appendLayer(childOffsetLayer)
@@ -390,7 +390,6 @@ export class PaintingContext extends ClipContext {
 
   dispose () {
     this.recorder?.dispose()
-    this.currentLayer?.dispose()
     this.canvas?.dispose()
 
     this.currentLayer = null

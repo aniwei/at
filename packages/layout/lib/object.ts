@@ -2,18 +2,30 @@ import { invariant } from '@at/utils'
 import { Matrix4 } from '@at/math'
 import { AbstractNode } from '@at/basic'
 import { Offset, Rect, Size } from '@at/geometry'
-import { ContainerLayer, LayerHandle, OffsetLayer } from '@at/engine'
+import { ContainerLayer, LayerRef, OffsetLayer } from '@at/engine'
 import { HitTestEntry, HitTestResult, HitTestTarget } from '@at/gesture'
 
 import { PipelineOwner } from './pipeline-owner'
 import { Constraints } from './constraints'
 import { PaintingContext } from './painting-context'
+import { LayoutError } from './layout-error'
+import { ResizeError } from './resize-error'
 
 export type ObjectVisitorHandle = (child: Object) => void
 
+//// => Object
+export interface ObjectFactory<T> {
+  new (...rests: unknown[]): T
+  create (...rests: unknown[]): T
+}
 export abstract class Object extends AbstractNode<Object, PipelineOwner> implements HitTestTarget {
+  static create <T extends Object> (...rests: unknown[]): Object {
+    const ObjectFactory = this as unknown as ObjectFactory<T>
+    return new ObjectFactory(...rests) as Object
+  }
+
   /**
-   * 清除子节点布局边界
+   * 清除子对象布局边界
    * @param child 
    */
   static cleanChildRelayoutBoundary (child: Object) {
@@ -21,7 +33,7 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
   }
 
   // => child
-  // private _child: Object | null = null
+  // 子对象
   public get child () {
     return this.firstChild
   }
@@ -36,46 +48,68 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
   }
 
   // => isPositioned
+  // 是否是定位元素
   public get isPositioned () {
     return false
   }
 
   // => layer
+  // 绘制层
   public get layer () {
     invariant(
       this.isRepaintBoundary ||
-      this.layerHandle.layer === null ||
-      this.layerHandle.layer instanceof OffsetLayer,
+      this.layerRef.layer === null ||
+      this.layerRef.layer instanceof OffsetLayer,
       `Cannot get the layer.`
     )
 
-    return this.layerHandle.layer
+    return this.layerRef.layer
   }
   public set layer (layer: ContainerLayer | null) {
     invariant(!this.isRepaintBoundary)
-    this.layerHandle.layer = layer
+    this.layerRef.layer = layer
   }
 
+
+
+  /// => 对象相关
+  // 子对象个数
   public count: number = 0
+  // 第一个子对象
   public firstChild: Object | null = null
+  // 最后一个子对象
   public lastChild: Object | null = null
+  // 上一个子对象
   public previousSibling: Object | null = null
+  // 下一个子对象
   public nextSibling: Object | null = null
 
-  public needsLayout: boolean = true
-  public relayoutBoundary: Object | null = null
-  
+  /// => 对象引用相关
+  // 绘制管线
   public owner: PipelineOwner | null = null
+  // 绘制层
+  public layerRef: LayerRef<ContainerLayer> = new LayerRef<ContainerLayer>()
+
+  /// => 对象状态相关
+  // 需要布局
+  public needsLayout: boolean = true
+  // 需要绘制
   public needsPaint: boolean = true
+  
+  ////=> 绘制相关
+  // 绘制边界对象
+  public relayoutBoundary: Object | null = null
+  // 父控制大小
   public sizedByParent: boolean = false
+  // 是否是绘制边界元素
   public isRepaintBoundary: boolean = false
   public alwaysNeedsCompositing: boolean = false
   public needsCompositingBitsUpdate: boolean = false
-  public layerHandle: LayerHandle<ContainerLayer> = new LayerHandle<ContainerLayer>()
-
+  
+  // 约束
   public constraints: Constraints | null = null
   public needsCompositing: boolean = this.isRepaintBoundary || this.alwaysNeedsCompositing
-
+  // 元素大小位置
   abstract bounds: Rect
 
   abstract performResize (): void
@@ -83,11 +117,27 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
   abstract performLayout (): void
   abstract performLayout (size?: Size): void
 
-
+  /**
+   * 
+   * @param {HitTestResult} result 
+   * @param {...unknown[]} rest 
+   */
+  // 点击碰撞
   abstract hitTest (result: HitTestResult, ...rest: unknown[]): void
   
+  /**
+   * 事件处理
+   * @param {PointerEvent} event 
+   * @param {HitTestEntry} entry 
+   */
   abstract handleEvent(event: PointerEvent, entry: HitTestEntry): void
 
+  /**
+   * 布局
+   * @param {Constraints} constraints 
+   * @param {boolean} parentUsesSize 
+   * @returns 
+   */
   layout (constraints: Constraints, parentUsesSize: boolean = false) {
     invariant(constraints !== null)
     invariant(this.parent !== null && this.parent instanceof Object)
@@ -111,20 +161,21 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     if (this.relayoutBoundary !== null && relayoutBoundary != this.relayoutBoundary) {
       this.visit(Object.cleanChildRelayoutBoundary)
     }
+
     this.relayoutBoundary = relayoutBoundary
     
     if (this.sizedByParent) {
       try {
         this.performResize()
       } catch (error: any) {
-        throw error
+        throw new ResizeError(error.message)
       }
     }
     
     try {
       this.performLayout()
     } catch (error: any) {
-      throw error
+      throw new LayoutError(error.message)
     }
     
     this.needsLayout = false
@@ -132,7 +183,7 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
   }
 
   layoutWithoutResize () {
-    invariant(this.relayoutBoundary === this, `The "this.relayoutBoundary" must be equal "this".`)
+    invariant(this.relayoutBoundary === this, `The "Object.relayoutBoundary" must be equal "this".`)
     
     try {
       this.performLayout()
@@ -142,27 +193,6 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     
     this.needsLayout = false
     this.markNeedsPaint()
-  }
-
-  // 初始化
-  scheduleInitialPaint (root: ContainerLayer) {
-    invariant(root.attached)
-    invariant(this.attached)
-    invariant(this.isRepaintBoundary)
-    invariant(this.layerHandle.layer === null)
-
-    this.layerHandle.layer = root
-    invariant(this.needsPaint)
-    this.owner?.nodesNeedingPaint.add(this)
-  }
-
-  scheduleInitialLayout () {
-    invariant(this.attached, `The "this.attached" cannot be null.`)
-    invariant(this.owner, `The "this.owner" cannot be null.`)
-    invariant(this.relayoutBoundary === null, `The "this.relayoutBoundary" must be null.`)
-    
-    this.relayoutBoundary = this
-    this.owner.nodesNeedingLayout.add(this)
   }
 
   updateCompositingBits () {
@@ -204,7 +234,6 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     }
   }
 
-
   /**
    * 
    * @param descendant 
@@ -238,10 +267,10 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     invariant(rootLayer.attached, `The "rootLayer" must be attached.`)
     invariant(this.attached, `The "Object" must be attached.`)
     invariant(this.isRepaintBoundary, `The "Object" must is "isRepaintBoundary".`)
-    invariant(this.layerHandle.layer !== null, `The "this.layerHandle.layer" cannot be null.`)
+    invariant(this.layerRef.layer !== null, `The "this.layerRef.layer" cannot be null.`)
 
-    this.layerHandle.layer.detach()
-    this.layerHandle.layer = rootLayer
+    this.layerRef.layer.detach()
+    this.layerRef.layer = rootLayer
 
     this.markNeedsPaint()
   }
@@ -252,18 +281,18 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     invariant(this.attached)
     invariant(this.isRepaintBoundary)
     invariant(this.needsPaint)
-    invariant(this.layerHandle.layer !== null)
-    invariant(!this.layerHandle.layer.attached)
+    invariant(this.layerRef.layer !== null)
+    invariant(!this.layerRef.layer.attached)
 
     let node: Object | null = this.parent as Object
     
     while (node instanceof Object) {
       if (node.isRepaintBoundary) {
-        if (node.layerHandle.layer === null) {
+        if (node.layerRef.layer === null) {
           break
         }
 
-        if (node.layerHandle.layer.attached) {
+        if (node.layerRef.layer.attached) {
           break
         }
 
@@ -286,7 +315,7 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     } else {
       this.needsLayout = true
       if (this.owner !== null) {
-        this.owner.nodesNeedingLayout.add(this)
+        this.owner.objectsNeedingLayout.add(this)
         this.owner.requestUpdate()
       }
     }
@@ -331,7 +360,7 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     }
     
     if (this.owner !== null) {
-      this.owner.nodesNeedingCompositingBitsUpdate.add(this)
+      this.owner.objectsNeedingCompositingBitsUpdate.add(this)
     }
   }
 
@@ -344,7 +373,7 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
   
     if (this.isRepaintBoundary) {
       if (this.owner) {
-        this.owner.nodesNeedingPaint.add(this)
+        this.owner.objectsNeedingPaint.add(this)
         this.owner.requestUpdate()
       }
     } else if (this.parent instanceof Object) {
@@ -388,7 +417,7 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
       this.needsCompositingBitsUpdate = false
       this.markNeedsCompositingBitsUpdate()
     }
-    if (this.needsPaint && this.layerHandle.layer !== null) {
+    if (this.needsPaint && this.layerRef.layer !== null) {
       this.needsPaint = false
       this.markNeedsPaint()
     }
@@ -439,7 +468,7 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
   }
 
   dispose () {
-    this.layerHandle.dispose()
-    this.layerHandle.layer = null
+    this.layerRef.dispose()
+    this.layerRef.layer = null
   }
 }

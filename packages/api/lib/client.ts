@@ -1,7 +1,8 @@
 import { ApiSubscribables, EventEmitter } from '@at/basic'
 
 export type ClientApiEvents = (
-  'client.pointer.event'
+  'client.pointer.event' |
+  'client.viewport.resize'
 )
 
 // 客户端的指令集

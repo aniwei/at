@@ -130,10 +130,7 @@ export class Vector3 extends ArrayLike<Vector3> {
 
   constructor (...rests: number[])
   constructor (x: number, y: number, z: number) {
-    super()
-    this.x = x
-    this.y = y
-    this.z = z
+    super(x, y, z)
   }
   
   set (x: number, y: number, z: number) {

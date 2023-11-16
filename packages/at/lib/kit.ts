@@ -21,9 +21,12 @@ export enum AtKitEnvKind {
 
 export interface AtKitEnvironments extends AtEngineEnvironments {
   ATKIT_ENV: AtKitEnvKind,
+  ATKIT_WIDTH: number,
+  ATKIT_HEIGHT: number,
+  DEVICE_PIXEL_RATIO: number
 }
 
-
+//// => AtKit
 export interface AtKitFactory<T> {
   new (configuration?: AtEngineConfiguration): T
   create (configuration?: AtEngineConfiguration): T
@@ -78,7 +81,13 @@ export abstract class AtKit extends AtEngine {
   public _view: View | null = null
   public get view () {
     if (this._view === null) {
-      this._view = View.create(ViewConfiguration.create())
+      this._view = View.create(ViewConfiguration.create({
+        width: this.configuration.size.width,
+        height: this.configuration.size.height,
+        devicePixelRatio: this.configuration.devicePixelRatio
+      }))
+      this.pipeline.root = this._view
+      this._view.prepareInitial()
     }
     return this._view
   }
@@ -87,13 +96,9 @@ export abstract class AtKit extends AtEngine {
   protected _pipeline: PipelineOwner | null = null
   public get pipeline (): PipelineOwner {
     if (this._pipeline === null) {
-      this._pipeline = PipelineOwner.create(
-        this.rasterizer,
-        () => {
+      this._pipeline = PipelineOwner.create(this.rasterizer, () => {
 
-        },
-        this.configuration
-      )
+      }, this.view.configuration)
     }
     return this._pipeline
   }  
@@ -102,22 +107,15 @@ export abstract class AtKit extends AtEngine {
   public environments: AtKitEnvironments
 
   constructor (configuration?: AtEngineConfiguration) {
-    const env = process.env
-
-    invariant(env.ASSETS_BASE_URI)
-    invariant(env.ASSETS_ROOT_DIR)
-    invariant(env.SKIA_URI)
-
     super({
       size: configuration?.size ?? Size.create(300, 300),
-      devicePixelRatio: configuration?.devicePixelRatio ?? 2.0,
+      devicePixelRatio: configuration?.devicePixelRatio ?? 1.0,
       uri: AtKit.env('SKIA_URI', '/canvaskit.wasm'),
       assets: {
         baseURI: AtKit.env('ATKIT_ASSETS_BASE_URI', '/'),
         rootDir: AtKit.env('ATKIT_ASSETS_ROOT_DIR', '/assets')
       }
     })
-
 
     this.environments = process.env as unknown as  AtKitEnvironments
   }
@@ -132,15 +130,13 @@ export abstract class AtKit extends AtEngine {
 
     return this.api.Engine.events.publish('resource.fonts.loader.change', [{
       state: 'loading'
-    }])
-    .then(() => {
+    }]).then(() => {
       return Promise.all(fonts.map(font => {
         return this.load(font.dir)
           .then(res => res.arrayBuffer())
           .then(data => AtEngine.fonts.register(data, font.family))
       })).then(() => AtEngine.fonts.ensure())
-    })
-    .then(() => this.api.Engine.events.publish('resource.fonts.loader.change', [{
+    }).then(() => this.api.Engine.events.publish('resource.fonts.loader.change', [{
       state: 'loaded'
     }]))
   }
@@ -179,6 +175,16 @@ export abstract class AtKit extends AtEngine {
     .then(() => this.prepare())
     .then(() => this.state = AtEngineLifecycleKind.Ready)
     .then(() => AtEngine.skia)
+  }
+
+  flush () {
+    invariant(this.pipeline, `The "AtKit.pipeline" cannot be null.`)
+    invariant(this.view, `The "AtKit.view" cannot be null.`)
+    
+    this.pipeline.flushLayout()
+    this.pipeline.flushCompositingBits()
+    this.pipeline.flushPaint()
+    this.view.composite()
   }
 
   dispose () {

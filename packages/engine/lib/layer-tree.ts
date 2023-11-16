@@ -54,6 +54,7 @@ export class LayerTree {
     nw.push(frame.canvas)
     nw.clear(Color.CLEAR)
 
+    
     const context = PaintContext.create(nw, frame.canvas, ignoreCache ? null : frame.caches)
     
     if (!this.root.ignored) {

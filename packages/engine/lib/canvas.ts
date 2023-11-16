@@ -1,4 +1,4 @@
-import { invariant, ArgumentError } from '@at/utils'
+import { invariant } from '@at/utils'
 import { Color } from '@at/basic'
 import { Offset, Rect, RRect } from '@at/geometry'
 import { offsetIsValid, rectIsValid, rrectIsValid } from '@at/geometry'
@@ -449,12 +449,6 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
    * @return {void}
    */
   transform (matrix4: number[]) {
-    invariant(matrix4 !== null, 'The "matrix4" cannot be null.')
-
-    if (matrix4.length !== 16) {
-      throw new ArgumentError('"matrix4" must have 16 entries.', 'matrix4')
-    }
-
     this.skia.concat(toMatrix(matrix4))
   }
 
@@ -491,7 +485,6 @@ export class Recorder extends Canvas {
    * @param {Rect} bounds 
    */
   constructor (bounds: Rect | null = null) {
-    invariant(Rect.LARGEST)
     const prictue = new AtEngine.skia.PictureRecorder()
     const cullRect = bounds ?? Rect.LARGEST
     super(prictue.beginRecording(cullRect))
@@ -505,7 +498,7 @@ export class Recorder extends Canvas {
     invariant(this.prictue, `Recorder is not recording`)
 
     const picture = this.prictue?.finishRecordingAsPicture() as Skia.Picture
-    return new Picture(picture, this.cullRect, this.snapshot)
+    return Picture.create(picture, this.cullRect, this.snapshot)
   }
 
   addCommand (command: PaintCommand) {

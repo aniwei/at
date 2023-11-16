@@ -12,7 +12,6 @@ export interface AtInstanceFactory<T> {
   new (...rests: unknown[]): T
   create <T extends AtInstance> (configuration?: AtEngineConfiguration): T
 } 
-
 export abstract class AtInstance extends AtKit {
   static create <T extends AtInstance> (...rests: unknown[]): AtInstance
   static create <T extends AtInstance> (configuration?: AtEngineConfiguration): AtInstance {

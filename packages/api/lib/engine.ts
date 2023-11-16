@@ -13,7 +13,8 @@ export interface EngineApiLifecycleEvent {
   state: AtEngineLifecycleKind
 }
 
-export interface EngineApiCommand extends ApiSubscribables {}
+export interface EngineApiCommand extends ApiSubscribables {
+}
 
 export interface EngineApiEvent extends EventEmitter<EngineApiEvents> {
   publish (name: EngineApiEvents, parameters: unknown[]): Promise<void>

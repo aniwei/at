@@ -3,7 +3,7 @@ import { Matrix4 } from '@at/math'
 import { Subscribable } from '@at/basic'
 import { HitTestEntry } from '@at/gesture'
 import { Offset, Rect, Size } from '@at/geometry'
-import { LayerScene, TransformLayer } from '@at/engine'
+import { ContainerLayer, LayerScene, TransformLayer } from '@at/engine'
 import { Object } from './object'
 import { BoxConstraints } from './constraints'
 import { Container } from './container'
@@ -11,7 +11,7 @@ import { PaintingContext } from './painting-context'
 import { BoxHitTestResult } from './box-hit-test'
 
 
-export type ViewSceneRasterizeCall = (scene: LayerScene) => void
+export type ViewSceneRasterizeHandle = (scene: LayerScene) => void
 
 //// => ViewConfiguration
 // 视图配置
@@ -31,9 +31,14 @@ export interface ViewConfigurationFactory<T> {
   create (options: ViewConfigurationOptions): T
 }
 export abstract class ViewConfiguration extends Subscribable {
-  static create <T extends ViewConfiguration> (...rests: unknown[]) {
+  static create <T extends ViewConfiguration> (...rests: unknown[]): ViewConfiguration
+  static create <T extends ViewConfiguration> (options: ViewConfigurationOptions): ViewConfiguration {
     const ViewConfigurationFactory = this as unknown as ViewConfigurationFactory<T>
-    return new ViewConfigurationFactory(...rests)
+    return new ViewConfigurationFactory(
+      options.width,
+      options.height,
+      options.devicePixelRatio
+    )
   }
 
   public width: number
@@ -91,21 +96,21 @@ export abstract class ViewConfiguration extends Subscribable {
   
   toString () {
     return `ViewConfiguration(
-      [size]: ${this.size}, 
+      [width]: ${this.width}, 
+      [height]: ${this.height}, 
       [devicePixelRatio]: ${this.devicePixelRatio}
     )`
   }
 }
 
-export type ViewOptions = {
-  child?: Object | null,
-  configuration: ViewConfiguration,
-}
-
-export abstract class View extends Container {
-  
+//// => View
+export class View extends Container {
+  static create (configuration: ViewConfiguration) {
+    return new View(configuration) as View
+  }
 
   // => configuration
+  // 视图配置
   protected _configuration: ViewConfiguration | null = null
   public get configuration () {
     invariant(this._configuration)
@@ -113,26 +118,27 @@ export abstract class View extends Container {
   }
   public set configuration (configuration: ViewConfiguration) {    
     if (
-      this.configuration === null || 
-      this.configuration?.notEqual(configuration)
+      this._configuration === null || 
+      this._configuration?.notEqual(configuration)
     ) {
       this._configuration = configuration
       
       if (this.attached) {
         this.replaceRootLayer(this.createNewRootLayer())
-        invariant(this.rootTransform !== null, `The this rootTransform cannot be null.`)
+        invariant(this.rootTransform !== null, `The "View.rootTransform" cannot be null.`)
         this.markNeedsLayout()
       }
     }
   }
   
   // => rasterize
-  private _rasterize: ViewSceneRasterizeCall | null = null
-  public get rasterize (): ViewSceneRasterizeCall {
+  // 光栅化回调
+  protected _rasterize: ViewSceneRasterizeHandle | null = null
+  public get rasterize (): ViewSceneRasterizeHandle {
     invariant(this._rasterize !== null)
     return this._rasterize
   }
-  public set rasterize (callback: ViewSceneRasterizeCall) {
+  public set rasterize (callback: ViewSceneRasterizeHandle) {
     this._rasterize = callback
   }
 
@@ -143,7 +149,10 @@ export abstract class View extends Container {
 
   // => size
   public get size (): Size {
-    const size = Size.create(this.configuration.width, this.configuration.height)
+    const size = Size.create(
+      this.configuration.width, 
+      this.configuration.height
+    )
     return size
   }
   
@@ -151,8 +160,6 @@ export abstract class View extends Container {
   public isRepaintBoundary: boolean = true
 
   /**
-   * 
-   * @param child 
    * @param configuration 
    */
   constructor (configuration: ViewConfiguration) {
@@ -171,16 +178,36 @@ export abstract class View extends Container {
     
     this.scheduleInitialLayout()
     this.scheduleInitialPaint(this.createNewRootLayer())
-    invariant(this.rootTransform !== null, `The "View.rootTransform" cannot be null.`)
   }
 
+  // 创建新绘制层
   createNewRootLayer (): TransformLayer {
     this.rootTransform = this.configuration.toMatrix()
-    // this.rootTransform?.translate(this.configuration.size.width / 2, this.configuration.size.width / 2)
     const root = TransformLayer.create(Offset.ZERO, this.rootTransform)    
     root.attach(this)
 
     return root
+  }
+
+  // 初始化
+  scheduleInitialPaint (root: ContainerLayer) {
+    invariant(this.attached)
+    invariant(this.isRepaintBoundary)
+    invariant(this.layerRef.layer === null)
+
+    this.layerRef.layer = root
+
+    invariant(this.needsPaint)
+    this.owner?.objectsNeedingPaint.add(this)
+  }
+
+  scheduleInitialLayout () {
+    invariant(this.attached, `The "this.attached" cannot be null.`)
+    invariant(this.owner, `The "this.owner" cannot be null.`)
+    invariant(this.relayoutBoundary === null, `The "this.relayoutBoundary" must be null.`)
+    
+    this.relayoutBoundary = this
+    this.owner.objectsNeedingLayout.add(this)
   }
 
   performResize () {
@@ -224,7 +251,7 @@ export abstract class View extends Container {
     transform: Matrix4
   ) {
     invariant(this.rootTransform !== null, `The "View.rootTransform" cannt be null.`)
-    transform.multiply(this.rootTransform!)
+    transform.multiply(this.rootTransform)
     super.applyPaintTransform(child, transform)
   }
 

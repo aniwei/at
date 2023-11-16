@@ -11,6 +11,10 @@ import * as Skia from './skia'
 export type SubmitCallback = (image: Image) => void 
 
 export class SurfaceFrame {
+  static create (surface: Surface) {
+    return new SurfaceFrame(surface)
+  }
+
   public get canvas () {
     invariant(this.surface)
     return this.surface.canvas
@@ -33,10 +37,9 @@ export class SurfaceFrame {
     layerTree.paint(this, ignoreCache)
   }
 
-  submit (): Image {
+  commit (): Image {
     invariant(this.surface)
     const image = this.surface.snapshot()
-    invariant(image)
     return Image.create(image)
   }
 
@@ -64,7 +67,7 @@ export class Surface extends Skia.ManagedSkiaRef<Skia.Surface> {
   
   // => canvas
   get canvas () {
-    invariant(!this.disposed, 'Attempting to use the canvas of a disposed surface')
+    invariant(!this.disposed, 'Attempting to use the canvas of a disposed surface.')
     return Canvas.create(this.skia.getCanvas())
   }
 
@@ -100,6 +103,7 @@ export class Surface extends Skia.ManagedSkiaRef<Skia.Surface> {
   flush (image: Image) {
     const paint = Paint.create()
     this.canvas.drawImage(image, Offset.ZERO, paint)
+
     this.skia.flush()
   }
 }

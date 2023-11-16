@@ -5,17 +5,19 @@ export default defineConfig({
     global: 'globalThis',
     '__DEV__': true,
     'process.env': {
-      NODE_ENV: 'development',
+      ATKIT_ENV: 'development',
       SKIA_URI: '/canvaskit.wasm',
-      ASSETS_ROOT_DIR: '/assets',
-      ASSETS_BASE_URI: '/'
+      ATKIT_ASSETS_ROOT_DIR: '/assets',
+      ATKIT_ASSETS_BASE_URI: '/'
     },
   },
   build: {
     lib: {
-      entry: './lib/index.ts',
-      name: 'index',
-      fileName: 'index',
+      entry: {
+        index: './lib/index.ts',
+        'boot': './lib/boot.ts',
+        'proxy': './lib/proxy.ts',
+      }, 
       formats: ['cjs', 'es']
     },
     sourcemap: true,

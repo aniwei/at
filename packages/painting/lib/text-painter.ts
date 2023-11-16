@@ -8,7 +8,6 @@ import {
   TextHeightBehavior, 
   Paragraph, 
   TextBox, 
-  LineMetrics, 
   TextPosition, 
   ParagraphStyle, 
   ParagraphBuilder, 

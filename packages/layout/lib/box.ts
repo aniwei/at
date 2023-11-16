@@ -123,17 +123,17 @@ export abstract class Box extends Container {
   }
 
   // => scale
-  protected _scale: number | null = null
+  protected _scale: number = 1.0
   public get scale () {
+    invariant(this._scale)
     return this._scale
   }
-  public set scale (scale: number | null) {
-    if (this._scale === null || this._scale !== scale) {
+  public set scale (scale: number) {
+    if (this._scale !== scale) {
       this._scale = scale
       this.markNeedsLayout()
     }
   }
-  
 
   // => size
   protected _size: Size | null = null
@@ -157,12 +157,6 @@ export abstract class Box extends Container {
       this._offset = offset
     }
   }
-
-  
-  // abstract width: number | null
-  // abstract height: number | null
-  // abstract scale: number | null
-  // abstract size: Size | null 
   
   public get bounds () {
     invariant(this.size !== null)
@@ -189,7 +183,6 @@ export abstract class Box extends Container {
   public cachedDryLayoutSizes: Map<BoxConstraints, Size> | null = null
   public cachedIntrinsicDimensions: Map<IntrinsicDimensionsCacheEntry, number> | null = null
   public cachedBaselines: Map<Skia.TextBaseline, number | null> | null = null
-
 
   constructor (child: Box | null = null) {
     super()

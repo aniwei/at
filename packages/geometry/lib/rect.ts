@@ -6,7 +6,7 @@ import { Size } from './size'
 
 export class Rect extends ArrayLike<Rect> {
     static ZERO = new Rect(0, 0, 0, 0)
-    static LARGEST = new Rect(0, 0, 0, 0)
+    static LARGEST = new Rect(-1.0E+9, -1.0E+9, 1.0E+9, 1.0E+9)
     
     /**
      * 

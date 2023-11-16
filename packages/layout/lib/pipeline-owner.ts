@@ -50,9 +50,10 @@ export class PipelineOwner {
   
   public rasterizer: AtRasterizer
   public configuration: ViewConfiguration
-  public nodesNeedingLayout: ObjectNeedingUpdate = ObjectNeedingUpdate.create()
-  public nodesNeedingPaint: ObjectNeedingUpdate = ObjectNeedingUpdate.create()
-  public nodesNeedingCompositingBitsUpdate: ObjectNeedingUpdate = ObjectNeedingUpdate.create()
+  
+  public objectsNeedingLayout: ObjectNeedingUpdate = ObjectNeedingUpdate.create()
+  public objectsNeedingPaint: ObjectNeedingUpdate = ObjectNeedingUpdate.create()
+  public objectsNeedingCompositingBitsUpdate: ObjectNeedingUpdate = ObjectNeedingUpdate.create()
   
   constructor (rasterizer: AtRasterizer, onNeedVisualUpdate: VoidFunction, configuration: ViewConfiguration) {
     this.onNeedVisualUpdate = onNeedVisualUpdate
@@ -68,12 +69,12 @@ export class PipelineOwner {
 
   flushLayout () {
     try {
-      while (this.nodesNeedingLayout.length > 0) {
-        const dirtyNodes = this.nodesNeedingLayout.sort((a: Object, b: Object) => {
+      while (this.objectsNeedingLayout.length > 0) {
+        const dirtyNodes = this.objectsNeedingLayout.sort((a: Object, b: Object) => {
           return a.depth - b.depth
         })
         
-        this.nodesNeedingLayout = ObjectNeedingUpdate.create()
+        this.objectsNeedingLayout = ObjectNeedingUpdate.create()
         for (const node of dirtyNodes) {
           if (node.needsLayout && node.owner === this) {
             node.layoutWithoutResize()
@@ -89,29 +90,29 @@ export class PipelineOwner {
   }
   
   flushCompositingBits () {
-    this.nodesNeedingCompositingBitsUpdate.sort((a, b) => a.depth - b.depth)
+    this.objectsNeedingCompositingBitsUpdate.sort((a, b) => a.depth - b.depth)
 
-    for (const node of this.nodesNeedingCompositingBitsUpdate) {
+    for (const node of this.objectsNeedingCompositingBitsUpdate) {
       if (node.needsCompositingBitsUpdate && node.owner === this) {
         node.updateCompositingBits()
       }
     }
 
-    this.nodesNeedingCompositingBitsUpdate = ObjectNeedingUpdate.create()
+    this.objectsNeedingCompositingBitsUpdate = ObjectNeedingUpdate.create()
   }
   
   flushPaint (): boolean {
     try {
-      const dirtyNodes: Object[] = this.nodesNeedingPaint.sort((a: Object, b: Object) => {
+      const dirtyNodes: Object[] = this.objectsNeedingPaint.sort((a: Object, b: Object) => {
         return b.depth - a.depth
       })
 
-      this.nodesNeedingPaint = ObjectNeedingUpdate.create()
+      this.objectsNeedingPaint = ObjectNeedingUpdate.create()
 
       for (const node of dirtyNodes) {
-        invariant(node.layerHandle.layer !== null, `The "node.layerHandle.layer" cannot be null.`)
+        invariant(node.layerRef.layer !== null, `The "node.layerRef.layer" cannot be null.`)
         if (node.needsPaint && node.owner === this) {
-          if (node.layerHandle.layer.attached) {
+          if (node.layerRef.layer.attached) {
             PaintingContext.repaintCompositedChild(node)
             break
           } else {

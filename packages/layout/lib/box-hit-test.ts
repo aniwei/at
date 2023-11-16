@@ -7,7 +7,7 @@ import { Box } from './box'
 export type BoxHitTestHandle = (result: BoxHitTestResult, position: Offset ) => boolean
 export type BoxHitTestWithOutOfBandPositionHandle = (result: BoxHitTestResult) => boolean
 
-export type BoxHitTestResultOptions = HitTestResultOptions
+export interface BoxHitTestResultOptions extends HitTestResultOptions { }
 
 export class BoxHitTestResult extends HitTestResult {
   static create (options: HitTestResultOptions) {

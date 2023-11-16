@@ -1,6 +1,6 @@
 
 
-import { invariant } from '@at/utils'
+import { invariant, tryCatch } from '@at/utils'
 import { AbstractNode } from '@at/basic'
 import { Matrix4 } from '@at/math'
 import { Offset, Rect, RRect } from '@at/geometry'
@@ -27,7 +27,7 @@ export abstract class Layer extends AbstractNode<Layer> {
 
   // => isShoudPaint
   public get ignored () {
-    return !this.bounds.isEmpty
+    return this.bounds.isEmpty
   }
 
   // 引用计数
@@ -104,7 +104,7 @@ export class LayerRef<T extends Layer> {
     return new LayerRef<T>()
   }
 
-  private _layer: T | null = null
+  protected _layer: T | null = null
   public get layer () {
     return this._layer
   }
@@ -292,11 +292,11 @@ export abstract class ContainerLayer extends Layer {
    * @return {*}
    */  
   paintChildren (context: PaintContext) {
-    invariant(this.ignored, `The layer bound cannot be empty.`)
+    invariant(!this.ignored, `The layer bound cannot be empty.`)
     let child: Layer | null = this.firstChild
     
     while (child !== null) {
-      if (child.ignored) {
+      if (!child.ignored) {
         child.paint(context)
       }
 
@@ -347,7 +347,7 @@ export class TransformLayer extends ContainerLayer {
   }
 
    // => offset
-   private _offset: Offset | null = null
+   protected _offset: Offset | null = null
    public get offset () {
     invariant(this._offset)
      return this._offset
@@ -355,12 +355,14 @@ export class TransformLayer extends ContainerLayer {
    public set offset (offset: Offset) {
      if (this._offset === null || this._offset.notEqual(offset)) {
        this._offset = offset
-       this.transform = Matrix4.translationValues(offset.dx, offset.dy, 0.0)
+       tryCatch(() => {
+         this.transform.multiply(Matrix4.translationValues(offset.dx, offset.dy, 0.0))
+       })
      }
    }
 
   // => transform
-  private _transform: Matrix4 | null = null
+  protected _transform: Matrix4 | null = null
   public get transform () {
     invariant(this._transform)
     return this._transform
@@ -368,12 +370,12 @@ export class TransformLayer extends ContainerLayer {
   public set transform (transform: Matrix4) {
     if (this._transform === null || this._transform.notEqual(transform)) {
       this._transform = transform
-      this.inverseDirty = true
+      tryCatch(() => {
+        this._transform?.multiply(Matrix4.translationValues(this.offset.dx, this.offset.dy, 0.0))
+      })
     }
   }
-  
-  public inverseDirty: boolean = true
-  
+    
   constructor(
     offset: Offset = Offset.ZERO,
     transform: Matrix4,
@@ -410,7 +412,7 @@ export class TransformLayer extends ContainerLayer {
    * @return {*}
    */  
   paint (context: PaintContext) {
-    invariant(this.ignored, `The layer must be ignored.`)
+    invariant(!this.ignored, `The layer cannot be ignored.`)
     invariant(this.transform !== null)
 
     context.internal.save()
@@ -465,7 +467,7 @@ export class OffsetLayer extends TransformLayer {
    * @return {*}
    */  
   paint (context: PaintContext) {
-    invariant(this.ignored, `The layer must be ignored.`)
+    invariant(!this.ignored, `The layer cannot be ignored.`)
     invariant(this.transform !== null)
 
     context.internal.save()
@@ -483,7 +485,7 @@ export class PictureLayer extends Layer {
   }
 
   // => picture
-  private _picture: Picture | null = null
+  protected _picture: Picture | null = null
   public get picture () {
     return this._picture
   }
@@ -499,18 +501,20 @@ export class PictureLayer extends Layer {
   public offset: Offset = Offset.ZERO
 
   preroll (context: PrerollContext, matrix: Matrix4) {
-    invariant(this.picture !== null)
-    invariant(this.picture.cullRect)
+    invariant(this.picture !== null, 'The "PictureLayer.picture" cannot be null.')
+    invariant(this.picture.cullRect, 'The "PictureLayer.picture.cullRect" cannot be null.')
+
     this.bounds = this.picture.cullRect.shift(this.offset)
   }
 
   paint (context: PaintContext) {
-    invariant(this.picture !== null, `The this.picture cannot be null.`) 
-    invariant(this.ignored, ``)
+    invariant(this.picture !== null, `The "PictureLayer.picture" cannot be null.`) 
+    invariant(!this.ignored)
 
     context.leaf.save()
     context.leaf.translate(this.offset.dx, this.offset.dy)
     context.leaf.drawPicture(this.picture)
+    // context.leaf.drawCircle(this.offset, 100, Paint.create())
     context.leaf.restore()
   }
 
@@ -564,7 +568,7 @@ export class ClipRectLayer extends ContainerLayer {
   }
 
   paint (context: PaintContext): void {
-    invariant(this.ignored, `The layer must be ignored.`)
+    invariant(!this.ignored, `The layer cannot be ignored.`)
 
     context.internal.save()
     context.internal.clipRect(this.clipRect, AtEngine.skia.ClipOp.Intersect, this.clipBehavior !== AtEngine.skia.ClipKind.HardEdge)
@@ -680,7 +684,7 @@ export class ClipPathLayer extends ContainerLayer {
    * @param {PaintContext} context
    */  
   paint (context: PaintContext) {
-    invariant(this.ignored, `The layer must be ignored.`)
+    invariant(!this.ignored, `The layer cannot be ignored.`)
 
     context.internal.save()
     context.internal.clipPath(this.clipPath, this.clipBehavior !== AtEngine.skia.ClipKind.HardEdge)

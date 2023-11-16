@@ -10,10 +10,10 @@ import * as Skia from './skia'
 export class Picture extends Skia.ManagedSkiaRef<Skia.Picture> {
   static create (
     picture: Skia.Picture,
-    cullRect?: Rect,
-    snapshot?: Snapshot
+    cullRect?: Rect | null,
+    snapshot?: Snapshot | null
   ) {
-    return new Picture(picture, cullRect, snapshot)
+    return new Picture(picture, cullRect ?? null, snapshot ?? null)
   }
 
   // => skia

@@ -59,8 +59,6 @@ export class ProxyApp extends EventEmitter<string> {
     return this._element
   }
   public set element (element: HTMLCanvasElement | null) {
-    
-
     if (element !== null) {
       tryCatch(() => {
         const size = this.configuration.size
@@ -163,7 +161,16 @@ export class ProxyApp extends EventEmitter<string> {
     })
   }
 
+  private onWindowResize = () => {
+    this.api.Client.events.publish('client.viewport.resize', [
+      window.innerWidth,
+      window.innerHeight
+    ])
+  }
+
   binding () {
+    window.addEventListener('resize', this.onWindowResize)
+
     return Promise.resolve()
   }
 
@@ -187,6 +194,8 @@ export class ProxyApp extends EventEmitter<string> {
   }
 
   dispose () {
+    window.removeEventListener('resize', this.onWindowResize)
+
     this.passage?.terminate()
     this.passage = null
     this.element = null

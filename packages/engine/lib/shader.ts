@@ -1,7 +1,6 @@
 import { invariant } from '@at/utils'
 import { Offset, offsetIsValid } from '@at/geometry'
 import { Color } from '@at/basic'
-import { matrix4IsValid } from '@at/math'
 import { AtEngine } from './engine'
 import { Image } from './image'
 import { 
@@ -77,7 +76,7 @@ export class GradientSweep extends Shader {
     matrix4: number[] | null
   ) {
     
-    invariant(matrix4 === null || matrix4IsValid(matrix4),  `The matrix4 argument cannot be null.`)
+    invariant(matrix4 === null,  `The argument "matrix4" cannot be null.`)
     const degrees = 180.0 / Math.PI
 
     return AtEngine.skia.Shader.MakeSweepGradient(

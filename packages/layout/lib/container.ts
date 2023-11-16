@@ -161,30 +161,6 @@ export abstract class Container extends Object {
     this.markNeedsLayout()
   }
 
-  /**
-   * 
-   * @param {PipelineOwner} owner 
-   */
-  attach (owner: PipelineOwner) {
-    super.attach(owner)
-    let child = this.firstChild
-
-    while (child !== null) {
-      child.attach(owner)
-      child = child.nextSibling as Object
-    }
-  }
-
-  detach () {
-    super.detach()
-    let child = this.firstChild
-    
-    while (child !== null) {
-      child.detach()
-      child = child.nextSibling as Object
-    }
-  }
-
   redepthChildren () {
     let child = this.firstChild
     while (child !== null) {
@@ -227,5 +203,29 @@ export abstract class Container extends Object {
     invariant(child.parent === this)
     
     return child.nextSibling as Object
+  }
+
+  /**
+   * 挂载到渲染管线
+   * @param {PipelineOwner} owner 
+   */
+  attach (owner: PipelineOwner) {
+    super.attach(owner)
+    let child = this.firstChild
+
+    while (child !== null) {
+      child.attach(owner)
+      child = child.nextSibling as Object
+    }
+  }
+
+  detach () {
+    super.detach()
+    let child = this.firstChild
+    
+    while (child !== null) {
+      child.detach()
+      child = child.nextSibling as Object
+    }
   }
 }

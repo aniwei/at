@@ -17,10 +17,10 @@ export class Matrix4 extends ArrayLike<Matrix4> {
 
   static identity () {
     const m4 = Matrix4.ZERO
-    m4[15] = 1.0
     m4[0] = 1.0
     m4[5] = 1.0
     m4[10] = 1.0
+    m4[15] = 1.0
     return m4
   }
 
@@ -90,11 +90,7 @@ export class Matrix4 extends ArrayLike<Matrix4> {
   }
   
   constructor (...rests: number[]) {
-    super()
-
-    for (let i = 0; i < rests.slice(0, 16).length; i++) {
-      this[i] = rests[i]
-    }
+    super(...rests)
   }
   
   index (row: number, col: number) {
@@ -445,9 +441,9 @@ export class Matrix4 extends ArrayLike<Matrix4> {
   }
 
   setTranslationRaw (x: number, y: number, z: number) {
-    this[14] = z
-    this[13] = y
     this[12] = x
+    this[13] = y
+    this[14] = z
   }
 
   transposeRotation () {

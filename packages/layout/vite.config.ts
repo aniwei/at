@@ -14,12 +14,14 @@ export default defineConfig({
       external: [
         '@at/core',
         '@at/asset',
+        '@at/engine',
         '@at/basic',
         '@at/gesture',
         '@at/geometry',
         '@at/math',
+        '@at/painting',
         '@at/utils',
-        'canvaskit-wasm'
+        // 'canvaskit-wasm'
       ],
     }
   },
