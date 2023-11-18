@@ -18,7 +18,7 @@ export interface ObjectFactory<T> {
   new (...rests: unknown[]): T
   create (...rests: unknown[]): T
 }
-export abstract class Object extends AbstractNode<Object, PipelineOwner> implements HitTestTarget {
+export abstract class Object extends AbstractNode<Object> implements HitTestTarget {
   static create <T extends Object> (...rests: unknown[]): Object {
     const ObjectFactory = this as unknown as ObjectFactory<T>
     return new ObjectFactory(...rests) as Object
@@ -47,9 +47,9 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     }
   }
 
-  // => isPositioned
+  // => positioned
   // 是否是定位元素
-  public get isPositioned () {
+  public get positioned () {
     return false
   }
 
@@ -69,8 +69,6 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     invariant(!this.isRepaintBoundary)
     this.layerRef.layer = layer
   }
-
-
 
   /// => 对象相关
   // 子对象个数
@@ -139,15 +137,16 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
    * @returns 
    */
   layout (constraints: Constraints, parentUsesSize: boolean = false) {
-    invariant(constraints !== null)
-    invariant(this.parent !== null && this.parent instanceof Object)
+    invariant(this.parent !== null)
 
     const isRelayoutBoundary = !parentUsesSize || constraints.tight || this.sizedByParent
-    const relayoutBoundary = isRelayoutBoundary ? this : this.parent.relayoutBoundary
+    const relayoutBoundary = isRelayoutBoundary 
+      ? this 
+      : this.parent.relayoutBoundary
 
     if (
       !this.needsLayout &&
-      this.constraints !== constraints
+      this.constraints?.notEqual(constraints)
     ) {
       if (this.relayoutBoundary !== relayoutBoundary) {
         this.relayoutBoundary = relayoutBoundary
@@ -158,7 +157,7 @@ export abstract class Object extends AbstractNode<Object, PipelineOwner> impleme
     }
 
     this.constraints = constraints
-    if (this.relayoutBoundary !== null && relayoutBoundary != this.relayoutBoundary) {
+    if (this.relayoutBoundary !== null && relayoutBoundary !== this.relayoutBoundary) {
       this.visit(Object.cleanChildRelayoutBoundary)
     }
 

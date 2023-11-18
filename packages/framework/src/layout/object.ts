@@ -41,8 +41,8 @@ export abstract class AtLayoutObject extends AbstractNode<AtLayoutObject, AtPipe
     }
   }
 
-  // => isPositioned
-  public get isPositioned () {
+  // => positioned
+  public get positioned () {
     return false
   }
 

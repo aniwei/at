@@ -72,7 +72,7 @@ export abstract class Layer extends AbstractNode<Layer> {
 
   redepthChildren () {}
 
-  adoptChild (child: AbstractNode<Layer>) {
+  adoptChild (child: Layer) {
     super.adoptChild(child)
   }
 
@@ -514,7 +514,6 @@ export class PictureLayer extends Layer {
     context.leaf.save()
     context.leaf.translate(this.offset.dx, this.offset.dy)
     context.leaf.drawPicture(this.picture)
-    // context.leaf.drawCircle(this.offset, 100, Paint.create())
     context.leaf.restore()
   }
 

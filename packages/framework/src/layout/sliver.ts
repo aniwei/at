@@ -7,7 +7,7 @@ import { AtConstraints, AtLayoutObject } from './object'
 import { AtBoxHitTestResult, AtLayoutBox } from './box'
 import { AtBoxConstraints } from './box-constraints'
 import { Offset, Rect, Size } from '../basic/geometry'
-import { axisDirectionToAxis, flipAxisDirection, flipScrollDirection } from './viewport-offset'
+import { axisDirectionToAxis, flipAxisDirection, flipScrollDirection } from './viewport'
 import { Axis, AxisDirection, ScrollDirection } from '../at'
 
 export enum GrowthDirection {

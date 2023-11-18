@@ -82,8 +82,8 @@ export abstract class AtKit extends AtEngine {
   public get view () {
     if (this._view === null) {
       this._view = View.create(ViewConfiguration.create({
-        width: this.configuration.size.width,
-        height: this.configuration.size.height,
+        width: this.configuration.width,
+        height: this.configuration.height,
         devicePixelRatio: this.configuration.devicePixelRatio
       }))
       this.pipeline.root = this._view
@@ -108,7 +108,8 @@ export abstract class AtKit extends AtEngine {
 
   constructor (configuration?: AtEngineConfiguration) {
     super({
-      size: configuration?.size ?? Size.create(300, 300),
+      width: configuration?.width ?? 800,
+      height: configuration?.height ?? 800,
       devicePixelRatio: configuration?.devicePixelRatio ?? 1.0,
       uri: AtKit.env('SKIA_URI', '/canvaskit.wasm'),
       assets: {

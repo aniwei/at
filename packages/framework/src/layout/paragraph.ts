@@ -1,7 +1,7 @@
 import { invariant } from '@at/utils'
 import { At, Axis, RenderComparison } from '../at'
 import { AtClipRectLayer, AtLayerHandle } from '../engine/layer'
-import { AtViewportOffset } from './viewport-offset'
+import { AtViewportOffset } from './viewport'
 import { AtInlineSpan } from '../painting/inline-span'
 import { Offset, Rect, Size } from '../basic/geometry'
 import { Matrix4 } from '../basic/matrix4'

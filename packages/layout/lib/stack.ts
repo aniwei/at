@@ -2,13 +2,20 @@ import { invariant } from '@at/utils'
 import { Offset, Size } from '@at/geometry'
 import { AtEngine, ClipRectLayer, LayerRef } from '@at/engine'
 import { Skia } from '@at/engine'
-import { Alignment, AlignmentDirectional, AlignmentGeometry } from '@at/painting'
+import { 
+  Alignment, 
+  AlignmentDirectional, 
+  AlignmentGeometry 
+} from '@at/painting'
 import { Box } from './box'
 import { RelativeRect } from './relative-rect'
 import { BoxConstraints } from './constraints'
 import { PaintingContext } from './painting-context'
 import { BoxHitTestResult } from './box-hit-test'
-import { ChildLayout, ChildLayouter } from './child-layout'
+
+// => Child Layout
+export type ChildLayoutHandle = (child: Box, constraints: BoxConstraints) => Size
+export type LayoutChildHandle = (child: Box, constraints: BoxConstraints) => Size
 
 // => StackFitKind
 // 适应方式
@@ -40,9 +47,9 @@ export class Stack extends Box {
   // => layoutPositionedChild
   // 布局子对象
   static layoutPositionedChild (child: Box, size: Size, alignment: Alignment): boolean {
-    invariant(child.isPositioned, `The child must be a positioned object.`)
+    invariant(child.positioned, `The "child" must be a positioned object.`)
     // 是否溢出
-    let hasVisualOverflow = false
+    let overflowed = false
     // 子节点约束
     let childConstraints = new BoxConstraints()
 
@@ -69,11 +76,12 @@ export class Stack extends Box {
     } else if (child.right !== null) {
       x = size.width - child.right - child.size.width
     } else {
-      x = alignment.alongOffset(size.substract(child.size) as unknown as Offset).dx
+      const s = size.substract(child.size)
+      x = alignment.alongOffset(Offset.create(s.width, s.height)).dx
     }
 
     if (x < 0.0 || x + child.size.width > size.width) {
-      hasVisualOverflow = true
+      overflowed = true
     }
 
     let y: number = 0
@@ -82,23 +90,24 @@ export class Stack extends Box {
     } else if (child.bottom !== null) {
       y = size.height - child.bottom - child.size.height
     } else {
-      y = alignment.alongOffset(size.substract(child.size) as unknown as Offset).dy
+      const s = size.substract(child.size)
+      y = alignment.alongOffset(Offset.create(s.width, s.height)).dy
     }
 
     if (y < 0 || y + child.size.height > size.height) {
-      hasVisualOverflow = true
+      overflowed = true
     }
 
     child.offset = new Offset(x, y)
-
-    return hasVisualOverflow
+    return overflowed
   }
 
   // 布局定位元素
+  // 需要根据父层来计算
   static layoutPositioned (box: Box, size: Size): boolean {
-    invariant(box.isPositioned, `The box object must be a positiond object.`)
+    invariant(box.positioned, `The box object must be a positiond object.`)
     
-    let hasVisualOverflow = false
+    let overflowed = false
     let constraints = new BoxConstraints()
 
     if (box.left !== null && box.right !== null) {
@@ -113,7 +122,7 @@ export class Stack extends Box {
       constraints = constraints.tighten(null, box.height)
     }
 
-    // child.layout(constraints, true)
+    // box.layout(constraints, true)
     invariant(box.size, `The "box.size" cannot be null after layouted.`)
 
     let x: number = 0
@@ -124,7 +133,7 @@ export class Stack extends Box {
     } 
 
     if (x < 0.0 || x + box.size.width > size.width) {
-      hasVisualOverflow = true
+      overflowed = true
     }
 
     let y: number = 0
@@ -135,11 +144,11 @@ export class Stack extends Box {
     }
 
     if (y < 0 || y + box.size.height > size.height) {
-      hasVisualOverflow = true
+      overflowed = true
     }
 
     box.offset = new Offset(x, y)
-    return hasVisualOverflow
+    return overflowed
   }
 
   static getIntrinsicDimension (firstChild: Box, mainChildSizeGetter: (child: Box) => number): number {
@@ -147,7 +156,7 @@ export class Stack extends Box {
     let child = firstChild
 
     while (child !== null) {
-      if (!child.isPositioned) {
+      if (!child.positioned) {
         extent = Math.max(extent, mainChildSizeGetter(child))
       }
 
@@ -212,9 +221,9 @@ export class Stack extends Box {
   }
 
   // => fit
-  private _fit: StackFitKind | null = null
+  private _fit: StackFitKind | null = StackFitKind.Expand
   public get fit () {
-    invariant(this._fit, 'The "Stack.fit" cannot be null.')
+    invariant(this._fit !== null, 'The "Stack.fit" cannot be null.')
     return this._fit
   }
   public set fit (value: StackFitKind) {
@@ -262,10 +271,10 @@ export class Stack extends Box {
   //
   public clipRectLayer: LayerRef<ClipRectLayer> = new LayerRef<ClipRectLayer>()
 
+  constructor (...rests: unknown[])
   /**
    * 构造函数
    * @param {Box[]} children 
-
    * @param {Alignment} alignment 
    * @param {TextDirection} textDirection 
    * @param {StackFit} fit 
@@ -277,8 +286,9 @@ export class Stack extends Box {
     textDirection: Skia.TextDirection = AtEngine.skia.TextDirection.LTR,
     fit: StackFitKind = StackFitKind.Loose,
     clipBehavior: Skia.ClipKind = AtEngine.skia.ClipKind.HardEdge,
+    ...rests: unknown[]
   ) {
-    super()
+    super(...rests)
 
     this.fit = fit
     this.alignment = alignment
@@ -330,19 +340,21 @@ export class Stack extends Box {
   computeDryLayout (constraints: BoxConstraints): Size {
     return this.computeSize(
       constraints,
-      ChildLayout.dryLayoutChild,
+      (child: Box, constraints: BoxConstraints) => child.getDryLayout(constraints),
     )
   }
 
-  computeSize (constraints: BoxConstraints, layoutChild: ChildLayouter) {
+  computeSize (
+    constraints: BoxConstraints, 
+    layoutChild: ChildLayoutHandle
+  ) {
     this.resolve()
-    invariant(this.resolvedAlignment !== null, `The "this.resolvedAlignment" cannot be null.`)
+    invariant(this.resolvedAlignment !== null, `The "Stack.resolvedAlignment" cannot be null.`)
 
     let hasNonPositionedChildren = false
+    
     if (this.count === 0) {
-      return constraints.biggest
-        ? constraints.biggest 
-        : constraints.smallest
+      return constraints.biggest ? constraints.biggest : constraints.smallest
     }
 
     let width = constraints.minWidth
@@ -350,7 +362,7 @@ export class Stack extends Box {
 
     let nonPositionedConstraints: BoxConstraints
 
-    invariant(this.fit !== null, `The "this.fit" cannot be null.`)
+    invariant(this.fit !== null, `The "Stack.fit" cannot be null.`)
     
     switch (this.fit) {
       case StackFitKind.Loose:
@@ -368,28 +380,18 @@ export class Stack extends Box {
 
     let child = this.firstChild
     while (child !== null) {
-      if (!child.isPositioned) {
+      if (!child.positioned) {
         hasNonPositionedChildren = true
+        let size = layoutChild(child as Box, nonPositionedConstraints)
 
-        let childSize = layoutChild(child as Box, nonPositionedConstraints)
-
-        width = Math.max(width, childSize.width)
-        height = Math.max(height, childSize.height)
+        width = Math.max(width, size.width)
+        height = Math.max(height, size.height)
       }
 
       child = child.nextSibling
     }
 
-    let size: Size
-    if (hasNonPositionedChildren) {
-      size = new Size(width, height)
-      invariant(size.width === constraints.constrainWidth(width))
-      invariant(size.height === constraints.constrainHeight(height))
-    } else {
-      size = constraints.biggest
-    }
-
-    invariant(size.isFinite, `The "size" must be finite.`)
+    const size: Size = hasNonPositionedChildren ? Size.create(width, height) : constraints.biggest
     return size
   }
 
@@ -401,16 +403,20 @@ export class Stack extends Box {
     this.overflowed = false
 
     invariant(this.constraints)
-    this.size = this.computeSize(constraints as BoxConstraints, ChildLayout.layoutChild)
+    this.size = this.computeSize(constraints as BoxConstraints, (child: Box, constraints: BoxConstraints) => {
+      child.layout(constraints, true)
+      invariant(child.size, 'The "Box.size" cannot be null after layouted.')
+      return child.size
+    })
 
-    invariant(this.resolvedAlignment !== null, `The "this.resolvedAlignment" cannot be null.`)
+    invariant(this.resolvedAlignment !== null, `The "Box.resolvedAlignment" cannot be null.`)
     let child = this.firstChild as Box    
     
     while (child !== null) {
-      if (child.isPositioned) {
+      if (child.positioned) {
         this.overflowed = Stack.layoutPositionedChild(child, this.size, this.resolvedAlignment) || this.overflowed
       } else {
-        invariant(child.size, `The "child.size" cannot be null.`)
+        invariant(child.size, `The "Box.size" cannot be null.`)
         child.offset = this.resolvedAlignment.alongOffset(this.size.substract(child.size) as unknown as Offset)
       }
 
@@ -432,7 +438,7 @@ export class Stack extends Box {
    * @param offset 
    */
   paint (context: PaintingContext, offset: Offset) {
-    invariant(this.size, `The "this.size" cannot be null.`)
+    invariant(this.size, `The "Box.size" cannot be null.`)
     if (this.clipBehavior !== AtEngine.skia.ClipKind.None && this.overflowed) {
       this.clipRectLayer.layer = context.pushClipRect(
         this.needsCompositing,

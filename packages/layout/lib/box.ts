@@ -30,7 +30,6 @@ export class IntrinsicDimensionsCacheEntry {
     this.dimension = dimension
     this.argument = argument
   }
-
   
   equal (other: IntrinsicDimensionsCacheEntry | null) {
     return (
@@ -45,36 +44,48 @@ export class IntrinsicDimensionsCacheEntry {
   }
 }
 
+//// => Box
+// 
+
+export interface BoxFactory<T> {
+  new (...rests: unknown[]): T,
+  create (...rests: unknown[]): T
+}
+
 export abstract class Box extends Container {
-  static dryLayoutCalculationValid: boolean = true
+  static create <T extends Box> (...rests: unknown[]): Box {
+    const BoxFactory = this as unknown as BoxFactory<T>
+    return new BoxFactory(...rests) 
+  }
 
   // => left
+  // 坐标
   protected _left: number | null = null
   public get left () {
     return this._left
   }
   public set left (left: number | null) {
-    invariant(left !== null)
     if (this._left === null || this._left !== left) {
       this._left = left
-      this.markNeedsLayoutForPositionedChange()
+      this.markNeedsLayout()
     }
   }
 
   // => top
+  // 坐标
   protected _top: number | null = null
   public get top () {
     return this._top
   }
   public set top (top: number | null) {
-    invariant(top !== null)
     if (this._top === null || this._top !== top) {
       this._top = top
-      this.markNeedsLayoutForPositionedChange()
+      this.markNeedsLayout()
     }
   }
 
   // => right
+  // 右坐标
   protected _right: number | null = null
   public get right () {
     return this._right
@@ -82,11 +93,12 @@ export abstract class Box extends Container {
   public set right (right: number | null) {
     if (this._right === null || this._right !== right) {
       this._right = right
-      this.markNeedsLayoutForPositionedChange()
+      this.markNeedsLayout()
     }
   }
 
   // => bottom
+  // 底部坐标
   protected _bottom: number | null = null
   public get bottom () {
     return this._bottom
@@ -94,11 +106,12 @@ export abstract class Box extends Container {
   public set bottom (bottom: number | null) {
     if (this._bottom === null || this._bottom !== bottom) {
       this._bottom = bottom
-      this.markNeedsLayoutForPositionedChange()
+      this.markNeedsLayout()
     }
   }
   
   // => width
+  // 宽度
   protected _width: number | null = null
   public get width () {
     return this._width
@@ -111,6 +124,7 @@ export abstract class Box extends Container {
   }
 
   // => height
+  // 高度
   protected _height: number | null = null
   public get height () {
     return this._height
@@ -125,7 +139,7 @@ export abstract class Box extends Container {
   // => scale
   protected _scale: number = 1.0
   public get scale () {
-    invariant(this._scale)
+    invariant(this._scale !== null, 'The "Box.scale" cannot be null.')
     return this._scale
   }
   public set scale (scale: number) {
@@ -158,16 +172,19 @@ export abstract class Box extends Container {
     }
   }
   
+  // => bounds
   public get bounds () {
     invariant(this.size !== null)
     return Offset.ZERO.and(this.size)
   }
 
+  // => hasSize
   public get hasSize () {
     return this.size !== null
   }
 
-  public get isPositioned () {
+  // => positioned
+  public get positioned () {
     return (
       this.left !== null || 
       this.top !== null || 
@@ -184,15 +201,37 @@ export abstract class Box extends Container {
   public cachedIntrinsicDimensions: Map<IntrinsicDimensionsCacheEntry, number> | null = null
   public cachedBaselines: Map<Skia.TextBaseline, number | null> | null = null
 
-  constructor (child: Box | null = null) {
+  constructor (...rests: unknown[])
+  constructor (
+    child: Box | null = null,
+    left: number | null = null,
+    top: number | null = null,
+    right: number | null = null,
+    bottom: number | null = null,
+    width: number | null = null,
+    height: number | null = null,
+    scale: number = 1.0,
+    ...rests: unknown[]
+  ) {
     super()
+
+    this.left = left
+    this.top = top
+    this.right = right
+    this.bottom = bottom
+    this.width = width
+    this.height = height
+    this.scale = scale
 
     if (child !== null) {
       this.append(child)
     }
   }
 
-  handleEvent (event: PointerEvent, entry: BoxHitTestEntry) { }
+  handleEvent (
+    event: PointerEvent, 
+    entry: BoxHitTestEntry
+  ) { }
 
   computeIntrinsicDimension (
     dimension: IntrinsicDimensionKind, 
@@ -227,14 +266,12 @@ export abstract class Box extends Container {
       this.computeMinIntrinsicWidth
     )
   }
-
   
   computeMinIntrinsicWidth (height: number) {
     return 0
   }
 
   getMaxIntrinsicWidth (height: number) {
-    
     return this.computeIntrinsicDimension(
       IntrinsicDimensionKind.MaxWidth, 
       height, 
@@ -253,7 +290,6 @@ export abstract class Box extends Container {
       this.computeMinIntrinsicHeight
     )
   }
-
   
   computeMinIntrinsicHeight (width: number) {
     return 0
@@ -289,7 +325,8 @@ export abstract class Box extends Container {
       
       return result
     }
-    return this.computeDryLayout(constraints);
+
+    return this.computeDryLayout(constraints)
   }
 
   computeDryLayout (constraints: BoxConstraints) {
@@ -302,8 +339,11 @@ export abstract class Box extends Container {
     onlyReal = false 
   ): number | null {
     const result = this.getDistanceToActualBaseline(baseline)
+
+    invariant(this.size !== null, `The "Box.size" cannot be null.`)
+
     if (result === null && !onlyReal) {
-      return this.size!.height
+      return this.size.height
     }
     return result
   }
@@ -322,13 +362,6 @@ export abstract class Box extends Container {
   computeDistanceToActualBaseline (baseline: Skia.TextBaseline): number | null {
     return null
   }
-
-  markNeedsLayoutForPositionedChange () {
-    this.markNeedsLayout()
-    if (this.parent !== null) {
-      this.markParentNeedsLayout()
-    }
-  }
   
   markNeedsLayout() {
     if (
@@ -340,7 +373,7 @@ export abstract class Box extends Container {
       this.cachedIntrinsicDimensions?.clear()
       this.cachedDryLayoutSizes?.clear()
       
-      if (parent instanceof Object) {
+      if (parent !== null) {
         this.markParentNeedsLayout()
         return
       }
@@ -349,10 +382,13 @@ export abstract class Box extends Container {
     super.markNeedsLayout()
   }
 
-  layout (constraints: Constraints, parentUsesSize = false) {
+  layout (
+    constraints: Constraints, 
+    parentUsesSize: boolean = false
+  ) {
     if (
       this.hasSize && 
-      this.constraints !== constraints &&
+      this.constraints?.notEqual(constraints) &&
       this.cachedBaselines !== null && 
       this.cachedBaselines.size > 0
     ) {
@@ -368,17 +404,14 @@ export abstract class Box extends Container {
     // @TODO 
     // invariant(this.size.isFinite);
   }
-
   
   performLayout () {
     if (this.child !== null) {
-      invariant(this.child instanceof Box)
-      invariant(this.constraints)
+      invariant(this.constraints, 'The "Box.constraints" cannot be null.')
       this.child.layout(this.constraints, true)
-      this.size = this.child.size
+      this.size = (this.child as Box).size
     } else {
-      invariant(this.constraints instanceof BoxConstraints)
-      this.size = this.computeSizeForNoChild(this.constraints)
+      this.size = this.computeSizeForNoChild(this.constraints as BoxConstraints)
     }
   }
 
@@ -389,11 +422,7 @@ export abstract class Box extends Container {
   applyPaintTransform (
     child: Box, 
     transform: Matrix4
-  ) {
-    invariant(child !== null)
-    invariant(child.parent === this)
-    
-    
+  ) {    
     const offset = child.offset
     transform.translate(offset.dx, offset.dy)
   }
@@ -421,7 +450,7 @@ export abstract class Box extends Container {
     }
 
     if (ancestorSpecified) {
-      renderers.push(ancestor!)
+      renderers.push(ancestor)
     }
     const transform = Matrix4.identity()
 
@@ -457,7 +486,6 @@ export abstract class Box extends Container {
   ) {
     return MatrixUtils.transformPoint(this.getTransformTo(ancestor), point);
   }  
-  // @TODO-EVENT
 
   defaultComputeDistanceToFirstActualBaseline (baseline: Skia.TextBaseline): number | null {
     let child = this.firstChild as Box
@@ -494,7 +522,10 @@ export abstract class Box extends Container {
     return result
   }
 
-  defaultPaint (context: PaintingContext, offset: Offset) {
+  defaultPaint (
+    context: PaintingContext,
+    offset: Offset
+  ) {
     let child = this.firstChild as Box
     
     while (child !== null) {
@@ -507,13 +538,15 @@ export abstract class Box extends Container {
       
       child = child.nextSibling as Box
     }
-    // console.log(`tag: ${tag}`, performance.now() - t, this.childCount)
   }
 
-  defaultHitTestChildren (result: BoxHitTestResult, position: Offset): boolean {
+  defaultHitTestChildren (
+    result: BoxHitTestResult, 
+    position: Offset
+  ): boolean {
     let child: Box | null  = this.lastChild as Box
-    while (child !== null) {
-      
+
+    while (child !== null) {  
       const isHit = result.addWithPaintOffset(
         child.offset,
         position,
@@ -533,7 +566,10 @@ export abstract class Box extends Container {
     return false;
   }
 
-  hitTestChildren (result: BoxHitTestResult, position: Offset) {
+  hitTestChildren (
+    result: BoxHitTestResult, 
+    position: Offset
+  ) {
     return false
   }
 

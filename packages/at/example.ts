@@ -3,7 +3,8 @@ import { Size } from '@at/geometry'
 import { ProxyApp } from './lib/index'
 
 const proxy = ProxyApp.create(document.getElementById('webgl') as HTMLCanvasElement, {
-  size: Size.create(800, 800),
+  width:400,
+  height: 400,
   devicePixelRatio: 2.0
 })
 

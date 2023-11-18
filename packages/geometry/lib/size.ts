@@ -197,8 +197,8 @@ export class Size extends Point {
      */
     substract (size: Size): Size {
       return new Size(
-        this.width - size.dx, 
-        this.height - size.dy
+        this.width - size.width, 
+        this.height - size.width
       )
     }
   

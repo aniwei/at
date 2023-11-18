@@ -1,7 +1,7 @@
 import { invariant } from '@at/utils'
 
 //// => AbstractNode
-export abstract class AbstractNode<T extends AbstractNode<T>, U extends unknown = unknown> {
+export abstract class AbstractNode<T extends AbstractNode<T>> {
   // => attached
   // 是否挂载
   get attached () {
@@ -9,15 +9,15 @@ export abstract class AbstractNode<T extends AbstractNode<T>, U extends unknown 
   }
     
   public depth = 0
-  public owner: U | null = null
-  public parent: AbstractNode<T> | null = null
+  public owner: unknown | null = null
+  public parent: T | null = null
 
   /**
    * 
-   * @param {AbstractNode<T>} child 
+   * @param {T} child 
    */
-  redepthChild (child: AbstractNode<T>) {
-    invariant(child.owner === this.owner, `The "child.depth" must be equal "this.owner"`)
+  redepthChild (child: T) {
+    invariant(child.owner === this.owner, 'The "child.depth" must be equal "this.owner"')
     
     if (child.depth <= this.depth) {
       child.depth = this.depth + 1
@@ -31,7 +31,7 @@ export abstract class AbstractNode<T extends AbstractNode<T>, U extends unknown 
    * 挂载
    * @param {U} owner 
    */
-  attach (owner: U) {
+  attach (owner: unknown) {
     invariant(owner !== null, 'The argument "owner" cannot be null.')
     this.owner = owner
   }
@@ -47,13 +47,13 @@ export abstract class AbstractNode<T extends AbstractNode<T>, U extends unknown 
 
   /**
    * 
-   * @param AbstractNode<T> child 
+   * @param {T} child 
    */
-  adoptChild (child: AbstractNode<T>) {
+  adoptChild (child: T) {
     invariant(child !== null, `The argument "child" cannot be null.`)
     invariant(child.parent === null)
 
-    child.parent = this
+    child.parent = this as unknown as T
 
     if (this.attached) {
       child.attach(this.owner)
@@ -66,10 +66,9 @@ export abstract class AbstractNode<T extends AbstractNode<T>, U extends unknown 
    * 
    * @param {AbstractNode<T>} child 
    */
-  dropChild (child: AbstractNode<T>) {
-    invariant(child !== null)
-    invariant(child.parent === this)
-    // invariant(child.attached === this.attached)
+  dropChild (child: T) {
+    invariant(child.parent === this as unknown as T, 'The "child.parent" cannot refer to itself.')
+    invariant(child.attached === this.attached)
     child.parent = null
     
     if (this.attached) {

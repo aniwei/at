@@ -10,11 +10,15 @@ import { Box } from './box'
 import { BoxConstraints } from './constraints'
 import * as Engine from '@at/engine'
 
-
+//// => Image
 export type ImageOptions = {
   image?: Engine.Image | null,
   width?: number | null,
   height?: number | null,
+  left?: number | null,
+  top?: number | null,
+  right?: number | null,
+  bottom?: number | null,
   scale?: number,
   color?: Color | null ,
   opacity?: number | null,
@@ -27,13 +31,17 @@ export type ImageOptions = {
   textDirection?: Skia.TextDirection | null,
   invertColors?: boolean,
   isAntiAlias?: boolean,
-  filterQuality?: Skia.FilterQualityKind,
+  quality?: Skia.FilterQualityKind,
 }
 
 export class Image extends Box {
   static create (options: ImageOptions) {
-    return new Image(
+    return super.create(
       options.image,
+      options.left,
+      options.top,
+      options.right,
+      options.bottom,
       options.width,
       options.height,
       options.scale,
@@ -48,8 +56,8 @@ export class Image extends Box {
       options.textDirection,
       options.invertColors,
       options.isAntiAlias,
-      options.filterQuality
-    )
+      options.quality
+    ) as Image
   }
 
   public get bounds () {
@@ -98,13 +106,13 @@ export class Image extends Box {
 
 
   // => filterQuality
-  private _filterQuality: Skia.FilterQualityKind | null = null
-  public get filterQuality () {
-    return this._filterQuality
+  private _quality: Skia.FilterQualityKind | null = null
+  public get quality () {
+    return this._quality
   }
-  public set filterQuality (filterQuality: Skia.FilterQualityKind | null) {
-    if (this._filterQuality !== filterQuality) {
-      this._filterQuality = filterQuality
+  public set quality (quality: Skia.FilterQualityKind | null) {
+    if (this._quality !== quality) {
+      this._quality = quality
       this.markNeedsPaint()
     }
   }
@@ -233,20 +241,19 @@ export class Image extends Box {
     }
   }
 
-  // public left: number | null = null
-  // public top: number | null = null
-  // public right: number | null = null
-  // public bottom: number | null = null
-  // public size: Size | null = null
   public resolvedAlignment: Alignment | null = null
   public flipHorizontally: boolean | null = null
   public filter: ColorFilter | null = null
 
   constructor (
     image: Engine.Image | null = null,
+    left: number | null = null,
+    top: number | null = null,
+    right: number | null = null,
+    bottom: number | null = null,
     width: number | null = null,
     height: number | null = null,
-    scale: number = 1,
+    scale: number = 1.0,
     color: Color | null = null,
     opacity: number | null = null,
     blendMode: Skia.BlendMode | null = null,
@@ -258,13 +265,19 @@ export class Image extends Box {
     textDirection: Skia.TextDirection | null = null,
     invertColors: boolean = false,
     isAntiAlias: boolean = false,
-    filterQuality: Skia.FilterQualityKind = AtEngine.skia.FilterQualityKind.Low,
+    quality: Skia.FilterQualityKind = AtEngine.skia.FilterQualityKind.Low,
   ) {
-    super()
+    super(
+      null,
+      left,
+      top,
+      right,
+      bottom,
+      width,
+      height,
+      scale
+    )
     this.image = image
-    this.width = width
-    this.height = height
-    this.scale = scale
     this.color = color
     // this.opacity = opacity
     this.blendMode = blendMode
@@ -275,7 +288,7 @@ export class Image extends Box {
     this.invertColors = invertColors
     this.textDirection = textDirection
     this.isAntiAlias = isAntiAlias
-    this.filterQuality = filterQuality
+    this.quality = quality
     this._alignment = alignment
 
     this.updateColorFilter()
@@ -408,7 +421,7 @@ export class Image extends Box {
         this.repeat!,
         this.flipHorizontally!,
         this.invertColors,
-        this.filterQuality!,
+        this.quality!,
         this.isAntiAlias!,
       )
     }

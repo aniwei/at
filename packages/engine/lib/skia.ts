@@ -291,3 +291,24 @@ export enum RenderComparisonKind {
   Paint,
   Layout,
 }
+
+// => AxisDirectionKind
+export enum AxisDirectionKind {
+  Up,
+  Right,
+  Down,
+  Left,
+}
+
+// => VerticalDirectionKind
+export enum VerticalDirectionKind {
+  Up,
+  Down,
+}
+
+// => ScrollDirectionKind
+export enum ScrollDirectionKind {
+  Idle,
+  Forward,
+  Reverse,
+}

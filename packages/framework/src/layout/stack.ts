@@ -207,7 +207,7 @@ export class AtLayoutStack extends AtListener {
   }
 
   static layoutPositionedChild (child: AtLayoutBox, size: Size, alignment: AtAlignment): boolean {
-    invariant(child.isPositioned)
+    invariant(child.positioned)
     
     let hasVisualOverflow = false
     let childConstraints = new AtBoxConstraints()
@@ -260,7 +260,7 @@ export class AtLayoutStack extends AtListener {
 
 
   static layoutPositioned (box: AtLayoutBox, size: Size): boolean {
-    invariant(box.isPositioned)
+    invariant(box.positioned)
     
     let hasVisualOverflow = false
     let constraints = new AtBoxConstraints()
@@ -311,7 +311,7 @@ export class AtLayoutStack extends AtListener {
     let child = firstChild
 
     while (child !== null) {
-      if (!child.isPositioned) {
+      if (!child.positioned) {
         extent = Math.max(extent, mainChildSizeGetter(child))
       }
 
@@ -527,7 +527,7 @@ export class AtLayoutStack extends AtListener {
 
     let child = this.firstChild
     while (child !== null) {
-      if (!child.isPositioned) {
+      if (!child.positioned) {
         hasNonPositionedChildren = true
 
         let childSize = layoutChild(child as AtLayoutBox, nonPositionedConstraints)
@@ -568,7 +568,7 @@ export class AtLayoutStack extends AtListener {
     let child = this.firstChild as AtLayoutBox    
     
     while (child !== null) {
-      if (child.isPositioned) {
+      if (child.positioned) {
         this.hasVisualOverflow = AtLayoutStack.layoutPositionedChild(child, this.size, this.resolvedAlignment) || this.hasVisualOverflow
       } else {
         invariant(child.size, `The "child.size" cannot be null.`)

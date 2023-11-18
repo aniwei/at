@@ -1,6 +1,5 @@
 import { invariant, tryCatch } from '@at/utils'
 import { EventEmitter } from '@at/basic'
-import { Size } from '@at/geometry'
 import { 
   ApiService, 
   ApiStateKind, 
@@ -9,7 +8,8 @@ import {
 } from '@at/api'
 
 export interface ProxyAppConfiguration {
-  size: Size,
+  width: number,
+  height: number,
   devicePixelRatio: number,
   assets?: {
     rootDir: string,
@@ -61,14 +61,15 @@ export class ProxyApp extends EventEmitter<string> {
   public set element (element: HTMLCanvasElement | null) {
     if (element !== null) {
       tryCatch(() => {
-        const size = this.configuration.size
+        const width = this.configuration.width
+        const height = this.configuration.height
         const devicePixelRatio = this.configuration.devicePixelRatio
   
-        element.width = size.width * devicePixelRatio
-        element.height = size.height * devicePixelRatio
+        element.width = width * devicePixelRatio
+        element.height = height * devicePixelRatio
 
-        element.style.width = `${size.width}px`
-        element.style.height = `${size.height}px`
+        element.style.width = `${width}px`
+        element.style.height = `${height}px`
         element.style.position = 'absolute'
       })
     } else {

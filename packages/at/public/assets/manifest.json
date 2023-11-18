@@ -8,6 +8,10 @@
     {
       "family": "PingFang",
       "dir": "fonts/pingfang.otf"
+    },
+    {
+      "family": "SourceHanSansSC-VF",
+      "dir": "fonts/SourceHanSansSC-VF.ttf"
     }
   ],
   "theme": {

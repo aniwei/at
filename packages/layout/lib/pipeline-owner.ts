@@ -5,6 +5,7 @@ import { ViewConfiguration } from './view'
 
 import type { AtRasterizer } from '@at/engine'
 
+//// => ObjectNeedingUpdate
 export type RequestRasterizeHandle = () => void
 export class ObjectNeedingUpdate extends Array<Object> {
   static create () {
@@ -31,8 +32,14 @@ export class PipelineOwner {
     )
   }
 
+
+  // => devicePixelRatio
+  public get devicePixelRatio () {
+    return this.configuration.devicePixelRatio
+  }
+
   // => root
-  private _root: Object | null = null
+  protected _root: Object | null = null
   public get root () {
     return this._root
   }
@@ -50,7 +57,7 @@ export class PipelineOwner {
   
   public rasterizer: AtRasterizer
   public configuration: ViewConfiguration
-  
+
   public objectsNeedingLayout: ObjectNeedingUpdate = ObjectNeedingUpdate.create()
   public objectsNeedingPaint: ObjectNeedingUpdate = ObjectNeedingUpdate.create()
   public objectsNeedingCompositingBitsUpdate: ObjectNeedingUpdate = ObjectNeedingUpdate.create()

@@ -58,3 +58,30 @@ export class ParagraphPlaceholder extends Equalable<ParagraphPlaceholder> {
     return !this.equal(other)
   }
 }
+
+/// => PlaceholderSpan
+export class PlaceholderSpan extends ParagraphPlaceholder {
+
+  public start: number
+  public end: number
+
+  constructor (
+    index: number,
+    width: number,
+    height: number,
+    alignment: Skia.PlaceholderAlignment, 
+    baselineOffset: number,
+    baseline: Skia.TextBaseline,
+  ) {
+    super(
+      width,
+      height,
+      alignment,
+      baseline,
+      baselineOffset,
+    )
+
+    this.start = index
+    this.end = index
+  }
+}

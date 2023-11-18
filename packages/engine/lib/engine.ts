@@ -32,7 +32,10 @@ export interface AtEngineSkia extends CanvasKit {
   AxisKind: typeof Skia.AxisKind,
   ClipKind: typeof Skia.ClipKind,
   FilterQualityKind: typeof Skia.FilterQualityKind,
-  ImageByteFormatKind: typeof Skia.ImageByteFormatKind
+  ImageByteFormatKind: typeof Skia.ImageByteFormatKind,
+  AxisDirectionKind: typeof Skia.AxisDirectionKind,
+  ScrollDirectionKind: typeof Skia.ScrollDirectionKind,
+  VerticalDirectionKind: typeof Skia.VerticalDirectionKind
 }
 
 // 环境变量
@@ -58,7 +61,8 @@ export enum AtEngineLifecycleKind {
 
 export interface AtEngineConfiguration {
   uri: string,  
-  size: Size,
+  width: number,
+  height: number,
   devicePixelRatio: number,
   assets: {
     baseURI: string,
@@ -77,11 +81,13 @@ export abstract class AtEngine extends AssetsManager {
   static set skia (skia: AtEngineSkia) {
     /// => extending skia
     // 扩展 Skia
+    defineReadOnly(skia, 'AxisDirectionKind', Skia.AxisDirectionKind)
     defineReadOnly(skia, 'AxisKind', Skia.AxisKind)
     defineReadOnly(skia, 'ClipKind', Skia.ClipKind)
     defineReadOnly(skia, 'FilterQualityKind', Skia.FilterQualityKind)
     defineReadOnly(skia, 'ImageByteFormatKind', Skia.ImageByteFormatKind)
-    
+    defineReadOnly(skia, 'ScrollDirectionKind', Skia.ScrollDirectionKind)
+    defineReadOnly(skia, 'VerticalDirectionKind', Skia.ImageByteFormatKind)
  
     this._skia = skia
   }
@@ -184,21 +190,20 @@ export abstract class AtEngine extends AssetsManager {
   public _rasterizer: AtRasterizer | null = null
   public get rasterizer () {
     if (this._rasterizer === null) {
-      const size = this.configuration.size
+      const width = this.configuration.width
+      const height = this.configuration.height
       const devicePixelRatio = this.configuration.devicePixelRatio
 
       tryCatch(() => {
         if (this.element) {
-          const width = size.width / devicePixelRatio
-          const height = size.height / devicePixelRatio
-
-          this.element.width = width
-          this.element.height = height
+          
+          this.element.width = width * devicePixelRatio
+          this.element.height = height * devicePixelRatio
         }
       })
 
       const surface = AtEngine.tryCreateSurface(
-        size, 
+        Size.create(width, height), 
         this.element
       ) 
 
@@ -222,6 +227,7 @@ export abstract class AtEngine extends AssetsManager {
 
   // skia 队列
   protected queue: VoidFunction[] = []  
+
   public configuration: AtEngineConfiguration
 
 

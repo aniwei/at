@@ -114,9 +114,9 @@ export class Alignment extends AlignmentGeometry {
   static CENTER = new Alignment(0.0, 0.0)
   static CENTER_RIGHT = new Alignment(1.0, 0.0)
 
-  static BUTTON_LEFT = new Alignment(-1.0, 1.0)
-  static BUTTON_CENTER = new Alignment(0.0, 1.0)
-  static BUTTON_RIGHT = new Alignment(1.0, 1.0)
+  static BOTTOM_LEFT = new Alignment(-1.0, 1.0)
+  static BOTTOM_CENTER = new Alignment(0.0, 1.0)
+  static BOTTOM_RIGHT = new Alignment(1.0, 1.0)
 
   static create (x: number, y: number) {
     return super.create(x, y) as Alignment

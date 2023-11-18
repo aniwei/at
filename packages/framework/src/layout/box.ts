@@ -176,7 +176,7 @@ export abstract class AtLayoutBox extends AtLayoutContainer {
     return this.size !== null
   }
 
-  public get isPositioned () {
+  public get positioned () {
     return (
       this.left !== null || 
       this.top !== null || 

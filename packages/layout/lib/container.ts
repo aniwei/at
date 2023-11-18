@@ -3,6 +3,8 @@ import { Object } from './object'
 import type { ObjectVisitorHandle } from './object'
 import type { PipelineOwner } from './pipeline-owner'
 
+//// => Container
+// 容器
 export abstract class Container extends Object {
   /**
    * 
@@ -17,7 +19,7 @@ export abstract class Container extends Object {
     invariant(child.previousSibling === null, `The "child.previousSibling" cannot be null.`)
     this.count += 1
     
-    invariant(this.count > 0, `The "children" length must gather than zero.`)
+    invariant(this.count > 0, `The "children" length must gather than "zero".`)
     if (afterChild === null) {
       child.nextSibling = this.firstChild
       if (this.firstChild !== null) {
@@ -26,11 +28,11 @@ export abstract class Container extends Object {
       this.firstChild = child
       this.lastChild ??= child
     } else {
-      invariant(this.firstChild !== null, `The "this.firstChild" cannot be null.`)
-      invariant(this.lastChild !== null, `The "this.lastChild" cannot be null.`)
+      invariant(this.firstChild !== null, `The "Container.firstChild" cannot be null.`)
+      invariant(this.lastChild !== null, `The "Container.lastChild" cannot be null.`)
       
       if (afterChild?.nextSibling === null) {
-        invariant(afterChild === this.lastChild, `The "this.lastChild" must be equal this argument "afterChild"`)
+        invariant(afterChild === this.lastChild, `The "Container.lastChild" must be equal this argument "afterChild"`)
         child.previousSibling = afterChild
         afterChild.nextSibling = child
         this.lastChild = child
@@ -49,7 +51,7 @@ export abstract class Container extends Object {
           nextSibling.previousSibling = child
         }
 
-        invariant(afterChild?.nextSibling === child, `The "afterChild.nextSibling" must be equal the argument "child".`)
+        invariant(afterChild?.nextSibling === child, `The "Container.afterChild.nextSibling" must be equal the argument "child".`)
       }
     }
   }
