@@ -18,9 +18,14 @@ interface ConnectionPayload {
 //// => AtBoot
 export class App extends AtInstance {
   static ready (readyHandle: (instance: App) => void) {
-    const app = App.create()
+    const app = App.create() as App
     app.start(() => readyHandle(app))
     return app
+  }
+
+  private handlePointerEvents = (event: PointerEvent) => {
+    // const packet = this.decomposite(event)
+    // this.handlePointerDataPacket(packet)
   }
 
   connect (): Promise<void> {
@@ -56,9 +61,7 @@ export class App extends AtInstance {
     })
 
     // 点击事件
-    api.Client.events.on('client.pointer.event', () => {
-      
-    })
+    api.Client.events.on('client.pointer.event', (event) => this.handlePointerEvents(event))
 
     return Promise.resolve()
   }
@@ -66,6 +69,11 @@ export class App extends AtInstance {
   start(callback?: VoidFunction): Promise<void> {
     return this.connect()
       .then(() => super.start(callback))
+  }
+  
+  stop (): void {
+    this.api.Engine.events.removeAllListeners()
+    this.api.Client.events.removeAllListeners()
   }
 }
 

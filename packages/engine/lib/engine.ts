@@ -71,6 +71,22 @@ export interface AtEngineConfiguration {
 }
 
 export abstract class AtEngine extends AssetsManager {  
+  // => instance
+  static instances: AtEngine[] = []
+
+  static register (engine: AtEngine) {
+    if (!AtEngine.instances.includes(engine)) {
+      this.instances.push(engine)
+    }
+  }
+
+  static unregister (engine: AtEngine) {
+    const index = this.instances.findIndex(e => e === engine)
+    if (index > -1) {
+      this.instances.splice(index, 1)
+    }
+  }
+
   // => engine
   // Skia Runtime 对象
   static _skia: AtEngineSkia | null = null
@@ -227,16 +243,18 @@ export abstract class AtEngine extends AssetsManager {
 
   // skia 队列
   protected queue: VoidFunction[] = []  
-
+  // 配置
   public configuration: AtEngineConfiguration
-
 
   constructor (configuration: AtEngineConfiguration) {
     const assets = configuration.assets
     super(assets.baseURI, assets.rootDir)
 
     this.configuration = configuration
+    AtEngine.register(this)
   } 
+
+  abstract prepare (): Promise<void>
 
   /**
    * 加载框架资源
@@ -285,5 +303,7 @@ export abstract class AtEngine extends AssetsManager {
     }
   }
 
-  abstract prepare (): Promise<void>
+  dispose () {
+    AtEngine.unregister(this)
+  }
 }

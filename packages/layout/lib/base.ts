@@ -69,7 +69,6 @@ export class Base<T extends BasePainter> extends Stack {
     }
   }
   
-  
   public isComplex: boolean
   public willChange: boolean
 

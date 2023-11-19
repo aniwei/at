@@ -1,12 +1,13 @@
 import { invariant } from '@at/utils'
-import { Offset, Equalable } from '@at/geometry'
+import { Offset } from '@at/geometry'
 import { GestureArenaManager } from './arena'
 import { PointerEvent, PointerEventConverter, PointerEventDecomposition } from './events'
 import { HitTestEntry, HitTestResult } from './hit-test'
-import { AtPointerPacket } from './pointer'
+import { PointerPacket } from './pointer'
 
-import { AtViewConfiguration } from '../layout/view'
-import { PointerRouter } from './pointer'
+// import { ViewConfiguration } from '@at/layout'
+// import { PointerRouter } from './pointer'
+import { Equalable } from '@at/basic'
 
 export class DeviceGestureSettings extends Equalable<DeviceGestureSettings> {
   static fromConfirugation (configuration: AtViewConfiguration) {
@@ -64,12 +65,14 @@ export class DeviceGestureSettings extends Equalable<DeviceGestureSettings> {
 }
 
 
-export abstract class Gesture extends PointerEventDecomposition {
+export class Gesture extends PointerEventDecomposition {
+  static create () {}
+
   protected locked: boolean = false
   protected pendingPointerEvents: PointerEvent[] = []
   protected hitTests: Map<number, HitTestResult> = new Map()
   
-  public router: PointerRouter = PointerRouter.create()
+  // public router: PointerRouter = PointerRouter.create()
   public arena: GestureArenaManager = new GestureArenaManager()
 
   constructor (devicePixelRatio: number) {
@@ -125,7 +128,7 @@ export abstract class Gesture extends PointerEventDecomposition {
    * 
    * @param {AtPointerPacket} packet 
    */
-  handlePointerDataPacket (packet: AtPointerPacket) {
+  handlePointerDataPacket (packet: PointerPacket) {
     PointerEventConverter.expand(packet.data, this.devicePixelRatio).map((event) => {
       this.pendingPointerEvents.push(event)
     })
@@ -153,7 +156,7 @@ export abstract class Gesture extends PointerEventDecomposition {
    * @param {HitTestEntry} entry 
    */
   handleEvent (event: PointerEvent, entry: HitTestEntry) {
-    this.router.route(event)
+    // this.router.route(event)
     if (event.isDown()) {
       this.arena.close(event.pointer)
     } else if (event.isUp()) {
@@ -175,7 +178,7 @@ export abstract class Gesture extends PointerEventDecomposition {
     if (hitTestResult === null) {
       invariant(event.isAdded() || event.isRemoved())
       try {
-        this.router.route(event)
+        // this.router.route(event)
       } catch (error: any) {
         console.warn(`Caught ProgressEvent with target: ${error.stack}`)
       }

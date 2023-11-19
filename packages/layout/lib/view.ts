@@ -3,7 +3,7 @@ import { Matrix4 } from '@at/math'
 import { Subscribable } from '@at/basic'
 import { HitTestEntry } from '@at/gesture'
 import { Offset, Rect, Size } from '@at/geometry'
-import { ContainerLayer, LayerScene, TransformLayer } from '@at/engine'
+import { AtEngine, ContainerLayer, LayerScene, TransformLayer } from '@at/engine'
 import { Object } from './object'
 import { BoxConstraints } from './constraints'
 import { Container } from './container'
@@ -105,8 +105,8 @@ export abstract class ViewConfiguration extends Subscribable {
 
 //// => View
 export class View extends Container {
-  static create (configuration: ViewConfiguration) {
-    return new View(configuration) as View
+  static create (instance: AtEngine, configuration: ViewConfiguration) {
+    return new View(instance, configuration) as View
   }
 
   // => configuration
@@ -156,15 +156,17 @@ export class View extends Container {
     return size
   }
   
+  public instance: AtEngine
   public rootTransform: Matrix4 | null = null
   public isRepaintBoundary: boolean = true
 
   /**
    * @param configuration 
    */
-  constructor (configuration: ViewConfiguration) {
+  constructor (instance: AtEngine, configuration: ViewConfiguration) {
     super()
 
+    this.instance = instance
     this.configuration = configuration  
   }
 

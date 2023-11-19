@@ -26,6 +26,7 @@
   "dependencies": {
     "@at/basic": "workspace:^",
     "@at/geometry": "workspace:^",
+    "@at/gesture": "workspace:^",
     "@at/math": "workspace:^",
     "@at/utils": "workspace:^",
     "ts-invariant": "^0.10.3"

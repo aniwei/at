@@ -172,7 +172,7 @@ export abstract class App<
   // => pipeline
   private _pipeline: AtPipelineOwner | null = null
   public get pipeline (): AtPipelineOwner {
-    invariant(this._pipeline !== null)
+    invariant(this._pipeline !== null, )
     return this._pipeline
   }
   public set pipeline (pipeline: AtPipelineOwner | null) {
@@ -323,8 +323,8 @@ export abstract class App<
     invariant(this.view, `The "this.view" cannot be null.`)
     invariant(this.rasterizer, `The "this.rasterizer" cannot be null.`)
 
-    this.view.dispose()
-    this.rasterizer.dispose()
+    this.view?.dispose()
+    this.rasterizer?.dispose()
 
     this.view = null
     this.rasterizer = null

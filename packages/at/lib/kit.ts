@@ -2,6 +2,7 @@ import { invariant } from '@at/utils'
 import { ApiService } from '@at/api'
 import { nextTick } from '@at/basic'
 import { PipelineOwner, View, ViewConfiguration } from '@at/layout'
+import { Gesture } from '@at/gesture'
 import { AtManifest } from './manifest'
 import { 
   AtEngine, 
@@ -9,8 +10,6 @@ import {
   AtEngineConfiguration,
   AtEngineEnvironments,
 } from '@at/engine'
-import { Size } from '@at/geometry'
-
 
 // 运行时环境
 export enum AtKitEnvKind {
@@ -77,11 +76,21 @@ export abstract class AtKit extends AtEngine {
     }
   }
 
+  // => gesture
+  public _gesture: Gesture | null = null
+  public get gesture () {
+    if (this._gesture === null) {
+      this._gesture = Gesture.create()
+    }
+
+    return this.gesture
+  }
+
   // => view
   public _view: View | null = null
   public get view () {
     if (this._view === null) {
-      this._view = View.create(ViewConfiguration.create({
+      this._view = View.create(this, ViewConfiguration.create({
         width: this.configuration.width,
         height: this.configuration.height,
         devicePixelRatio: this.configuration.devicePixelRatio
@@ -96,7 +105,7 @@ export abstract class AtKit extends AtEngine {
   protected _pipeline: PipelineOwner | null = null
   public get pipeline (): PipelineOwner {
     if (this._pipeline === null) {
-      this._pipeline = PipelineOwner.create(this.rasterizer, () => {
+      this._pipeline = PipelineOwner.create(this, this.rasterizer, () => {
 
       }, this.view.configuration)
     }
