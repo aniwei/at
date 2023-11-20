@@ -1,1 +1,4 @@
+export * from './arena'
+export * from './device-gesture-settings'
+export * from './gesture'
 export * from './hit-test'

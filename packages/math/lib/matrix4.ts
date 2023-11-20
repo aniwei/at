@@ -72,7 +72,7 @@ export class Matrix4 extends ArrayLike<Matrix4> {
     return m4
   }
 
-  static diagonal3Values(x: number, y: number, z: number) {
+  static diagonal3Values (x: number, y: number, z: number) {
     const m4 = Matrix4.ZERO
     m4[15] = 1.0
     m4[10] = z
@@ -98,14 +98,28 @@ export class Matrix4 extends ArrayLike<Matrix4> {
   }
 
   entry (row: number, col: number, v?: number): void | number {
-    invariant((row >= 0) && (row < this.dimension))
-    invariant((col >= 0) && (col < this.dimension))
+    invariant((row >= 0) && (row < this.dimension), 'The argument "row" must be gather than 0')
+    invariant((col >= 0) && (col < this.dimension), 'The argument "col" must be gather than 0')
 
     if (v === undefined) {
       return this[this.index(row, col)]
     }
 
     this[this.index(row, col)] = v
+  }
+
+  column (column: number, v: number[]) {
+    const entry = column * 4
+    
+    for (let i = 0; i < v.length; i++) {
+      this[entry + i] = v[i]
+    }
+  }
+
+  row (row: number, v: number[]) {    
+    for (let i = 0; i < v.length; i++) {
+      this[this.index(row, i)] = v[i]
+    }
   }
 
   set (
@@ -161,10 +175,6 @@ export class Matrix4 extends ArrayLike<Matrix4> {
     this[2] = m4[2]
     this[1] = m4[1]
     this[0] = m4[0]
-  }
-
-  clone () {
-    return Matrix4.copy(this)
   }
 
   copyInto (m4: Matrix4) {
@@ -340,8 +350,7 @@ export class Matrix4 extends ArrayLike<Matrix4> {
       this[15] === 1.0
     )
   }
-
-  
+ 
   isIdentityOrTranslation () {
     return (
       this[15] === 1.0 &&
@@ -665,11 +674,11 @@ export class Matrix4 extends ArrayLike<Matrix4> {
     this[15] = (m30 * n03) + (m31 * n13) + (m32 * n23) + (m33 * n33)
   }
 
-multiplied (m4: Matrix4) {
-  const m = this.clone()
-  m.multiply(m4)
-  return m
-}
+  multiplied (m4: Matrix4) {
+    const m = this.clone()
+    m.multiply(m4)
+    return m
+  }
 
   transposeMultiply (m4: Matrix4) {
     const m33 = this[15]
@@ -824,6 +833,10 @@ multiplied (m4: Matrix4) {
     this[2] = array[i + 2]
     this[1] = array[i + 1]
     this[0] = array[i + 0]
+  }
+
+  clone () {
+    return Matrix4.copy(this)
   }
 
   equal (m4: Matrix4 | null): boolean {

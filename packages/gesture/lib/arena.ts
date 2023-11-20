@@ -7,13 +7,15 @@ export enum GestureDispositionKind {
   Rejected,
 }
 
-// 手势对象成员
+//// => GestureArenaMember
+// 竞技场成员
 export abstract class GestureArenaMember {
   abstract accept (pointer: number): void
   abstract reject (pointer: number): void
 }
 
-export type GestureArenaEntryInitOptions = {
+
+export interface GestureArenaEntryOptions {
   arena: GestureArenaManager,
   pointer: number,
   member: GestureArenaMember,
@@ -22,7 +24,7 @@ export type GestureArenaEntryInitOptions = {
 // 手势竞技场入口
 export class GestureArenaEntry {
   static create (...rests: unknown[]): GestureArenaEntry
-  static create (options: GestureArenaEntryInitOptions) {
+  static create (options: GestureArenaEntryOptions) {
     return new GestureArenaEntry(
       options.arena,
       options.pointer,
@@ -30,10 +32,12 @@ export class GestureArenaEntry {
     )
   }
 
+  // 竞技场
   public arena: GestureArenaManager 
+  // 成员
   public member: GestureArenaMember
   
-  private pointer: number
+  protected pointer: number
 
   constructor (...rests: unknown[]) 
   /**
@@ -53,13 +57,18 @@ export class GestureArenaEntry {
   }
 
   resolve (disposition: GestureDispositionKind) {
-    this.arena.resolve(this.pointer, this.member, disposition)
+    this.arena.resolve(
+      this.pointer, 
+      this.member, 
+      disposition
+    )
   }
 }
 
 
-// 竞技场状体啊
-export enum GestureArenaStatus {
+//// => GestureArena
+// 竞技场状态
+export enum GestureArenaStateKind {
   Open,
   Held
 }
@@ -68,41 +77,37 @@ export enum GestureArenaStatus {
 export class GestureArena {
   // => opened
   public get opened () {
-    return (this.status & GestureArenaStatus.Open) === GestureArenaStatus.Open
+    return (this.state & GestureArenaStateKind.Open) === GestureArenaStateKind.Open
   }
   public set opened (opened: boolean) {
-    if (opened) {
-      this.status |= GestureArenaStatus.Open
-    } else {
-      this.status &= ~GestureArenaStatus.Open
-    }
+    opened 
+      ? this.state |= GestureArenaStateKind.Open
+      : this.state &= ~GestureArenaStateKind.Open
   }
 
   // => held
   public get held () {
-    return (this.status & GestureArenaStatus.Held) === GestureArenaStatus.Held
+    return (this.state & GestureArenaStateKind.Held) === GestureArenaStateKind.Held
   }
   public set held (held: boolean) {
-    if (held) {
-      this.status |= GestureArenaStatus.Held
-    } else {
-      this.status &= ~GestureArenaStatus.Held
-    }
+    held 
+      ? this.state |= GestureArenaStateKind.Held
+      : this.state &= ~GestureArenaStateKind.Held
   }
 
-  public members: GestureArenaMember[] = []
-  public status: GestureArenaStatus = GestureArenaStatus.Open
   public hasPendingSweep: boolean = false
+  public members: GestureArenaMember[] = []
+  public state: GestureArenaStateKind = GestureArenaStateKind.Open
 
   // 获胜者
   public eagerWinner: GestureArenaMember | null = null
 
   /**
    * 添加竞技成员
-   * @param member 
+   * @param {GestureArenaMember} member 
    */
   add (member: GestureArenaMember) {
-    invariant(this.opened)
+    invariant(this.opened, 'The "GestureArena.opened" cannot be held, must be opened.')
     this.members.push(member)
   }
 
@@ -114,7 +119,7 @@ export class GestureArena {
 }
 
 // 竞技场管理管理
-// 根据 pointer id 来管理
+// 根据 device id 来管理
 export class GestureArenaManager {
   static create () {
     return new GestureArenaManager()
@@ -127,7 +132,7 @@ export class GestureArenaManager {
    * @param pointer 
    * @param state 
    */
-  private tryToResolveArena (pointer: number, arena: GestureArena) {
+  tryToResolveArena (pointer: number, arena: GestureArena) {
     invariant(this.arenas.get(pointer) === arena)
     invariant(!arena.opened)
     if (arena.members.length == 1) {
@@ -145,7 +150,7 @@ export class GestureArenaManager {
    * @param state 
    * @param member 
    */
-  private resolveInFavorOf (pointer: number, arena: GestureArena, member: GestureArenaMember) {
+  resolveInFavorOf (pointer: number, arena: GestureArena, member: GestureArenaMember) {
     invariant(arena === this.arenas.get(pointer))
     invariant(arena !== null)
     invariant(arena.eagerWinner === null || arena.eagerWinner === member)
@@ -190,7 +195,7 @@ export class GestureArenaManager {
   close (pointer: number) {
     const state: GestureArena | null = this.arenas.get(pointer) ?? null
     if (state !== null) {
-      state.status |= GestureArenaStatus.Open
+      state.state |= GestureArenaStateKind.Open
       this.tryToResolveArena(pointer, state)
     }
   }

@@ -77,13 +77,14 @@ export abstract class AtKit extends AtEngine {
   }
 
   // => gesture
+  // 手势
   public _gesture: Gesture | null = null
   public get gesture () {
     if (this._gesture === null) {
-      this._gesture = Gesture.create()
+      this._gesture = Gesture.create(this.configuration.devicePixelRatio)
     }
 
-    return this.gesture
+    return this._gesture
   }
 
   // => view
@@ -152,7 +153,19 @@ export abstract class AtKit extends AtEngine {
   }
 
   // 绑定
-  abstract bindings (): Promise<void>
+  bindings (): Promise<void> {
+    return Promise.resolve().then(() => {
+      const api = this.api
+
+      /// => api 绑定
+      // 窗口大小变化
+      api.Client.events.on('client.viewport.resize', () => {
+        
+      })
+      // 点击事件
+      api.Client.events.on('client.pointer.event', (event) => this.gesture.handlePointerDataPacket(event))
+    })
+  }
 
   /// => utility
   // 启动前准备：

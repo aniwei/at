@@ -9,8 +9,12 @@ export default defineConfig({
       formats: ['cjs', 'es']
     },
     sourcemap: true,
+    minify: false,
     rollupOptions: {
-      external: ['@at/basic']
+      external: [
+        '@at/basic',
+        '@at/layout'
+      ]
     }
   }
 })

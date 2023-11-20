@@ -1,7 +1,7 @@
 import { invariant } from '@at/utils' 
 import { Object } from './object'
 import { PaintingContext } from './painting-context'
-import { ViewConfiguration } from './view'
+import { ViewConfiguration } from './view-configuration'
 
 import type { AtEngine, AtRasterizer } from '@at/engine'
 

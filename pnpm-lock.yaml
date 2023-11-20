@@ -109,6 +109,9 @@ importers:
       '@at/geometry':
         specifier: workspace:^
         version: link:../geometry
+      '@at/gesture':
+        specifier: workspace:^
+        version: link:../gesture
       '@at/layout':
         specifier: workspace:^
         version: link:../layout
@@ -325,9 +328,6 @@ importers:
       '@at/geometry':
         specifier: workspace:^
         version: link:../geometry
-      '@at/gesture':
-        specifier: workspace:^
-        version: 'link:'
       '@at/math':
         specifier: workspace:^
         version: link:../math

@@ -34,6 +34,7 @@
     "@at/basic": "workspace:^",
     "@at/engine": "workspace:^",
     "@at/geometry": "workspace:^",
+    "@at/gesture": "workspace:^",
     "@at/layout": "workspace:^",
     "@at/painting": "workspace:^",
     "@at/utils": "workspace:^",

@@ -24,7 +24,6 @@ export class App extends AtInstance {
   }
 
   private handlePointerEvents = (event: PointerEvent) => {
-    // const packet = this.decomposite(event)
     // this.handlePointerDataPacket(packet)
   }
 
@@ -52,18 +51,7 @@ export class App extends AtInstance {
   }
 
   bindings (): Promise<void> {
-    const api = this.api
-    
-    /// => api 绑定
-    // 窗口大小变化
-    api.Client.events.on('client.viewport.resize', () => {
-      
-    })
-
-    // 点击事件
-    api.Client.events.on('client.pointer.event', (event) => this.handlePointerEvents(event))
-
-    return Promise.resolve()
+    return super.bindings()
   }
 
   start(callback?: VoidFunction): Promise<void> {

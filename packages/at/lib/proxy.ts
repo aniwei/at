@@ -39,6 +39,10 @@ export class ProxyApp extends EventEmitter<string> {
 
     return defaultEnv as string
   }
+  // => devicePixelRatio
+  public get devicePixelRatio () {
+    return this.configuration.devicePixelRatio
+  }
 
   // => passage
   public _passage: Worker | null = null
@@ -102,23 +106,27 @@ export class ProxyApp extends EventEmitter<string> {
 
   private handlePointerEvent = (event: PointerEvent) => {
     this.api.Client.events.publish('client.pointer.event', [{
-      type: event.type,
-      pointerId: event.pointerId,
-      pointerType: event.pointerType,
+      buttons: event.buttons,
+      // 键位
       altKey: event.altKey,
       ctrlKey: event.ctrlKey,
       shiftKey: event.shiftKey,
-      pageX: event.pageX,
-      pageY: event.pageY,
-      clientX: event.clientX,
-      clientY: event.clientX,
-      timeStamp: event.timeStamp
+      // 触发 id
+      device: event.pointerId,
+      // 触发设备类型 
+      kind: event.pointerType, 
+      timeStamp: event.timeStamp,
+      // 事件
+      type: event.type,
+      // 物理坐标
+      x: event.clientX * this.devicePixelRatio,
+      y: event.clientY * this.devicePixelRatio,
     }])
   }
 
   private registerPointerEvents () {
     this.element?.addEventListener('pointerdown', this.handlePointerEvent)
-    this.element?.addEventListener('pointermove', this.handlePointerEvent)
+    // this.element?.addEventListener('pointermove', this.handlePointerEvent)
     this.element?.addEventListener('pointerup', this.handlePointerEvent)
     this.element?.addEventListener('pointercancel', this.handlePointerEvent)
   }

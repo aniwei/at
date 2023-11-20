@@ -5,12 +5,12 @@ import { Matrix4 } from '../basic/matrix4'
 import { PointerEvent } from './events'
 import { PointerDeviceKind } from './pointer'
 import { GestureArenaEntry, GestureArenaMember, GestureDisposition } from './arena'
-import { DeviceGestureSettings } from './gesture'
+import { DeviceGestureSettings } from './device-gesture-settings'
 
-type RecognizerCallback<T> = () => T
+export type RecognizerHandle<T> = () => T
 
 
-export enum DragStartBehavior {
+export enum DragStartBehaviorKind {
   Start,
   Down,
 }
@@ -22,7 +22,7 @@ export enum GestureRecognizerState {
   Defunct,
 }
 
-// 手势识别
+//// => GestureRecognizer
 export abstract class GestureRecognizer extends GestureArenaMember {
   static defaultButtonAcceptBehavior (buttons: number) {
     return true
@@ -87,12 +87,12 @@ export abstract class GestureRecognizer extends GestureArenaMember {
   /**
    * 
    * @param {string} name 
-   * @param {RecognizerCallback<T>} callback 
+   * @param {RecognizerHandle<T>} callback 
    * @returns 
    */
   invokeCallback<T> (
     name: string, 
-    callback: RecognizerCallback<T>
+    callback: RecognizerHandle<T>
   ): T | null {
     invariant(callback !== null)
     let result: T | null = null
@@ -246,7 +246,7 @@ export abstract class OneSequenceGestureRecognizer extends GestureRecognizer {
   }
 }
 
-export abstract class AtPrimaryPointerGestureRecognizer extends AtOneSequenceGestureRecognizer {
+export abstract class PrimaryPointerGestureRecognizer extends OneSequenceGestureRecognizer {
   
 
   // => state
@@ -265,8 +265,8 @@ export abstract class AtPrimaryPointerGestureRecognizer extends AtOneSequenceGes
   }
 
   // => initialPosition
-  private _initialPosition: AtOffsetPair | null = null
-  public set initialPosition (initialPosition: AtOffsetPair | null) {
+  private _initialPosition: OffsetPair | null = null
+  public set initialPosition (initialPosition: OffsetPair | null) {
     this._initialPosition = initialPosition
   } 
   public get initialPosition () {
@@ -412,22 +412,22 @@ export abstract class AtPrimaryPointerGestureRecognizer extends AtOneSequenceGes
 }
 
 
-export class AtOffsetPair {
-  static zero = new AtOffsetPair(Offset.zero, Offset.zero)
+export class OffsetPair {
+  static zero = new OffsetPair(Offset.zero, Offset.zero)
 
   static fromEventPosition (event: PointerEvent) {
-    return new AtOffsetPair(event.localPosition, event.position)
+    return new OffsetPair(event.localPosition, event.position)
   }
 
   static fromEventDelta (event: PointerEvent) {
-    return new AtOffsetPair(event.localDelta, event.delta)
+    return new OffsetPair(event.localDelta, event.delta)
   }
 
   static create (
     local: Offset,
     global: Offset,
   ) {
-    return new AtOffsetPair(local, global)
+    return new OffsetPair(local, global)
   }
 
   public local:  Offset
@@ -441,21 +441,21 @@ export class AtOffsetPair {
     this.global = global
   }
 
-  add (other: AtOffsetPair) {
-    return new AtOffsetPair(
+  add (other: OffsetPair) {
+    return new OffsetPair(
       this.local.add(other.local),
       this.global.add(other.global),
     )
   }
 
-  subtract (other: AtOffsetPair) {
-    return new AtOffsetPair(
-      this.local.subtract(other.local),
-      this.global.subtract(other.global),
+  substract (other: OffsetPair) {
+    return new OffsetPair(
+      this.local.substract(other.local),
+      this.global.substract(other.global),
     )
   }
  
   toString () {
-    return `AtOffsetPari(local: ${this.local}, global: ${this.global})`
+    return `OffsetPair(local: ${this.local}, global: ${this.global})`
   }
 }
