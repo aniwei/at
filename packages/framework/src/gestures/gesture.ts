@@ -128,6 +128,7 @@ export abstract class AtGesture extends AtPointerEventDecomposition {
     AtPointerEventConverter.expand(packet.data, this.devicePixelRatio).map((event) => {
       this.pendingPointerEvents.push(event)
     })
+    
     if (!this.locked) {
       this.flushPointerEventQueue()
     }

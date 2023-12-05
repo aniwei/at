@@ -1,5 +1,4 @@
 //// => Sanitizer
-
 export class Sanitizer {
   static sanitizers: Map<number, Sanitizer> = new Map()
 

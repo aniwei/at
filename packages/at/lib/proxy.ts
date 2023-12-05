@@ -105,6 +105,8 @@ export class ProxyApp extends EventEmitter<string> {
   }
 
   private handlePointerEvent = (event: PointerEvent) => {
+    console.log(event.type, event.button, event.buttons)
+    
     this.api.Client.events.publish('client.pointer.event', [{
       buttons: event.buttons,
       // 键位

@@ -21,6 +21,7 @@ export class PointerEvent {
 
   static decomposite (data: PointerEventPacket) {
     const packets: PointerEventPacket[] = []
+    
     switch (data.kind) {
       case 'pointerdown': {
         const alreadyAdded = this.packets.has(data.device) ?? null

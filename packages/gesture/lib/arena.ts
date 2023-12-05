@@ -14,7 +14,6 @@ export abstract class GestureArenaMember {
   abstract reject (pointer: number): void
 }
 
-
 export interface GestureArenaEntryOptions {
   arena: GestureArenaManager,
   pointer: number,
