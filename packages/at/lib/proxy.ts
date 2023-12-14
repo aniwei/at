@@ -108,6 +108,7 @@ export class ProxyApp extends EventEmitter<string> {
     console.log(event.type, event.button, event.buttons)
     
     this.api.Client.events.publish('client.pointer.event', [{
+      button: event.button,
       buttons: event.buttons,
       // 键位
       altKey: event.altKey,
