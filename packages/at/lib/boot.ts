@@ -1,8 +1,7 @@
 import { fetch } from '@at/basic'
 import { ApiStateKind, ApiTransport } from '@at/api'
 import { AtEngineConfiguration } from '@at/engine'
-import { Offset } from '@at/geometry'
-import { Alignment, InlineSpan, TextPaintingStyle, TextSpan } from '@at/painting'
+import { Alignment, TextPaintingStyle, TextSpan } from '@at/painting'
 import { Image, Stack, ParagraphDelegate, Paragraph } from '@at/layout'
 import { AtInstance } from './at'
 import * as Engine from '@at/engine'
@@ -23,9 +22,9 @@ export class App extends AtInstance {
     return app
   }
 
-  private handlePointerEvents = (event: PointerEvent) => {
-    // this.handlePointerDataPacket(packet)
-  }
+  // private handlePointerEvents = (event: PointerEvent) => {
+  //   // this.handlePointerDataPacket(packet)
+  // }
 
   connect (): Promise<void> {
     return new Promise((resolve) => {
