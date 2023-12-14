@@ -2,7 +2,7 @@ import { invariant } from '@at/utils'
 import { Offset } from '@at/geometry'
 import { Subscribable } from '@at/basic'
 import { HitTestEntry, HitTestResult } from './hit-test'
-import { Packet, Pointer } from './pointer'
+// import { Packet, Pointer } from './pointer'
 import { GestureArenaManager } from './arena'
 
 
@@ -13,7 +13,7 @@ export class Gesture extends Subscribable {
   }
 
   protected locked: boolean = false
-  protected queue: Pointer[] = []
+  // protected queue: Pointer[] = []
   protected hitTests: Map<number, HitTestResult> = new Map()
   protected devicePixelRatio: number
   
@@ -28,13 +28,13 @@ export class Gesture extends Subscribable {
 
   flushPointerEventQueue () {
     invariant(!this.locked)
-    while (this.queue.length > 0) {
-      this.handlePointerEvent(this.queue.shift() as Pointer)
-    }
+    // while (this.queue.length > 0) {
+    //   this.handlePointerEvent(this.queue.shift() as Pointer)
+    // }
   }
 
   // 处理事件
-  handlePointerEventImmediately (pointer: Pointer) {
+  handlePointerEventImmediately (pointer: unknown) {
     let hitTestResult: HitTestResult | null = null
     this.dispatchEvent(pointer, hitTestResult)
   }
@@ -43,13 +43,13 @@ export class Gesture extends Subscribable {
    * 
    * @param {PointerPacket} packet 
    */
-  handlePointerDataPacket (packet: Packet) {
-    Pointer.decomposite(packet).map(pointer => {
-      this.queue.push(pointer)
-    })
-    if (!this.locked) {
-      this.flushPointerEventQueue()
-    }
+  handlePointerDataPacket (packet: unknown) {
+    // Pointer.decomposite(packet).map(pointer => {
+    //   this.queue.push(pointer)
+    // })
+    // if (!this.locked) {
+    //   this.flushPointerEventQueue()
+    // }
   }
 
   hitTest (result: HitTestResult, position: Offset) {
@@ -60,7 +60,7 @@ export class Gesture extends Subscribable {
    * 
    * @param {Pointer} event 
    */
-  handlePointerEvent (pointer: Pointer) {
+  handlePointerEvent (pointer: unknown) {
     invariant(!this.locked)
     this.handlePointerEventImmediately(pointer)
   }
@@ -80,7 +80,7 @@ export class Gesture extends Subscribable {
    * @param {HitTestResult | null} hitTestResult 
    * @returns 
    */
-  dispatchEvent (event: Pointer, hitTestResult: HitTestResult | null) {
+  dispatchEvent (event: unknown, hitTestResult: HitTestResult | null) {
   }
 }
   
