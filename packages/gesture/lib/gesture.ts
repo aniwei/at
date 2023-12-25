@@ -7,6 +7,7 @@ import { GestureArenaManager } from './arena'
 
 
 //// => Gesture
+// 手势
 export class Gesture extends Subscribable {
   static create (devicePixelRatio: number) {
     return new Gesture(devicePixelRatio)
