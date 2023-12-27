@@ -1,4 +1,8 @@
-//// => state
+
+import { invariant } from '@at/utils'
+
+//// => PointerState
+// pointer 状态
 export class PointerState {
   static count: number = 0
 
@@ -14,6 +18,10 @@ export class PointerState {
     this.x = x
     this.y = y
   }
+
+  locationHasChanged (physicalX: number, physicalY: number): boolean {
+    return this.x !== physicalX || this.y !== physicalY
+  }
   
   start () {
     PointerState.count += 1
@@ -21,6 +29,7 @@ export class PointerState {
   }
 }
 
+//// => PointerStateManager
 export class PointerStateManager {
   static create () {
     return new PointerStateManager()
@@ -39,8 +48,16 @@ export class PointerStateManager {
     return state
   }
 
-  exist (device: number) {
+  delete (device: number) {
+    return this.states.delete(device)
+  }
+
+  has (device: number) {
     return this.states.has(device)
+  }
+
+  get (device: number) {
+    return this.states.get(device)
   }
 }
 
@@ -52,9 +69,22 @@ export enum PointerChangeKind {
   Move,
   Up
 }
+
+
 export interface SanitizedDetail {
   change: number,
-  kind: number
+  buttons: number,
+  deltaX: number,
+  deltaY: number,
+  physicalDeltaX: number,
+  physicalDeltaY: number,
+  synthesized: boolean,
+  timeStamp: number
+}
+
+export interface SanitizedResult {
+  change: PointerChangeKind,
+  buttons: number
 }
 
 export class PointerSanitizer {
@@ -68,8 +98,8 @@ export class PointerSanitizer {
     const buttons = event.buttons
     if (this.pressedButtons !== 0 && buttons === 0) {
       this.pressedButtons = 0
-      return {
-        change: PointerChangeKind.Up,
+      return { 
+        change: PointerChangeKind.Up, 
         buttons: this.pressedButtons
       }
     }
@@ -78,7 +108,48 @@ export class PointerSanitizer {
   }
 
   sanitizeDownEvent (event: PointerEvent) {
+    const { button, buttons } = event
 
+    if (this.pressedButtons !== 0) {
+      return this.sanitizeMoveEvent(event)
+    }
+
+    if (buttons === 0 && button > -1) {
+      if (button === 0) {
+        this.pressedButtons = 1
+      } else if (button === 1) {
+        this.pressedButtons = 4
+      } else if (button === 2) {
+        this.pressedButtons = 2
+      }
+    } else {
+      this.pressedButtons = buttons
+    }
+
+    return {
+      change: PointerChangeKind.Down,
+      buttons: this.pressedButtons,
+    }
+  }
+
+  sanitizeMoveEvent (event: PointerEvent) {
+    const buttons = event.buttons
+    
+    if (this.pressedButtons === 0 && buttons !== 0) {
+      return {
+        change: PointerChangeKind.Hover,
+        buttons: this.pressedButtons,
+      }
+    }
+
+    this.pressedButtons = buttons
+
+    return {
+      change: this.pressedButtons === 0
+        ? PointerChangeKind.Hover
+        : PointerChangeKind.Move,
+      buttons: this.pressedButtons,
+    }
   }
 
   sanitizeUpEvent (event: PointerEvent) {
@@ -89,10 +160,10 @@ export class PointerSanitizer {
     this.pressedButtons = event.buttons
 
     return {
-      buttons: this.pressedButtons,
       change: this.pressedButtons === 0 
         ? PointerChangeKind.Up
-        : PointerChangeKind.Move
+        : PointerChangeKind.Move, 
+      buttons: this.pressedButtons
     }
   }
 }
@@ -124,43 +195,83 @@ export class PointerSanitizerManager {
 
 export class PointerEventSanitizer {
   protected devicePixelRatio: number = 2.0
+
   protected states: PointerStateManager = PointerStateManager.create()
   protected sanitizers: PointerSanitizerManager = PointerSanitizerManager.create()
+  
+  protected activeButtons: number = 0
 
   constructor (devicePixelRatio: number) {
     this.devicePixelRatio = devicePixelRatio
   }
 
   sanitize (event: PointerEvent) {
+    const timeStamp = event.timeStamp
+    const buttons = event.buttons
     const device = event.pointerId
     const sanitizer = this.sanitizers.ensure(device)
 
     const physicalX = event.clientX * this.devicePixelRatio
     const physicalY = event.clientY * this.devicePixelRatio
 
+    const details: SanitizedDetail[] = []
+
     switch (event.type) {
       case 'pointerdown': {
+        // 处理右键
         const sanitizedUp = sanitizer.sanitizeMissingMouseUp(event)
-
         if (sanitizedUp !== null) {
+          const state = this.states.get(device) as PointerState
 
+          if (state.locationHasChanged(physicalX, physicalY)) {
+            details.push({
+              
+            })
+          }
+
+          details.push(sanitizedUp.complete())
         }
 
         const sanitizedDown = sanitizer.sanitizeDownEvent(event)
-        const alreadyAdded = this.states.exist(device)  
-        const state = this.states.ensure(
-          device, 
-          physicalX, 
-          physicalY
-        )
-
         
+        const alreadyAdded = this.states.has(device)  
+        const state = this.states.ensure(device, physicalX, physicalY)
+        state.start()
+
+        if (!alreadyAdded) {
+          details.push({
+            timeStamp,
+            device,
+            change: PointerChangeKind.Add,
+            physicalX,
+            physicalY,
+            buttons: sanitizedDown.buttons
+          })
+        }
+
+        if (state.locationHasChanged(physicalX, physicalY)) {
+          sanitizedDown.synthesize()
+        }
+
+        this.activeButtons = buttons
         break
       }
 
       case 'pointermove': {
 
+        this.activeButtons = buttons
+        break
+      }
+
+      case 'pointerup':
+      case 'pointercancel': {
+        const state = this.states.get(device) as PointerState
+        
+        this.states.delete(device)
+        break
       }
     }
+
+    return details
   }
 }
