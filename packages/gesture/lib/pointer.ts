@@ -54,7 +54,8 @@ export class PointerState {
   }
   
   start () {
-    this.device = ++PointerState.count
+    PointerState.count += 1
+    this.device = PointerState.count
   }
 }
 
@@ -66,7 +67,11 @@ export class PointerStates {
 
   public states: Map<number, PointerState> = new Map()
 
-  ensure (device: number, x: number, y: number) {
+  ensure (
+    device: number, 
+    x: number, 
+    y: number
+  ) {
     let state = this.states.get(device) ?? null
 
     if (state === null) {
@@ -463,5 +468,3 @@ export class Pointer {
 
   }
 }
-
-

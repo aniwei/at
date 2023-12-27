@@ -1,53 +1,165 @@
-//// => Sanitizer
-export class Sanitizer {
-  static sanitizers: Map<number, Sanitizer> = new Map()
+//// => state
+export class PointerState {
+  static count: number = 0
 
-  static ensure (device: number) {
-    if (!this.sanitizers.has(device)) {
-      const sanitizer = Sanitizer.create()
-      this.sanitizers.set(device, sanitizer)
-    }
-    
-    return this.sanitizers.get(device) as Sanitizer
+  static create (x: number, y: number) {
+    return new PointerState(x, y)
   }
 
+  public x: number
+  public y: number
+  public device: number | null = null
+
+  constructor (x: number, y: number) {
+    this.x = x
+    this.y = y
+  }
+  
+  start () {
+    PointerState.count += 1
+    this.device = PointerState.count
+  }
+}
+
+export class PointerStateManager {
   static create () {
-    return new Sanitizer()
+    return new PointerStateManager()
+  }
+
+  protected states: Map<number, PointerState> = new Map()
+
+  ensure (device: number, x: number, y: number) {
+    let state = this.states.get(device) ?? null
+
+    if (state === null) {
+      state = PointerState.create(x, y)
+      this.states.set(device, state)
+    }
+
+    return state
+  }
+
+  exist (device: number) {
+    return this.states.has(device)
+  }
+}
+
+export enum PointerChangeKind {
+  Add,
+  Cancel,
+  Down,
+  Hover,
+  Move,
+  Up
+}
+export interface SanitizedDetail {
+  change: number,
+  kind: number
+}
+
+export class PointerSanitizer {
+  static create () {
+    return new PointerSanitizer()
   }
 
   protected pressedButtons: number = 0
 
-  sanitize (type: string, packet: PointerPacket) {
-    switch (type) {
+  sanitizeMissingMouseUp (event: PointerEvent) {
+    const buttons = event.buttons
+    if (this.pressedButtons !== 0 && buttons === 0) {
+      this.pressedButtons = 0
+      return {
+        change: PointerChangeKind.Up,
+        buttons: this.pressedButtons
+      }
+    }
+
+    return null
+  }
+
+  sanitizeDownEvent (event: PointerEvent) {
+
+  }
+
+  sanitizeUpEvent (event: PointerEvent) {
+    if (this.pressedButtons === 0) {
+      return null
+    }
+
+    this.pressedButtons = event.buttons
+
+    return {
+      buttons: this.pressedButtons,
+      change: this.pressedButtons === 0 
+        ? PointerChangeKind.Up
+        : PointerChangeKind.Move
+    }
+  }
+}
+
+export class PointerSanitizerManager {
+  static create () {
+    return new PointerSanitizerManager()
+  }
+
+  protected sanitizers: Map<number, PointerSanitizer> = new Map()
+
+  ensure (device: number) {
+    let sanitizer = this.sanitizers.get(device) ?? null
+
+    if (sanitizer === null) {
+      sanitizer = PointerSanitizer.create()
+      this.sanitizers.set(device, sanitizer)
+    }
+
+    return sanitizer
+  }
+
+  exist (device: number) {
+    return this.sanitizers.has(device)
+  }
+
+
+}
+
+export class PointerEventSanitizer {
+  protected devicePixelRatio: number = 2.0
+  protected states: PointerStateManager = PointerStateManager.create()
+  protected sanitizers: PointerSanitizerManager = PointerSanitizerManager.create()
+
+  constructor (devicePixelRatio: number) {
+    this.devicePixelRatio = devicePixelRatio
+  }
+
+  sanitize (event: PointerEvent) {
+    const device = event.pointerId
+    const sanitizer = this.sanitizers.ensure(device)
+
+    const physicalX = event.clientX * this.devicePixelRatio
+    const physicalY = event.clientY * this.devicePixelRatio
+
+    switch (event.type) {
       case 'pointerdown': {
-        if (this.pressedButtons !== 0) {
-          return this.sanitize('pointermove', packet)
+        const sanitizedUp = sanitizer.sanitizeMissingMouseUp(event)
+
+        if (sanitizedUp !== null) {
+
         }
+
+        const sanitizedDown = sanitizer.sanitizeDownEvent(event)
+        const alreadyAdded = this.states.exist(device)  
+        const state = this.states.ensure(
+          device, 
+          physicalX, 
+          physicalY
+        )
+
+        
         break
       }
 
       case 'pointermove': {
-        const pressedButtons = packet.buttons
-        if (
-          this.pressedButtons === 0 && 
-          pressedButtons !== 0
-        ) {
-          packet.change = PointerChangeKind.Hover
-          packet.buttons = this.pressedButtons
-        } else {
-          this.pressedButtons = pressedButtons
-          packet.change = this.pressedButtons === 0 
-            ? PointerChangeKind.Hover
-            : PointerChangeKind.Move
-        }
 
-        this.pressedButtons = this.pressedButtons
-        break
-      }
-
-      case 'pointerup': {
-
-        break
       }
     }
   }
