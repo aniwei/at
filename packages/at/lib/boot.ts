@@ -3,7 +3,7 @@ import { ApiStateKind, ApiTransport } from '@at/api'
 import { AtEngineConfiguration } from '@at/engine'
 import { Alignment, TextPaintingStyle, TextSpan } from '@at/painting'
 import { Image, Stack, ParagraphDelegate, Paragraph } from '@at/layout'
-import { AtInstance } from './at'
+import { AtInstance } from './kit'
 import * as Engine from '@at/engine'
 
 //// => ConnectionPayload
@@ -21,10 +21,6 @@ export class App extends AtInstance {
     app.start(() => readyHandle(app))
     return app
   }
-
-  // private handlePointerEvents = (event: PointerEvent) => {
-  //   // this.handlePointerDataPacket(packet)
-  // }
 
   connect (): Promise<void> {
     return new Promise((resolve) => {

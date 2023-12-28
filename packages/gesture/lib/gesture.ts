@@ -1,37 +1,29 @@
 import { invariant } from '@at/utils'
 import { Offset } from '@at/geometry'
-import { Subscribable } from '@at/basic'
 import { HitTestEntry, HitTestResult } from './hit-test'
-// import { Packet, Pointer } from './pointer'
+import { SanitizedEvent, PointerEventSanitizer } from './sanitizer'
 import { GestureArenaManager } from './arena'
 
 
 //// => Gesture
 // 手势
-export class Gesture extends Subscribable {
+export class Gesture extends PointerEventSanitizer {
   static create (devicePixelRatio: number) {
     return new Gesture(devicePixelRatio)
   }
 
   protected locked: boolean = false
-  // protected queue: Pointer[] = []
+  protected queue: SanitizedEvent[] = []
   protected hitTests: Map<number, HitTestResult> = new Map()
-  protected devicePixelRatio: number
   
   // public router: PointerRouter = PointerRouter.create()
   public arena: GestureArenaManager = new GestureArenaManager()
 
-  constructor (devicePixelRatio: number) {
-    super()
-
-    this.devicePixelRatio = devicePixelRatio
-  }
-
   flushPointerEventQueue () {
     invariant(!this.locked)
-    // while (this.queue.length > 0) {
-    //   this.handlePointerEvent(this.queue.shift() as Pointer)
-    // }
+    while (this.queue.length > 0) {
+      this.handlePointerEvent(this.queue.shift() as SanitizedEvent)
+    }
   }
 
   // 处理事件
@@ -44,13 +36,14 @@ export class Gesture extends Subscribable {
    * 
    * @param {PointerPacket} packet 
    */
-  handlePointerDataPacket (packet: unknown) {
-    // Pointer.decomposite(packet).map(pointer => {
-    //   this.queue.push(pointer)
-    // })
-    // if (!this.locked) {
-    //   this.flushPointerEventQueue()
-    // }
+  handlePointerDataPacket (event: PointerEvent) {
+    this.sanitize(event).map(event => {
+      this.queue.push(event)
+    })
+
+    if (!this.locked) {
+      this.flushPointerEventQueue()
+    }
   }
 
   hitTest (result: HitTestResult, position: Offset) {

@@ -115,15 +115,15 @@ export class ProxyApp extends EventEmitter<string> {
       ctrlKey: event.ctrlKey,
       shiftKey: event.shiftKey,
       // 触发 id
-      device: event.pointerId,
+      pointerId: event.pointerId,
       // 触发设备类型 
-      kind: event.pointerType, 
+      pointerType: event.pointerType, 
       timeStamp: event.timeStamp,
       // 事件
       type: event.type,
       // 物理坐标
-      x: event.clientX * this.devicePixelRatio,
-      y: event.clientY * this.devicePixelRatio,
+      x: event.clientX,
+      y: event.clientY,
     }])
   }
 
