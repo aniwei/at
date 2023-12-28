@@ -1,7 +1,8 @@
 import { invariant } from '@at/utils'
 import { Offset } from '@at/geometry'
+import { SanitizedEventDispatcher } from './dispatcher'
 import { HitTestEntry, HitTestResult } from './hit-test'
-import { SanitizedEvent, PointerEventSanitizer } from './sanitizer'
+import { PointerChangeKind, PointerEventSanitizer, SanitizedPointerEvent } from './sanitizer'
 import { GestureArenaManager } from './arena'
 
 
@@ -13,30 +14,62 @@ export class Gesture extends PointerEventSanitizer {
   }
 
   protected locked: boolean = false
-  protected queue: SanitizedEvent[] = []
+  protected queue: SanitizedPointerEvent[] = []
   protected hitTests: Map<number, HitTestResult> = new Map()
   
-  // public router: PointerRouter = PointerRouter.create()
   public arena: GestureArenaManager = new GestureArenaManager()
+  public dispatcher: SanitizedEventDispatcher = SanitizedEventDispatcher.create()
 
   flushPointerEventQueue () {
-    invariant(!this.locked)
+    invariant(!this.locked, 'Cannot flush event queue when the gesture was locked.')
     while (this.queue.length > 0) {
-      this.handlePointerEvent(this.queue.shift() as SanitizedEvent)
+      this.handlePointerEvent(this.queue.shift() as SanitizedPointerEvent)
     }
   }
 
   // 处理事件
-  handlePointerEventImmediately (pointer: unknown) {
+  handlePointerEventImmediately (event: SanitizedPointerEvent) {
     let hitTestResult: HitTestResult | null = null
-    this.dispatchEvent(pointer, hitTestResult)
+
+    switch (event.change) {
+      case PointerChangeKind.Down:
+      case PointerChangeKind.Hover: {
+        invariant(!this.hitTests.has(event.id), `Cannot exist event.pointer in hitTests`)
+        hitTestResult = HitTestResult.create()
+        this.hitTest(hitTestResult, event.position)
+
+        if (event.change === PointerChangeKind.Down) {
+          this.hitTests.set(event.id, hitTestResult)
+        }
+
+        break
+      }
+      case PointerChangeKind.Up:
+      case PointerChangeKind.Cancel: {
+        hitTestResult = this.hitTests.get(event.id) ?? null
+        this.hitTests.delete(event.id)
+        break
+      }
+
+      default: {
+        break
+      }
+    }
+
+    if (
+      hitTestResult !== null ||
+      event.change === PointerChangeKind.Add ||
+      event.change === PointerChangeKind.Remove
+    ) {
+      this.dispatchEvent(event,hitTestResult)
+    }
   }
 
   /**
    * 
    * @param {PointerPacket} packet 
    */
-  handlePointerDataPacket (event: PointerEvent) {
+  sanitizePointerEvent (event: PointerEvent) {
     this.sanitize(event).map(event => {
       this.queue.push(event)
     })
@@ -54,7 +87,7 @@ export class Gesture extends PointerEventSanitizer {
    * 
    * @param {Pointer} event 
    */
-  handlePointerEvent (pointer: unknown) {
+  handlePointerEvent (pointer: SanitizedPointerEvent) {
     invariant(!this.locked)
     this.handlePointerEventImmediately(pointer)
   }
@@ -64,8 +97,23 @@ export class Gesture extends PointerEventSanitizer {
    * @param {PointerEvent} event 
    * @param {HitTestEntry} entry 
    */
-  handleEvent (event: PointerEvent, entry: HitTestEntry) {
-   
+  handleEvent (
+    event: SanitizedPointerEvent, 
+    entry: HitTestEntry
+  ) {
+    this.dispatcher.route(event)
+
+    switch (event.change) {
+      case PointerChangeKind.Down: {
+
+        break
+      }
+
+      case PointerChangeKind.Up: {
+
+        break
+      }
+    }
   }
 
   /**
@@ -74,7 +122,25 @@ export class Gesture extends PointerEventSanitizer {
    * @param {HitTestResult | null} hitTestResult 
    * @returns 
    */
-  dispatchEvent (event: unknown, hitTestResult: HitTestResult | null) {
+  dispatchEvent (event: SanitizedPointerEvent, hitTestResult: HitTestResult | null) {
+    invariant(!this.locked, 'Cannot dispatch event when ths gesture was "locked".')
+    
+    if (hitTestResult === null) {
+      try {
+        this.dispatcher.route(event)
+      } catch (error: any) {
+        console.warn(`Caught ProgressEvent with target: ${error.stack}`)
+      }
+    } else {
+      for (const entry of hitTestResult.path) {
+        try {
+          entry.target.handleEvent(event.transformed(entry.transform), entry)
+        } catch (error: any) {
+          console.warn(`Caught ProgressEvent with target: ${error.stack}`)
+        }
+      }
+    }
+
   }
 }
   

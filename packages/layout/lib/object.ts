@@ -10,6 +10,7 @@ import { Constraints } from './constraints'
 import { PaintingContext } from './painting-context'
 import { LayoutError } from './layout-error'
 import { ResizeError } from './resize-error'
+import type { SanitizedPointerEvent } from '@at/gesture'
 
 export type ObjectVisitorHandle = (child: Object) => void
 
@@ -125,10 +126,10 @@ export abstract class Object extends AbstractNode<Object> implements HitTestTarg
   
   /**
    * 事件处理
-   * @param {PointerEvent} event 
+   * @param {SanitizedPointerEvent} event 
    * @param {HitTestEntry} entry 
    */
-  abstract handleEvent(event: PointerEvent, entry: HitTestEntry): void
+  abstract handleEvent(event: SanitizedPointerEvent, entry: HitTestEntry): void
 
   /**
    * 布局

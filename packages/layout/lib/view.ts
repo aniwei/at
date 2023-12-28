@@ -9,6 +9,7 @@ import { Container } from './container'
 import { PaintingContext } from './painting-context'
 import { BoxHitTestResult } from './box-hit-test'
 import { ViewConfiguration } from './view-configuration'
+import type { SanitizedPointerEvent } from '@at/gesture'
 
 
 export type ViewSceneRasterizeHandle = (scene: LayerScene) => void
@@ -80,7 +81,7 @@ export class View extends Container {
     this.configuration = configuration  
   }
 
-  handleEvent (event: PointerEvent, entry: HitTestEntry): void {
+  handleEvent (event: SanitizedPointerEvent, entry: HitTestEntry): void {
     
   }
 

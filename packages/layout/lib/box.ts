@@ -10,6 +10,8 @@ import { Container } from './container'
 import { Constraints } from './constraints'
 import { BoxHitTestEntry, BoxHitTestResult } from './box-hit-test'
 
+import type { SanitizedPointerEvent } from '@at/gesture'
+
 
 export enum IntrinsicDimensionKind { 
   MinWidth, 
@@ -229,7 +231,7 @@ export abstract class Box extends Container {
   }
 
   handleEvent (
-    event: PointerEvent, 
+    event: SanitizedPointerEvent, 
     entry: BoxHitTestEntry
   ) { }
 

@@ -1,5 +1,7 @@
 
 import { invariant } from '@at/utils'
+import { Matrix4, Vector3 } from '@at/math'
+import { Offset } from '@at/geometry'
 
 //// => common 
 export enum PointerChangeKind {
@@ -41,21 +43,42 @@ export function toDeviceKind (type: string) {
 export class PointerState {
   static count: number = 0
 
-  static create (x: number, y: number) {
-    return new PointerState(x, y)
+  static create (x: number, y: number, devicePixelRatio: number = 2.0) {
+    return new PointerState(x, y, devicePixelRatio)
+  }
+
+  // => id
+  protected _id: number | null = null
+  public get id () {
+    invariant(this._id, 'The "id" cannot be null.')
+    return this._id
+  }
+  public set id (id: number) {
+    this._id = id
+  }
+
+  // => physicalX
+  public get physicalX () {
+    return this.x * this.devicePixelRatio
+  }
+
+  // => physicalX
+  public get physicalY () {
+    return this.y * this.devicePixelRatio
   }
 
   public x: number
   public y: number
-  public id: number | null = null
+  public devicePixelRatio: number = 2.0
 
-  constructor (x: number, y: number) {
+  constructor (x: number, y: number, devicePixelRatio: number = 2.0) {
     this.x = x
     this.y = y
+    this.devicePixelRatio = devicePixelRatio
   }
 
-  locationHasChanged (physicalX: number, physicalY: number): boolean {
-    return this.x !== physicalX || this.y !== physicalY
+  locationHasChanged (x: number, y: number): boolean {
+    return this.x !== x || this.y !== y
   }
   
   start () {
@@ -72,11 +95,11 @@ export class PointerStateManager {
 
   protected states: Map<number, PointerState> = new Map()
 
-  ensure (device: number, x: number, y: number) {
+  ensure (device: number, x: number, y: number, devicePixelRatio: number = 2.0) {
     let state = this.states.get(device) ?? null
 
     if (state === null) {
-      state = PointerState.create(x, y)
+      state = PointerState.create(x, y, devicePixelRatio)
       this.states.set(device, state)
     }
 
@@ -98,16 +121,161 @@ export class PointerStateManager {
 
 
 export interface SanitizedEvent {
+  id: number
   kind: PointerDeviceKind,
   device: number,
   change: PointerChangeKind,
   buttons: number,
+  x: number,
+  y: number,
   physicalX: number,
   physicalY: number,
+  deltaX: number,
+  deltaY: number,
   physicalDeltaX: number,
   physicalDeltaY: number,
   synthesized: boolean,
   timeStamp: number
+}
+
+export class SanitizedPointerEvent {
+  static create (event: SanitizedEvent, transform: Matrix4 | null = null) {
+    const position = Offset.create(event.x, event.y)
+    const delta = Offset.create(event.deltaX, event.deltaY)
+    const physicalPosition = Offset.create(event.physicalX, event.physicalY)
+    const physicalDelta = Offset.create(event.physicalDeltaX, event.physicalDeltaY)
+
+    return new SanitizedPointerEvent(
+      event.id,
+      event.timeStamp,
+      event.change,
+      transform,
+      null,
+      event.kind,
+      event.device,
+      position,
+      delta,
+      physicalPosition,
+      physicalDelta,
+      event.synthesized,
+      event.buttons
+    )
+  }
+
+  static removePerspectiveTransform (transform: Matrix4) {
+    const vector = new Vector3(0, 0, 1)
+    
+    const cloned = transform.clone()
+    cloned.column(2, vector)
+    cloned.row(2, vector)
+
+    return cloned
+  }
+
+  static transformPosition (transform: Matrix4 | null = null, position: Offset) {
+    if (transform == null) {
+      return position
+    }
+    const position3 = new Vector3(position.dx, position.dy, 0.0)
+    const transformed3 = transform.perspectiveTransform(position3)
+    return Offset.create(transformed3.x, transformed3.y)
+  }
+
+  // => localPosition
+  public get localPosition () {
+    return this.position
+  }
+
+  // => localDelta
+  public get localDelta () {
+    return this.delta
+  }
+
+  public get localPhysicalPosition () {
+    return this.physicalPosition
+  }
+
+  public get localPhysicalDelta () {
+    return this.physicalDelta
+  }
+
+  public id: number
+  public timeStamp: number
+  public change: PointerChangeKind
+  
+  public kind: PointerDeviceKind
+  public device: number
+  public buttons: number
+
+  public delta: Offset
+  public position: Offset
+  public physicalDelta: Offset
+  public physicalPosition: Offset
+  public transform: Matrix4 | null
+  public origin: SanitizedPointerEvent | null
+  public synthesized: boolean
+
+  constructor (
+    id: number,
+    timeStamp: number,
+    change: PointerChangeKind,
+    transform: Matrix4 | null = null,
+    origin: SanitizedPointerEvent | null = null,
+    kind: PointerDeviceKind = PointerDeviceKind.Touch,
+    device: number = 0,
+    position: Offset = Offset.ZERO,
+    delta: Offset = Offset.ZERO,
+    physicalPosition: Offset,
+    physicalDelta: Offset,
+    synthesized: boolean = false,
+    buttons: number = 0,
+  ) {
+    this.id = id
+    this.timeStamp = timeStamp
+    this.change = change
+    this.transform = transform
+    this.origin = origin
+    this.kind = kind
+    this.device = device
+    this.position = position
+    this.delta = delta
+    this.physicalPosition = physicalPosition
+    this.physicalDelta = physicalDelta
+    this.synthesized = synthesized
+    this.buttons = buttons
+  }
+
+  transformed (transform: Matrix4 | null): SanitizedPointerEvent {
+    if (transform === null || transform.equal(this.transform)) {
+      return this
+    }
+
+    const event = this.origin ?? this
+
+    return SanitizedPointerEvent.create({
+      id: event.id,
+      timeStamp: event.timeStamp,
+      kind: event.kind,
+      device: event.device,
+      change: event.change,
+      buttons: event.buttons,
+      x: event.position.dx,
+      y: event.position.dy,
+      deltaX: event.delta.dx,
+      deltaY: event.delta.dy,
+      physicalDeltaX: event.physicalDelta.dx,
+      physicalDeltaY: event.physicalDelta.dy,
+      physicalX: event.physicalPosition.dx,
+      physicalY: event.physicalPosition.dy,
+      synthesized: event.synthesized
+    }, transform)
+  }
+
+  copyWith (
+
+  ) {
+
+  }
 }
 
 export interface SanitizedDetail {
@@ -244,25 +412,16 @@ export abstract class PointerEventSanitizer {
     physicalY: number = 0.0,
     buttons: number
   ) {
-    const state = this.states.get(device) as PointerState
-    const deltaX = physicalX - state.x
-    const deltaY = physicalY - state.y
-    state.x = physicalX
-    state.y = physicalY
-
-    return {
-      id: state.id,
+    return this.generate(
       timeStamp,
-      physicalX,
-      physicalY,
-      physicalDeltaX: deltaX,
-      physicalDeltaY: deltaY,
-      change,
       kind,
       device,
+      change,
+      physicalX,
+      physicalY,
       buttons,
-      synthesized: true,
-    }
+      true,
+    )
   }
 
   generate (
@@ -270,29 +429,35 @@ export abstract class PointerEventSanitizer {
     kind: PointerDeviceKind,
     device: number,
     change: PointerChangeKind,
-    physicalX: number = 0.0,
-    physicalY: number = 0.0,
-    buttons: number
+    x: number,
+    y: number,
+    buttons: number = 0,
+    synthesized: boolean = false,
   ) {
     invariant(this.states.has(device), 'Cannot generate before the state has not add.')
     const state = this.states.get(device) as PointerState
-    const deltaX = physicalX - state.x
-    const deltaY = physicalY - state.y
-    state.x = physicalX
-    state.y = physicalY
+    const deltaX = x - state.x
+    const deltaY = y - state.y
+    state.x = x
+    state.y = y
 
-    return {
+    return SanitizedPointerEvent.create({
+      id: state.id,
       timeStamp,
-      physicalX,
-      physicalY,
-      physicalDeltaX: deltaX,
-      physicalDeltaY: deltaY,
+      x: state.x,
+      y: state.y,
+      physicalX: state.physicalX,
+      physicalY: state.physicalY,
+      deltaX,
+      deltaY,
+      physicalDeltaX: deltaX * this.devicePixelRatio,
+      physicalDeltaY: deltaY * this.devicePixelRatio,
       change,
       kind,
       device,
       buttons,
-      synthesized: true,
-    }
+      synthesized
+    })
   }
 
   transform (
@@ -305,32 +470,34 @@ export abstract class PointerEventSanitizer {
     const change = sanitized.change
     const buttons = sanitized.buttons
 
-    let physicalX = event.x * this.devicePixelRatio
-    let physicalY = event.y * this.devicePixelRatio
-
-    const events: SanitizedEvent[] = []
+    let x = event.x
+    let y = event.y
+    
+    const events: SanitizedPointerEvent[] = []
 
     switch (change) {
       case PointerChangeKind.Add: {
         invariant(!this.states.has(device), `Cannot add a pointer state which has added.`)
-        const state = this.states.ensure(device, physicalX, physicalY)
-        invariant(!state.locationHasChanged(physicalX, physicalY), `Cannot add a pointer state which has location changed.`)
+        const state = this.states.ensure(device, x, y, this.devicePixelRatio)
+        invariant(!state.locationHasChanged(x, y), `Cannot add a pointer state which has location changed.`)
 
-        events.push(this.generate(
+        const event = this.generate(
           timeStamp,
           kind,
           device,
           change,
-          physicalX,
-          physicalY,
+          state.x,
+          state.y,
           buttons
-        ))
+        )
+
+        events.push(event)
         break
       }
 
       case PointerChangeKind.Hover: {
         const alreadyAdded = this.states.has(device)
-        const state = this.states.ensure(device, physicalX, physicalY)
+        const state = this.states.ensure(device, x, y, this.devicePixelRatio)
         state.start()
         if (!alreadyAdded) {
           events.push(this.synthesize(
@@ -338,8 +505,8 @@ export abstract class PointerEventSanitizer {
             kind,
             device,
             PointerChangeKind.Add,
-            physicalX,
-            physicalY,
+            state.x,
+            state.y,
             buttons
           ))
         }
@@ -349,17 +516,18 @@ export abstract class PointerEventSanitizer {
           kind,
           device,
           change,
-          physicalX,
-          physicalY,
+          state.x,
+          state.y,
           buttons
         ))
+
         this.activeButtons = buttons
         break
       }
 
       case PointerChangeKind.Down: {
         const alreadyAdded = this.states.has(device)
-        const state = this.states.ensure(device, physicalX, physicalY)
+        const state = this.states.ensure(device, x, y, this.devicePixelRatio)
         state.start()
 
         if (!alreadyAdded) {
@@ -368,20 +536,20 @@ export abstract class PointerEventSanitizer {
             kind,
             device,
             PointerChangeKind.Add,
-            physicalX,
-            physicalY,
+            state.x,
+            state.y,
             buttons,
           ))
         }
 
-        if (state.locationHasChanged(physicalX, physicalY)) {
+        if (state.locationHasChanged(x, y)) {
           events.push(this.synthesize(
             timeStamp,
             kind,
             device,
-            PointerChangeKind.Add,
-            physicalX,
-            physicalY,
+            PointerChangeKind.Hover,
+            state.x,
+            state.y,
             buttons
           ))
         }
@@ -390,9 +558,9 @@ export abstract class PointerEventSanitizer {
           timeStamp,
           kind,
           device,
-          PointerChangeKind.Add,
-          physicalX,
-          physicalY,
+          change,
+          state.x,
+          state.y,
           buttons
         ))
         this.activeButtons = buttons
@@ -404,18 +572,18 @@ export abstract class PointerEventSanitizer {
         invariant(this.states.has(device), `Cannot get a pointer state which has not added.`)
         const state = this.states.get(device) as PointerState
         if (change === PointerChangeKind.Cancel) {
-          physicalX = state.x
-          physicalY = state.y
+          x = state.x
+          y = state.y
         }
 
-        if (state.locationHasChanged(physicalX, physicalY)) {
+        if (state.locationHasChanged(x, y)) {
           events.push(this.synthesize(
             timeStamp,
             kind,
             device,
             PointerChangeKind.Move,
-            physicalX,
-            physicalY,
+            state.x,
+            state.y,
             buttons
           ))
         }
@@ -425,8 +593,8 @@ export abstract class PointerEventSanitizer {
           kind,
           device,
           change,
-          physicalX,
-          physicalY,
+          state.x,
+          state.y,
           buttons
         ))
 
@@ -436,8 +604,8 @@ export abstract class PointerEventSanitizer {
             kind,
             device,
             PointerChangeKind.Remove,
-            physicalX,
-            physicalY,
+            state.x,
+            state.y,
             buttons
           ))
         }
@@ -458,11 +626,12 @@ export abstract class PointerEventSanitizer {
           state.y,
           buttons,
         ))
+
         this.states.delete(device)
         break
       }
     }
-    
+
     return events
   }
 
@@ -473,7 +642,7 @@ export abstract class PointerEventSanitizer {
       : event.pointerId
 
     const sanitizer = this.sanitizers.ensure(device)
-    const events: SanitizedEvent[] = []
+    const events: SanitizedPointerEvent[] = []
 
     switch (event.type) {
       case 'pointerdown': {

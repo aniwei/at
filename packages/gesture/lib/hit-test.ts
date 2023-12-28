@@ -1,6 +1,7 @@
 import { invariant } from '@at/utils'
 import { Offset } from '@at/geometry'
 import { Matrix4 } from '@at/math'
+import type { SanitizedPointerEvent } from './sanitizer'
 
 //// => HitTestable
 // 碰撞
@@ -16,13 +17,13 @@ export abstract class HitTestable {
 //// => HitTestDispatcher
 // 碰撞分发
 export abstract class HitTestDispatcher {
-  abstract dispatchEvent (event: PointerEvent, result: HitTestResult): void
+  abstract dispatchEvent (event: SanitizedPointerEvent, result: HitTestResult): void
 }
 
 //// => HitTestTarget
 // 碰撞对象
 export abstract class HitTestTarget {
-  abstract handleEvent (event: PointerEvent, entry: HitTestEntry): void
+  abstract handleEvent (event: SanitizedPointerEvent, entry: HitTestEntry): void
 }
 
 //// => HitTestEntry

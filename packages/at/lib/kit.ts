@@ -163,7 +163,7 @@ export abstract class AtKit extends AtEngine {
         
       })
       // 点击事件
-      api.Client.events.on('client.pointer.event', (event) => this.gesture.handlePointerDataPacket(event))
+      api.Client.events.on('client.pointer.event', (event) => this.gesture.sanitizePointerEvent(event))
     })
   }
 
