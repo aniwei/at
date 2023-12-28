@@ -1,15 +1,21 @@
 import { invariant } from '@at/utils'
 import { ApiService } from '@at/api'
 import { nextTick } from '@at/basic'
-import { PipelineOwner, View, ViewConfiguration } from '@at/layout'
-import { Gesture } from '@at/gesture'
-import { AtManifest } from './manifest'
+import { Offset } from '@at/geometry'
+import { Gesture, HitTestResult } from '@at/gesture'
 import { 
-  AtEngine, 
+  BoxHitTestResult, 
+  PipelineOwner, 
+  View, 
+  ViewConfiguration 
+} from '@at/ui'
+import { 
   AtEngineLifecycleKind,
   AtEngineConfiguration,
   AtEngineEnvironments,
+  AtEngine,
 } from '@at/engine'
+import { AtManifest } from './manifest'
 
 // 运行时环境
 export enum AtKitEnvKind {
@@ -30,7 +36,7 @@ export interface AtKitFactory<T> {
   new (configuration?: AtEngineConfiguration): T
   create (configuration?: AtEngineConfiguration): T
 }
-export abstract class AtKit extends AtEngine {
+export abstract class AtKit extends Gesture {
   // 创建 At 全局对象
   static create <T extends AtKit> (...rests: unknown[]): AtKit
   static create <T extends AtKit> (configuration?: AtEngineConfiguration): AtKit {
@@ -76,16 +82,6 @@ export abstract class AtKit extends AtEngine {
     }
   }
 
-  // => gesture
-  // 手势
-  public _gesture: Gesture | null = null
-  public get gesture () {
-    if (this._gesture === null) {
-      this._gesture = Gesture.create(this.configuration.devicePixelRatio)
-    }
-
-    return this._gesture
-  }
 
   // => view
   public _view: View | null = null
@@ -152,6 +148,11 @@ export abstract class AtKit extends AtEngine {
     }]))
   }
 
+  hitTest (result: HitTestResult, position: Offset) {
+    this.view.hitTest(result as BoxHitTestResult, position)
+    super.hitTest(result, position)
+  }
+
   // 绑定
   bindings (): Promise<void> {
     return Promise.resolve().then(() => {
@@ -163,7 +164,7 @@ export abstract class AtKit extends AtEngine {
         
       })
       // 点击事件
-      api.Client.events.on('client.pointer.event', (event) => this.gesture.sanitizePointerEvent(event))
+      api.Client.events.on('client.pointer.event', (event) => this.sanitizePointerEvent(event))
     })
   }
 
@@ -252,7 +253,6 @@ export abstract class AtInstance extends AtKit {
   
   start (callback: VoidFunction = (() => {})) {
     return this.ensure()
-      .then(() => this.prepare())
       .then(() => callback())
   }
 

@@ -1,5 +1,6 @@
 import { invariant } from '@at/utils'
 import { Offset } from '@at/geometry'
+import { AtEngine, AtEngineConfiguration } from '@at/engine'
 import { SanitizedEventDispatcher } from './dispatcher'
 import { HitTestEntry, HitTestResult } from './hit-test'
 import { PointerChangeKind, PointerEventSanitizer, SanitizedPointerEvent } from './sanitizer'
@@ -8,22 +9,30 @@ import { GestureArenaManager } from './arena'
 
 //// => Gesture
 // 手势
-export class Gesture extends PointerEventSanitizer {
-  static create (devicePixelRatio: number) {
-    return new Gesture(devicePixelRatio)
-  }
-
-  protected locked: boolean = false
-  protected queue: SanitizedPointerEvent[] = []
-  protected hitTests: Map<number, HitTestResult> = new Map()
+export abstract class Gesture extends AtEngine {
+  protected locked: boolean
+  protected hitTests: Map<number, HitTestResult>
+  protected pendingQueue: SanitizedPointerEvent[]
   
-  public arena: GestureArenaManager = new GestureArenaManager()
-  public dispatcher: SanitizedEventDispatcher = SanitizedEventDispatcher.create()
+  protected arena: GestureArenaManager
+  protected sanitizer: PointerEventSanitizer
+  protected dispatcher: SanitizedEventDispatcher
+
+  constructor (configuration: AtEngineConfiguration) {
+    super(configuration)
+
+    this.locked = false
+    this.pendingQueue = []
+    this.hitTests = new Map()
+    this.arena = GestureArenaManager.create()
+    this.dispatcher = SanitizedEventDispatcher.create()
+    this.sanitizer = PointerEventSanitizer.create(this.configuration.devicePixelRatio)
+  }
 
   flushPointerEventQueue () {
     invariant(!this.locked, 'Cannot flush event queue when the gesture was locked.')
-    while (this.queue.length > 0) {
-      this.handlePointerEvent(this.queue.shift() as SanitizedPointerEvent)
+    while (this.pendingQueue.length > 0) {
+      this.handlePointerEvent(this.pendingQueue.shift() as SanitizedPointerEvent)
     }
   }
 
@@ -70,8 +79,8 @@ export class Gesture extends PointerEventSanitizer {
    * @param {PointerPacket} packet 
    */
   sanitizePointerEvent (event: PointerEvent) {
-    this.sanitize(event).map(event => {
-      this.queue.push(event)
+    this.sanitizer.sanitize(event).map(event => {
+      this.pendingQueue.push(event)
     })
 
     if (!this.locked) {

@@ -13,7 +13,11 @@ export default defineConfig({
     rollupOptions: {
       external: [
         '@at/basic',
-        '@at/layout'
+        '@at/engine',
+        '@at/geometry',
+        '@at/math',
+        '@at/utils',
+        '@at/ui'
       ]
     }
   }

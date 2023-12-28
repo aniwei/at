@@ -391,7 +391,11 @@ export class PointerSanitizerManager {
   }
 }
 
-export abstract class PointerEventSanitizer {
+export class PointerEventSanitizer {
+  static create (devicePixelRatio: number) {
+    return new PointerEventSanitizer(devicePixelRatio)
+  }
+
   protected devicePixelRatio: number = 2.0
 
   protected states: PointerStateManager = PointerStateManager.create()

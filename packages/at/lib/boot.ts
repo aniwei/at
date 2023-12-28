@@ -2,7 +2,7 @@ import { fetch } from '@at/basic'
 import { ApiStateKind, ApiTransport } from '@at/api'
 import { AtEngineConfiguration } from '@at/engine'
 import { Alignment, TextPaintingStyle, TextSpan } from '@at/painting'
-import { Image, Stack, ParagraphDelegate, Paragraph } from '@at/layout'
+import { Image, Stack, ParagraphDelegate, Paragraph } from '@at/ui'
 import { AtInstance } from './kit'
 import * as Engine from '@at/engine'
 
@@ -16,9 +16,9 @@ interface ConnectionPayload {
 
 //// => AtBoot
 export class App extends AtInstance {
-  static ready (readyHandle: (instance: App) => void) {
+  static ready (ready: (instance: App) => void) {
     const app = App.create() as App
-    app.start(() => readyHandle(app))
+    app.start(() => ready(app))
     return app
   }
 
