@@ -94,7 +94,7 @@ export abstract class Gesture extends Engine {
    * @param {Offset} position 
    */
   hitTest (result: HitTestResult, position: Offset) {
-    result.add(new HitTestEntry(this))
+    result.add(HitTestEntry.create(this))
   }
 
   /**

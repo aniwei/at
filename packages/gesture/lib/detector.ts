@@ -2,12 +2,14 @@ import { Offset } from '@at/geometry'
 import { HitTestEntry } from './hit-test'
 import { DragStartBehaviorKind } from './recognizer'
 import { TapGestureRecognizer, TapDetail } from './tap'
+import { DragDetail, DragGestureRecognizer } from './drag'
 import { Gesture } from './gesture'
 import { 
   PointerChangeKind, 
   PointerDeviceKind,
   SanitizedPointerEvent 
 } from './sanitizer'
+
 
 export interface GestureEventCallback<T> {
   (detail: T): void
@@ -30,6 +32,9 @@ export interface GestureDetectorOptions {
   onTapUp?: GestureEventCallback<TapDetail> | null,
   onTap?: GestureEventCallback<TapDetail> | null,
   onTapCancel?: GestureEventCallback<TapDetail> | null,
+  onDragStart?: GestureEventCallback<DragDetail> | null,
+  onDragUpdate?: GestureEventCallback<DragDetail> | null,
+  onDragEnd?: GestureEventCallback<DragDetail> | null,
 }
 
 //// => GestureDetector
@@ -92,6 +97,42 @@ export class GestureDetector {
     }
   }
 
+  // => onDragStart
+  protected _onDragStart: GestureEventCallback<DragDetail> | null = null
+  public get onDragStart () {
+    return this._onDragStart
+  }
+  public set onDragStart (onDragStart: GestureEventCallback<DragDetail> | null) {
+    if (this._onDragStart !== onDragStart) {
+      this._onDragStart = onDragStart
+      this.markNeedsCreateDragGestureRecognizer()
+    }
+  }
+
+  // => onDragUpdate
+  protected _onDragUpdate: GestureEventCallback<DragDetail> | null = null
+  public get onDragUpdate () {
+    return this._onDragUpdate
+  }
+  public set onDragUpdate (onDragUpdate: GestureEventCallback<DragDetail> | null) {
+    if (this._onDragUpdate !== onDragUpdate) {
+      this._onDragUpdate = onDragUpdate
+      this.markNeedsCreateDragGestureRecognizer()
+    }
+  }
+
+  // => onDragEnd
+  protected _onDragEnd: GestureEventCallback<DragDetail> | null = null
+  public get onDragEnd () {
+    return this._onDragEnd
+  }
+  public set onDragEnd (onDragEnd: GestureEventCallback<DragDetail> | null) {
+    if (this._onDragEnd !== onDragEnd) {
+      this._onDragEnd = onDragEnd
+      this.markNeedsCreateDragGestureRecognizer()
+    }
+  }
+
   public behavior: HitTestBehavior
   public dragStartBehavior: DragStartBehaviorKind
   public devices: Set<PointerDeviceKind> | null
@@ -100,6 +141,7 @@ export class GestureDetector {
 
   protected gesture: Gesture
   protected tap: TapGestureRecognizer | null = null
+  protected drag: DragGestureRecognizer | null = null
   
   constructor (
     gesture: Gesture,
@@ -131,6 +173,19 @@ export class GestureDetector {
     this.onTapCancel = onTapCancel
   }
 
+  markNeedsCreateDragGestureRecognizer () {
+    if (
+      this.onDragStart !== null ||
+      this.onDragUpdate !== null ||
+      this.onDragEnd !== null 
+    ) {
+      this.drag ??= DragGestureRecognizer.create(this.gesture)
+      this.drag.onStart = this.onDragStart
+      this.drag.onUpdate = this.onDragUpdate
+      this.drag.onEnd = this.onDragEnd
+    }
+  }
+
   markNeedsCreateTapGestureRecognizer () {
     if (
       this.onTapDown !== null ||
@@ -152,6 +207,7 @@ export class GestureDetector {
   handleEvent (event: SanitizedPointerEvent, entry: HitTestEntry) {
     if (event.change === PointerChangeKind.Down) {
       this.tap?.addPointer(event)
+      this.drag?.addPointer(event)
     }
   }
 

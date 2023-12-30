@@ -49,6 +49,9 @@ export abstract class Drag {
 
 // 拖拽手势识别
 export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer {
+  static create (gesture: Gesture): DragGestureRecognizer {
+    return new DragGestureRecognizer(gesture) 
+  }
 
   static defaultBuilder (event: SanitizedPointerEvent): VelocityTracker {
     return VelocityTracker.withKind(event.kind)
@@ -65,7 +68,7 @@ export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer
   public minFlingVelocity: number | null = null
   // 最大速度
   public maxFlingVelocity: number | null = null
-
+  // 
   public acceptedActivePointers: Set<number> = new Set()
 
   public onDown: GestureDragCallback | null = null
@@ -91,12 +94,17 @@ export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer
   protected globalDistanceMoved: number | null = null
 
   constructor (
+    gesture: Gesture,
     behavior: DragStartBehaviorKind = DragStartBehaviorKind.Start,
     velocityTrackerBuilder = DragGestureRecognizer.defaultBuilder,
     devices: Set<PointerDeviceKind> | null = null,
-    allowedButtonsHandle: AllowedButtonsHandle | null
+    allowedButtonsHandle: AllowedButtonsHandle | null = null
   ) {
-    super(devices, allowedButtonsHandle ?? DragGestureRecognizer.defaultButtonAcceptBehavior)
+    super(
+      gesture,
+      devices, 
+      allowedButtonsHandle ?? DragGestureRecognizer.defaultButtonAcceptBehavior
+    )
   
     this.behavior = behavior
     this.velocityTrackerBuilder = velocityTrackerBuilder
@@ -106,6 +114,94 @@ export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer
   abstract getDeltaForDetails (delta: Offset): Offset
   abstract getPrimaryValueFromOffset (value: Offset ): number | null
   abstract hasSufficientGlobalDistanceToAccept(pointerDeviceKind: PointerDeviceKind, deviceTouchSlop: number | null): boolean
+
+  protected checkDown () {
+    if (this.onDown !== null) {
+      invariant(this.position, 'The "Drag.position" cannot be null before call onDown.')
+      const detail = {
+        globalPosition: this.position.global,
+        localPosition: this.position.local,
+      }
+
+      this.onDown(detail)
+    }
+  }
+
+  protected checkStart (timestamp: number, id: number) {
+    if (this.onStart !== null) {
+      invariant(this.position, 'The "Drag.position" cannot be null.')
+      const detail = {
+        sourceTimeStamp: timestamp,
+        globalPosition: this.position.global,
+        localPosition: this.position.local,
+        kind: this.getKindForPointer(id),
+      }
+      this.onStart(detail)
+    }
+  }
+
+  protected checkUpdate (
+    sourceTimeStamp: number | null = null,
+    delta: Offset,
+    primaryDelta: number | null = null,
+    globalPosition: Offset ,
+    localPosition: Offset | null = null,
+  ) {
+    if (this.onUpdate !== null) {
+      const detail = {
+        sourceTimeStamp,
+        delta,
+        primaryDelta,
+        globalPosition,
+        localPosition
+      }
+      this.onUpdate(detail)
+    }
+  }
+
+  protected checkEnd (id: number) {
+    if (this.onEnd !== null) {
+      const tracker = this.trackers.get(id) ?? null
+      invariant(tracker !== null)
+  
+      let detail: DragDetail
+      const estimate = tracker.estimate
+  
+      if (estimate !== null && this.isFlingGesture(estimate, tracker.kind)) {
+        const velocity = Velocity.create(estimate.pixelsPerSecond)
+        velocity.clampMagnitude(
+          this.minFlingVelocity ?? Gesture.env<number>('ATKIT_GESTURE_MIN_FLING_VELOCITY', 50), 
+          this.maxFlingVelocity ?? Gesture.env<number>('ATKIT_GESTURE_MIN_FLING_VELOCITY', 8000), 
+        )
+
+        detail = {
+          velocity,
+          primaryVelocity: this.getPrimaryValueFromOffset(velocity.pixelsPerSecond),
+        }
+      } else {
+        detail = {
+          primaryVelocity: 0.0,
+        }
+      }
+
+      this.onEnd(detail)
+    }
+
+  }
+
+  protected checkCancel () {
+    if (this.onCancel !== null) {
+      this.onCancel()
+    }
+  }
+
+  giveUpPointer (id: number) {
+    this.stopTrackingPointer(id)
+   
+    if (!this.acceptedActivePointers.delete(id)) {
+      this.resolvePointer(id, GestureDispositionKind.Rejected)
+    }
+  }
 
   /**
    * 
@@ -300,94 +396,6 @@ export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer
     this.trackers.clear()
     this.buttons = null
     this.state = DragStateKind.Ready
-  }
-
-  private giveUpPointer (pointer: number) {
-    this.stopTrackingPointer(pointer)
-   
-    if (!this.acceptedActivePointers.delete(pointer)) {
-      this.resolvePointer(pointer, GestureDispositionKind.Rejected)
-    }
-  }
-
-  protected checkDown () {
-    if (this.onDown !== null) {
-      invariant(this.position, 'The "Drag.position" cannot be null before call onDown.')
-      const detail = {
-        globalPosition: this.position.global,
-        localPosition: this.position.local,
-      }
-
-      this.onDown(detail)
-    }
-  }
-
-  protected checkStart (timestamp: number, pointer: number) {
-    if (this.onStart !== null) {
-      invariant(this.position)
-      const details = {
-        sourceTimeStamp: timestamp,
-        globalPosition: this.position.global,
-        localPosition: this.position.local,
-        kind: this.getKindForPointer(pointer),
-      }
-      this.onStart(details)
-    }
-  }
-
-  protected checkUpdate (
-    sourceTimeStamp: number | null = null,
-    delta: Offset,
-    primaryDelta: number | null = null,
-    globalPosition: Offset ,
-    localPosition: Offset | null = null,
-  ) {
-    if (this.onUpdate !== null) {
-      const details = {
-        sourceTimeStamp,
-        delta,
-        primaryDelta,
-        globalPosition,
-        localPosition
-      }
-      this.onUpdate(details)
-    }
-  }
-
-  protected checkEnd (pointer: number) {
-    if (this.onEnd !== null) {
-      const tracker = this.trackers.get(pointer) ?? null
-      invariant(tracker !== null)
-  
-      let details: DragDetail
-      const estimate = tracker.estimate
-  
-      if (estimate !== null && this.isFlingGesture(estimate, tracker.kind)) {
-        const velocity = Velocity.create(estimate.pixelsPerSecond)
-        velocity.clampMagnitude(
-          this.minFlingVelocity ?? Gesture.env<number>('ATKIT_GESTURE_MIN_FLING_VELOCITY', 50), 
-          this.maxFlingVelocity ?? Gesture.env<number>('ATKIT_GESTURE_MIN_FLING_VELOCITY', 8000), 
-        )
-
-        details = {
-          velocity,
-          primaryVelocity: this.getPrimaryValueFromOffset(velocity.pixelsPerSecond),
-        }
-      } else {
-        details = {
-          primaryVelocity: 0.0,
-        }
-      }
-
-      this.onEnd(details)
-    }
-
-  }
-
-  private checkCancel () {
-    if (this.onCancel !== null) {
-      this.onCancel()
-    }
   }
 
   dispose () {

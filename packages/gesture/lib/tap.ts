@@ -7,7 +7,6 @@ import { GestureRecognizerStateKind, PrimaryPointerGestureRecognizer } from './r
 
 import { Gesture } from './gesture'
 
-
 // => common
 export interface TapDetail {
   globalPosition: Offset
