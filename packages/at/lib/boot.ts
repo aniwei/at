@@ -101,6 +101,14 @@ App.ready((instance) => {
         debugger
       }
 
+      image.onTap = () => {
+        debugger
+      }
+
+      stack.onTap = () => {
+        debugger
+      }
+
       instance.view.append(stack)
       instance.flush()
     })

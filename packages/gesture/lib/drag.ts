@@ -2,12 +2,17 @@ import { invariant } from '@at/utils'
 import { Matrix4 } from '@at/math'
 import { Offset } from '@at/geometry'
 import { GestureDispositionKind } from './arena'
-import { PointerDeviceKind, PointerEventButtonKind, SanitizedPointerEvent } from './sanitizer'
-import { Velocity, VelocityEstimate, VelocityTracker } from './velocity'
-import { AllowedButtonsHandle, DragStartBehaviorKind, OffsetPair, OneSequenceGestureRecognizer } from './recognizer'
-import { PointerChangeKind } from './sanitizer'
 import { Gesture } from './gesture'
+import { PointerChangeKind } from './sanitizer'
+import { DeviceGestureSettings } from './device-gesture-settings'
+import { Velocity, VelocityEstimate, VelocityTracker } from './velocity'
+import { PointerDeviceKind, PointerEventButtonKind, SanitizedPointerEvent } from './sanitizer'
+import { AllowedButtonsHandle, OffsetPair, OneSequenceGestureRecognizer } from './recognizer'
 
+export enum DragStartBehaviorKind {
+  Start,
+  Down,
+}
 
 // 拖拽状态枚举
 export enum DragStateKind {
@@ -91,21 +96,38 @@ export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer
   protected globalDistanceMoved: number | null = null
 
   constructor (
+    gesture: Gesture,
     behavior: DragStartBehaviorKind = DragStartBehaviorKind.Start,
     velocityTrackerBuilder = DragGestureRecognizer.defaultBuilder,
     devices: Set<PointerDeviceKind> | null = null,
-    allowedButtonsHandle: AllowedButtonsHandle | null
+    allowedButtonsHandle: AllowedButtonsHandle | null = null
   ) {
-    super(devices, allowedButtonsHandle ?? DragGestureRecognizer.defaultButtonAcceptBehavior)
+    super(
+      gesture, 
+      devices, 
+      allowedButtonsHandle ?? DragGestureRecognizer.defaultButtonAcceptBehavior
+    )
   
     this.behavior = behavior
     this.velocityTrackerBuilder = velocityTrackerBuilder
   } 
 
-  abstract isFlingGesture (estimate: VelocityEstimate, kind: PointerDeviceKind): boolean
-  abstract getDeltaForDetails (delta: Offset): Offset
-  abstract getPrimaryValueFromOffset (value: Offset ): number | null
-  abstract hasSufficientGlobalDistanceToAccept(pointerDeviceKind: PointerDeviceKind, deviceTouchSlop: number | null): boolean
+  isFlingGesture (estimate: VelocityEstimate, kind: PointerDeviceKind): boolean {
+    const minVelocity = this.minFlingVelocity ?? Gesture.env<number>('ATKIT_GESTURE_MIN_FLING_VELOCITY', 50)
+    const minDistance = this.minFlingDistance ?? computeHitSlop(kind, this.settings)
+    return (
+      estimate.pixelsPerSecond.distanceSquared > minVelocity * minVelocity && 
+      estimate.offset.distanceSquared > minDistance * minDistance
+    )
+  }
+  
+  hasSufficientGlobalDistanceToAccept (
+    pointerDeviceKind: PointerDeviceKind, 
+    deviceTouchSlop: number | null
+  ): boolean {
+    invariant(this.globalDistanceMoved !== null)
+    return Math.abs(this.globalDistanceMoved) > computePanSlop(pointerDeviceKind, this.settings)
+  }
 
   /**
    * 
@@ -172,15 +194,15 @@ export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer
 
     if (event.change === PointerChangeKind.Move) {
       if (event.buttons !== this.buttons) {
-        this.giveUpPointer(event.id)
+        this.giveUp(event.id)
         return
       }
 
       if (this.state === DragStateKind.Accepted) {
         this.checkUpdate(
           event.timeStamp,
-          this.getDeltaForDetails(event.localDelta),
-          this.getPrimaryValueFromOffset(event.localDelta),
+          event.localDelta,
+          null,
           event.position,
           event.localPosition,
         )
@@ -189,24 +211,19 @@ export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer
         this.pendingDragOffset = this.pendingDragOffset?.add(OffsetPair.create(event.localDelta, event.delta))
         this.lastPendingEventTimeStamp = event.timeStamp
         this.lastTransform = event.transform
-        const movedLocally = this.getDeltaForDetails(event.localDelta)
+        const movedLocally = event.localDelta
         const localToGlobalTransform = event.transform === null 
           ? null 
           : Matrix4.tryInvert(event.transform)
 
         invariant(this.globalDistanceMoved !== null)
-
-        const value = this.getPrimaryValueFromOffset(movedLocally) ?? 1
-        const sign = value === 0 
-          ? 0 
-          : value > 0 ? 1 : -1
-
+         
         this.globalDistanceMoved += SanitizedPointerEvent.transformDeltaViaPositions(
           event.localPosition,
           null,
           movedLocally,
           localToGlobalTransform,
-        ).distance * sign
+        ).distance
         
         if (this.hasSufficientGlobalDistanceToAccept(event.kind, this.settings?.slop ?? null)) {
           this.resolve(GestureDispositionKind.Accepted)
@@ -218,7 +235,7 @@ export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer
       event.change === PointerChangeKind.Up || 
       event.change === PointerChangeKind.Cancel
     ) {
-      this.giveUpPointer(event.id)
+      this.giveUp(event.id)
     }
   }
 
@@ -242,7 +259,7 @@ export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer
           break
         case DragStartBehaviorKind.Down:
           invariant(delta)
-          localUpdateDelta = this.getDeltaForDetails(delta.local)
+          localUpdateDelta = delta.local
           break
       }
       this.pendingDragOffset = OffsetPair.ZERO
@@ -270,7 +287,7 @@ export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer
         this.checkUpdate(
           timestamp,
           localUpdateDelta,
-          this.getPrimaryValueFromOffset(localUpdateDelta),
+          null,
           correctedPosition.global,
           correctedPosition.local,
         )
@@ -280,7 +297,7 @@ export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer
   }
 
   reject (pointer: number) {
-    this.giveUpPointer(pointer)
+    this.giveUp(pointer)
   }
 
   didStopTrackingLastPointer (pointer: number) {
@@ -297,12 +314,12 @@ export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer
         this.checkEnd(pointer)
         break
     }
-    this.trackers.clear()
     this.buttons = null
+    this.trackers.clear()
     this.state = DragStateKind.Ready
   }
 
-  private giveUpPointer (pointer: number) {
+  private giveUp (pointer: number) {
     this.stopTrackingPointer(pointer)
    
     if (!this.acceptedActivePointers.delete(pointer)) {
@@ -371,7 +388,7 @@ export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer
 
         details = {
           velocity,
-          primaryVelocity: this.getPrimaryValueFromOffset(velocity.pixelsPerSecond),
+          primaryVelocity: null,
         }
       } else {
         details = {
@@ -393,5 +410,30 @@ export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer
   dispose () {
     this.trackers.clear()
     super.dispose()
+  }
+}
+
+
+function computePanSlop (kind: PointerDeviceKind, settings: DeviceGestureSettings | null) {
+  switch (kind) {
+    case PointerDeviceKind.Mouse:
+      return Gesture.env<number>('ATKIT_GESTURE_PRECISE_PAN_SLOP', 2.0)
+    case PointerDeviceKind.Stylus:
+    case PointerDeviceKind.InvertedStylus:
+    case PointerDeviceKind.Unknown:
+    case PointerDeviceKind.Touch:
+      return settings?.slop ?? Gesture.env<number>('ATKIT_GESTURE_PAN_SLOP', Gesture.env<number>('ATKIT_GESTURE_TOUCH_SLOP', 18) * 2)
+  }
+}
+
+export function computeHitSlop (kind: PointerDeviceKind, settings: DeviceGestureSettings | null) {
+  switch (kind) {
+    case PointerDeviceKind.Mouse:
+      return Gesture.env<number>('ATKIT_GESTURE_PRECISE_HIT_SLOP', 1.0)
+    case PointerDeviceKind.Stylus:
+    case PointerDeviceKind.InvertedStylus:
+    case PointerDeviceKind.Unknown:
+    case PointerDeviceKind.Touch:
+      return settings?.slop ?? Gesture.env<number>('ATKIT_GESTURE_TOUCH_SLOP', 18)
   }
 }

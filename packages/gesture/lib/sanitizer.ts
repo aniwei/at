@@ -24,8 +24,8 @@ export enum PointerDeviceKind {
 
 export enum PointerEventButtonKind {
   Primary = 1,
-  Secondary,
-  Tertiary
+  Secondary = 2,
+  Tertiary = 4
 }
 
 export function toDeviceKind (type: string) {

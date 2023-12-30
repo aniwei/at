@@ -23,12 +23,6 @@ export interface RecognizerHandle<T> {
   (): T
 }
 
-
-export enum DragStartBehaviorKind {
-  Start,
-  Down,
-}
-
 // 手势识别状态
 export enum GestureRecognizerStateKind {
   // 就绪

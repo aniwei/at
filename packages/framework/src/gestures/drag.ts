@@ -417,7 +417,7 @@ export class AtPanGestureRecognizer extends AtDragGestureRecognizer {
 
   hasSufficientGlobalDistanceToAccept (pointerDeviceKind: PointerDeviceKind, deviceTouchSlop: number | null = null): boolean {
     invariant(this.globalDistanceMoved !== null)
-    return Math.abs(this.globalDistanceMoved) > computePanSlop(pointerDeviceKind, this.settings)
+    return Math.abs(this.globalDistanceMoved as number) > computePanSlop(pointerDeviceKind, this.settings)
   }
 
   getDeltaForDetails (delta: Offset): Offset {

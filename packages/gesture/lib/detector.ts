@@ -1,6 +1,5 @@
 import { Offset } from '@at/geometry'
 import { HitTestEntry } from './hit-test'
-import { DragStartBehaviorKind } from './recognizer'
 import { TapGestureRecognizer, TapDetail } from './tap'
 import { Gesture } from './gesture'
 import { 
@@ -8,6 +7,7 @@ import {
   PointerDeviceKind,
   SanitizedPointerEvent 
 } from './sanitizer'
+import { DragStartBehaviorKind } from './drag'
 
 export interface GestureEventCallback<T> {
   (detail: T): void
