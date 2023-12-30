@@ -1,7 +1,7 @@
 import { invariant, lerp, listEquals } from '@at/utils'
 import { Color, Equalable } from '@at/basic'
 import { Matrix4 } from '@at/math'
-import { AtEngine, GradientConical, GradientLinear, GradientRadial, GradientSweep, Shader, Skia } from '@at/engine'
+import { Engine, GradientConical, GradientLinear, GradientRadial, GradientSweep, Shader, Skia } from '@at/engine'
 import { Offset, Rect } from '@at/geometry'
 import { Alignment, AlignmentGeometry } from './alignment'
 
@@ -148,7 +148,7 @@ export abstract class Gradient {
     to: Offset ,
     colors: Color[], 
     stops: number[] = [],
-    tileMode: Skia.TileMode = AtEngine.skia.TileMode.Clamp,
+    tileMode: Skia.TileMode = Engine.skia.TileMode.Clamp,
     matrix4: number[] | null = null,
   ) {
     return GradientLinear.create({
@@ -166,7 +166,7 @@ export abstract class Gradient {
     radius: number,
     colors: Color[], 
     stops: number[],
-    tileMode: Skia.TileMode = AtEngine.skia.TileMode.Clamp,
+    tileMode: Skia.TileMode = Engine.skia.TileMode.Clamp,
     matrix4: number[] | null = null,
     focal: Offset | null = null,
     focalRadius: number = 0,
@@ -200,7 +200,7 @@ export abstract class Gradient {
     center: Offset,
     colors: Color[], 
     stops: number[],
-    tileMode: Skia.TileMode = AtEngine.skia.TileMode.Clamp,
+    tileMode: Skia.TileMode = Engine.skia.TileMode.Clamp,
     startAngle: number = 0.0,
     endAngle: number = Math.PI * 2,
     matrix4: number[] | null = null,
@@ -523,7 +523,7 @@ export class RadialGradient extends Gradient {
 
     this.center = center
     this.radius = radius
-    this.tileMode = tileMode ?? AtEngine.skia.TileMode.Clamp
+    this.tileMode = tileMode ?? Engine.skia.TileMode.Clamp
     this.focal = focal
     this.focalRadius = focalRadius
   }

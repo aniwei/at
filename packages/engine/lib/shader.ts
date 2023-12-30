@@ -1,7 +1,7 @@
 import { invariant } from '@at/utils'
 import { Offset, offsetIsValid } from '@at/geometry'
 import { Color } from '@at/basic'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import { Image } from './image'
 import { 
   toColors, 
@@ -79,7 +79,7 @@ export class GradientSweep extends Shader {
     invariant(matrix4 === null,  `The argument "matrix4" cannot be null.`)
     const degrees = 180.0 / Math.PI
 
-    return AtEngine.skia.Shader.MakeSweepGradient(
+    return Engine.skia.Shader.MakeSweepGradient(
       center.dx,
       center.dy,
       toColors(colors),
@@ -199,7 +199,7 @@ export class GradientLinear extends Shader {
     invariant(offsetIsValid(from), `The argument from was invalid.`)
     invariant(offsetIsValid(to), `The argument to was invalid.`)
     
-    return AtEngine.skia.Shader.MakeLinearGradient(
+    return Engine.skia.Shader.MakeLinearGradient(
       from,
       to,
       toColors(colors),
@@ -310,7 +310,7 @@ export class GradientRadial extends Shader {
     stops: number[],
     matrix4: number[] | null = null
   ) {
-    return AtEngine.skia.Shader.MakeRadialGradient(
+    return Engine.skia.Shader.MakeRadialGradient(
       center,
       radius,
       toColors(colors),
@@ -422,7 +422,7 @@ export class GradientConical extends Shader {
     tileMode: Skia.TileMode,
     matrix4: number[] | null
   ) {
-    return AtEngine.skia.Shader.MakeTwoPointConicalGradient(
+    return Engine.skia.Shader.MakeTwoPointConicalGradient(
       focal,
       focalRadius,
       center,
@@ -561,7 +561,7 @@ export class ImageShader extends Shader {
     let shader = this.skia
     
     if (this.cachedQuality !== q || shader === null) {
-      if (q === AtEngine.skia.FilterQualityKind.High) {
+      if (q === Engine.skia.FilterQualityKind.High) {
         shader = this.image.skia.makeShaderCubic(
           this.tileModeX,
           this.tileModeY,
@@ -590,6 +590,6 @@ export class ImageShader extends Shader {
    * @return {Shader}
    */  
   resurrect () {
-    return this.withQuality(this.cachedQuality ?? AtEngine.skia.FilterQualityKind.None)
+    return this.withQuality(this.cachedQuality ?? Engine.skia.FilterQualityKind.None)
   } 
 }

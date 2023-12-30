@@ -11,7 +11,7 @@ import { ColorFilter } from './color-filter'
 import { Picture } from './picture'
 import { Path } from './path'
 import { ImageFilter } from './image-filter'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import { transformRect } from './to'
 
 import * as Skia from './skia'
@@ -33,7 +33,6 @@ export abstract class Layer extends AbstractNode<Layer> {
   // 引用计数
   public count: number = 0
   // 挂载对象
-  public owner: unknown | null = null
   // 节点深度
   public depth: number = 0
   // 节点边界
@@ -545,10 +544,10 @@ export class ClipRectLayer extends ContainerLayer {
 
   constructor (
     clipRect: Rect,
-    clipBehavior: Skia.ClipKind = AtEngine.skia.ClipKind.HardEdge,
+    clipBehavior: Skia.ClipKind = Engine.skia.ClipKind.HardEdge,
   ) {
     super()
-    invariant(clipBehavior !== AtEngine.skia.ClipKind.None)
+    invariant(clipBehavior !== Engine.skia.ClipKind.None)
 
     this.clipRect = clipRect ?? null
     this.clipBehavior = clipBehavior
@@ -570,15 +569,15 @@ export class ClipRectLayer extends ContainerLayer {
     invariant(!this.ignored, `The layer cannot be ignored.`)
 
     context.internal.save()
-    context.internal.clipRect(this.clipRect, AtEngine.skia.ClipOp.Intersect, this.clipBehavior !== AtEngine.skia.ClipKind.HardEdge)
+    context.internal.clipRect(this.clipRect, Engine.skia.ClipOp.Intersect, this.clipBehavior !== Engine.skia.ClipKind.HardEdge)
 
-    if (this.clipBehavior === AtEngine.skia.ClipKind.AntiAliasWithSaveLayer) {
+    if (this.clipBehavior === Engine.skia.ClipKind.AntiAliasWithSaveLayer) {
       context.internal.saveLayer(this.clipRect, null)
     }
 
     this.paintChildren(context)
 
-    if (this.clipBehavior === AtEngine.skia.ClipKind.AntiAliasWithSaveLayer) {
+    if (this.clipBehavior === Engine.skia.ClipKind.AntiAliasWithSaveLayer) {
       context.internal.restore()
     }
 
@@ -601,11 +600,11 @@ export class ClipRRectLayer extends ContainerLayer {
 
   constructor(
     clipRRect: RRect,
-    clipBehavior: Skia.ClipKind = AtEngine.skia.ClipKind.AntiAlias,
+    clipBehavior: Skia.ClipKind = Engine.skia.ClipKind.AntiAlias,
   ) {
     super()
 
-    invariant(clipBehavior !== AtEngine.skia.ClipKind.None)
+    invariant(clipBehavior !== Engine.skia.ClipKind.None)
     
     this.clipRRect = clipRRect ?? null
     this.clipBehavior = clipBehavior
@@ -626,15 +625,15 @@ export class ClipRRectLayer extends ContainerLayer {
     invariant(this.ignored, ``)
 
     context.internal.save()
-    context.internal.clipRRect(this.clipRRect, this.clipBehavior !== AtEngine.skia.ClipKind.HardEdge)
+    context.internal.clipRRect(this.clipRRect, this.clipBehavior !== Engine.skia.ClipKind.HardEdge)
 
-    if (this.clipBehavior === AtEngine.skia.ClipKind.AntiAliasWithSaveLayer) {
+    if (this.clipBehavior === Engine.skia.ClipKind.AntiAliasWithSaveLayer) {
       context.internal.saveLayer(this.bounds, null)
     }
 
     this.paintChildren(context)
 
-    if (this.clipBehavior === AtEngine.skia.ClipKind.AntiAliasWithSaveLayer) {
+    if (this.clipBehavior === Engine.skia.ClipKind.AntiAliasWithSaveLayer) {
       context.internal.restore()
     }
 
@@ -657,10 +656,10 @@ export class ClipPathLayer extends ContainerLayer {
 
   constructor (
     clipPath: Path,
-    clipBehavior: Skia.ClipKind = AtEngine.skia.ClipKind.AntiAlias,
+    clipBehavior: Skia.ClipKind = Engine.skia.ClipKind.AntiAlias,
   ) {
     super()
-    invariant(clipBehavior !== AtEngine.skia.ClipKind.None)
+    invariant(clipBehavior !== Engine.skia.ClipKind.None)
 
     this.clipPath = clipPath
     this.clipBehavior = clipBehavior
@@ -686,14 +685,14 @@ export class ClipPathLayer extends ContainerLayer {
     invariant(!this.ignored, `The layer cannot be ignored.`)
 
     context.internal.save()
-    context.internal.clipPath(this.clipPath, this.clipBehavior !== AtEngine.skia.ClipKind.HardEdge)
+    context.internal.clipPath(this.clipPath, this.clipBehavior !== Engine.skia.ClipKind.HardEdge)
 
-    if (this.clipBehavior === AtEngine.skia.ClipKind.AntiAliasWithSaveLayer) {
+    if (this.clipBehavior === Engine.skia.ClipKind.AntiAliasWithSaveLayer) {
       context.internal.saveLayer(this.bounds, null)
     }
 
     this.paintChildren(context)
-    if (this.clipBehavior === AtEngine.skia.ClipKind.AntiAliasWithSaveLayer) {
+    if (this.clipBehavior === Engine.skia.ClipKind.AntiAliasWithSaveLayer) {
       context.internal.restore()
     }
 
@@ -797,7 +796,7 @@ export class OpacityLayer extends OffsetLayer {
 export class BackdropFilterLayer extends ContainerLayer {
   static create (
     filter: Skia.ImageFilter,
-    blendMode: Skia.BlendMode = AtEngine.skia.BlendMode.SrcOver,
+    blendMode: Skia.BlendMode = Engine.skia.BlendMode.SrcOver,
   ) {
     return super.create(filter, blendMode) as BackdropFilterLayer
   }
@@ -807,7 +806,7 @@ export class BackdropFilterLayer extends ContainerLayer {
 
   constructor (
     filter: ImageFilter,
-    blendMode: Skia.BlendMode = AtEngine.skia.BlendMode.SrcOver,
+    blendMode: Skia.BlendMode = Engine.skia.BlendMode.SrcOver,
   ) {
     super()
     this.filter = filter

@@ -2,7 +2,7 @@ import { invariant } from '@at/utils'
 import { Matrix4 } from '@at/math'
 import { HitTestEntry } from '@at/gesture'
 import { Offset, Rect, Size } from '@at/geometry'
-import { AtEngine, ContainerLayer, LayerScene, TransformLayer } from '@at/engine'
+import { Engine, ContainerLayer, LayerScene, TransformLayer } from '@at/engine'
 import { Object } from './object'
 import { BoxConstraints } from './constraints'
 import { Container } from './container'
@@ -16,7 +16,7 @@ export type ViewSceneRasterizeHandle = (scene: LayerScene) => void
 
 //// => View
 export class View extends Container {
-  static create (instance: AtEngine, configuration: ViewConfiguration) {
+  static create (instance: Engine, configuration: ViewConfiguration) {
     return new View(instance, configuration) as View
   }
 
@@ -67,14 +67,14 @@ export class View extends Container {
     return size
   }
   
-  public instance: AtEngine
+  public instance: Engine
   public rootTransform: Matrix4 | null = null
   public isRepaintBoundary: boolean = true
 
   /**
    * @param configuration 
    */
-  constructor (instance: AtEngine, configuration: ViewConfiguration) {
+  constructor (instance: Engine, configuration: ViewConfiguration) {
     super()
 
     this.instance = instance

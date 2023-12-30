@@ -11,7 +11,7 @@ import {
   TextStyle, 
   FontFeature, 
   TextLeadingDistributionKind, 
-  AtEngine
+  Engine
 } from '@at/engine'
 import { TextOverflowKind } from './text-painter'
 
@@ -509,7 +509,7 @@ export class TextPaintingStyle {
       fontWeight: fontWeight ?? this.fontWeight,
       fontStyle: fontStyle ?? this.fontStyle,
       fontFamily: fontFamily ?? this.fontFamily,
-      fontSize: (fontSize ?? this.fontSize ?? AtEngine.env<number>('ATKIT_FONT_SIZE', 12)) * textScaleFactor,
+      fontSize: (fontSize ?? this.fontSize ?? Engine.env<number>('ATKIT_FONT_SIZE', 12)) * textScaleFactor,
       maxLines: maxLines,
       ellipsis: ellipsis,
       height: height ?? this.height,

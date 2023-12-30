@@ -1,7 +1,7 @@
 import { invariant } from '@at/utils'
 import { Color } from '@at/basic'
 import { Paint } from './paint'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import { ParagraphCommand } from './paragraph-command'
 import { ParagraphPlaceholder } from './paragraph-placeholder'
 import { ParagraphStyle } from './paragraph-style'
@@ -17,9 +17,9 @@ export class ParagraphBuilder extends Skia.ManagedSkiaRef<Skia.ParagraphBuilder>
 
   static resurrect<T extends Skia.SkiaRef>(style: ParagraphStyle): Skia.ParagraphBuilder {
     invariant(style.skia)
-    const skia = AtEngine.skia.ParagraphBuilder.MakeFromFontProvider(
+    const skia = Engine.skia.ParagraphBuilder.MakeFromFontProvider(
       style.skia,
-      AtEngine.fonts.provider as Skia.TypefaceFontProvider,
+      Engine.fonts.provider as Skia.TypefaceFontProvider,
     ) 
 
     return skia
@@ -99,7 +99,7 @@ export class ParagraphBuilder extends Skia.ManagedSkiaRef<Skia.ParagraphBuilder>
       height: height * scale,
       alignment: alignment,
       offset: (baselineOffset ?? height) * scale,
-      baseline: baseline ?? AtEngine.skia.TextBaseline.Alphabetic,
+      baseline: baseline ?? Engine.skia.TextBaseline.Alphabetic,
     })
 
     this.commands.push(ParagraphCommand.placeholder(placeholder))

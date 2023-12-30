@@ -1,24 +1,35 @@
 import { invariant } from '@at/utils'
 import { Offset } from '@at/geometry'
-import { AtEngine, AtEngineConfiguration } from '@at/engine'
+import { Engine, EngineConfiguration, EngineEnvironments } from '@at/engine'
 import { SanitizedEventDispatcher } from './dispatcher'
 import { HitTestEntry, HitTestResult } from './hit-test'
 import { PointerChangeKind, PointerEventSanitizer, SanitizedPointerEvent } from './sanitizer'
 import { GestureArenaManager } from './arena'
 
 
+export interface Gesture extends EngineEnvironments {
+  ATKIT_GESTURE_TOUCH_SLOP: number,
+  ATKIT_GESTURE_PRESS_TIMEOUT: number,
+  ATKIT_GESTURE_MIN_FLING_VELOCITY: number,
+  ATKIT_GESTURE_MAX_FLING_VELOCITY: number,
+  ATKIT_GESTURE_MOUSE_SCROLL_TO_SCALE_FACTOR: number,
+  ATKIT_GESTURE_TRACK_SCROLL_TO_SCALE_FACTOR: Offset
+}
+
+
 //// => Gesture
 // 手势
-export abstract class Gesture extends AtEngine {
+export abstract class Gesture extends Engine {
+  public arena: GestureArenaManager
+  public dispatcher: SanitizedEventDispatcher
+  
   protected locked: boolean
   protected hitTests: Map<number, HitTestResult>
   protected pendingQueue: SanitizedPointerEvent[]
   
-  protected arena: GestureArenaManager
   protected sanitizer: PointerEventSanitizer
-  protected dispatcher: SanitizedEventDispatcher
 
-  constructor (configuration: AtEngineConfiguration) {
+  constructor (configuration: EngineConfiguration) {
     super(configuration)
 
     this.locked = false
@@ -36,7 +47,10 @@ export abstract class Gesture extends AtEngine {
     }
   }
 
-  // 处理事件
+  /**
+   * 
+   * @param {SanitizedPointerEvent} event 
+   */
   handlePointerEventImmediately (event: SanitizedPointerEvent) {
     let hitTestResult: HitTestResult | null = null
 
@@ -76,7 +90,16 @@ export abstract class Gesture extends AtEngine {
 
   /**
    * 
-   * @param {PointerPacket} packet 
+   * @param {HitTestResult} result 
+   * @param {Offset} position 
+   */
+  hitTest (result: HitTestResult, position: Offset) {
+    result.add(new HitTestEntry(this))
+  }
+
+  /**
+   * 
+   * @param {PointerEvent} event 
    */
   sanitizePointerEvent (event: PointerEvent) {
     this.sanitizer.sanitize(event).map(event => {
@@ -88,16 +111,12 @@ export abstract class Gesture extends AtEngine {
     }
   }
 
-  hitTest (result: HitTestResult, position: Offset) {
-    result.add(new HitTestEntry(this))
-  }
-
   /**
    * 
    * @param {Pointer} event 
    */
   handlePointerEvent (pointer: SanitizedPointerEvent) {
-    invariant(!this.locked)
+    invariant(!this.locked, 'Cannot handle pointer event when "Gesture" was locked.')
     this.handlePointerEventImmediately(pointer)
   }
 
@@ -114,12 +133,12 @@ export abstract class Gesture extends AtEngine {
 
     switch (event.change) {
       case PointerChangeKind.Down: {
-
+        this.arena.close(event.id)
         break
       }
 
       case PointerChangeKind.Up: {
-
+        this.arena.sweep(event.id)
         break
       }
     }
@@ -131,7 +150,10 @@ export abstract class Gesture extends AtEngine {
    * @param {HitTestResult | null} hitTestResult 
    * @returns 
    */
-  dispatchEvent (event: SanitizedPointerEvent, hitTestResult: HitTestResult | null) {
+  dispatchEvent (
+    event: SanitizedPointerEvent, 
+    hitTestResult: HitTestResult | null
+  ) {
     invariant(!this.locked, 'Cannot dispatch event when ths gesture was "locked".')
     
     if (hitTestResult === null) {

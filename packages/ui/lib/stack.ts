@@ -1,6 +1,6 @@
 import { invariant } from '@at/utils'
 import { Offset, Size } from '@at/geometry'
-import { AtEngine, ClipRectLayer, LayerRef } from '@at/engine'
+import { Engine, ClipRectLayer, LayerRef } from '@at/engine'
 import { Skia } from '@at/engine'
 import { 
   Alignment, 
@@ -76,7 +76,7 @@ export class Stack extends Box {
     } else if (child.right !== null) {
       x = size.width - child.right - child.size.width
     } else {
-      const s = size.substract(child.size)
+      const s = size.subtract(child.size)
       x = alignment.alongOffset(Offset.create(s.width, s.height)).dx
     }
 
@@ -90,7 +90,7 @@ export class Stack extends Box {
     } else if (child.bottom !== null) {
       y = size.height - child.bottom - child.size.height
     } else {
-      const s = size.substract(child.size)
+      const s = size.subtract(child.size)
       y = alignment.alongOffset(Offset.create(s.width, s.height)).dy
     }
 
@@ -236,7 +236,7 @@ export class Stack extends Box {
   }
 
   // => clipBehavior
-  private _clipBehavior: Skia.ClipKind = AtEngine.skia.ClipKind.HardEdge
+  private _clipBehavior: Skia.ClipKind = Engine.skia.ClipKind.HardEdge
   public get clipBehavior () {
     return this._clipBehavior
   }
@@ -283,9 +283,9 @@ export class Stack extends Box {
   constructor (
     children: Box[] = [],
     alignment: AlignmentDirectional = AlignmentDirectional.TOP_START,
-    textDirection: Skia.TextDirection = AtEngine.skia.TextDirection.LTR,
+    textDirection: Skia.TextDirection = Engine.skia.TextDirection.LTR,
     fit: StackFitKind = StackFitKind.Loose,
-    clipBehavior: Skia.ClipKind = AtEngine.skia.ClipKind.HardEdge,
+    clipBehavior: Skia.ClipKind = Engine.skia.ClipKind.HardEdge,
     ...rests: unknown[]
   ) {
     super(...rests)
@@ -417,7 +417,7 @@ export class Stack extends Box {
         this.overflowed = Stack.layoutPositionedChild(child, this.size, this.resolvedAlignment) || this.overflowed
       } else {
         invariant(child.size, `The "Box.size" cannot be null.`)
-        child.offset = this.resolvedAlignment.alongOffset(this.size.substract(child.size) as unknown as Offset)
+        child.offset = this.resolvedAlignment.alongOffset(this.size.subtract(child.size) as unknown as Offset)
       }
 
       child = child.nextSibling as Box
@@ -439,7 +439,7 @@ export class Stack extends Box {
    */
   paint (context: PaintingContext, offset: Offset) {
     invariant(this.size, `The "Box.size" cannot be null.`)
-    if (this.clipBehavior !== AtEngine.skia.ClipKind.None && this.overflowed) {
+    if (this.clipBehavior !== Engine.skia.ClipKind.None && this.overflowed) {
       this.clipRectLayer.layer = context.pushClipRect(
         this.needsCompositing,
         this.offset,

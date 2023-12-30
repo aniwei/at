@@ -1,7 +1,7 @@
 import { UnimplementedError, lerp } from '@at/utils'
 import { Color } from '@at/basic'
 import { Offset } from '@at/geometry'
-import { AtEngine, MaskFilter, Paint, Skia } from '@at/engine'
+import { Engine, MaskFilter, Paint, Skia } from '@at/engine'
 import { ShapeShadow, ShapeShadows } from './shadow'
 
 export type BoxShadowOptions = {
@@ -53,7 +53,7 @@ export class BoxShadow extends ShapeShadow {
       Offset.lerp(a.offset, b.offset, t) as Offset,
       lerp(a.blurRadius, b.blurRadius, t),
       lerp(a.spreadRadius, b.spreadRadius, t),
-      a.blurStyle === AtEngine.skia.BlurStyle.Normal 
+      a.blurStyle === Engine.skia.BlurStyle.Normal 
         ? b.blurStyle 
         : a.blurStyle
     )
@@ -98,7 +98,7 @@ export class BoxShadow extends ShapeShadow {
     offset: Offset = Offset.ZERO,
     blurRadius: number = 0,
     spreadRadius: number = 0,
-    blurStyle: Skia.BlurStyle = AtEngine.skia.BlurStyle.Normal,
+    blurStyle: Skia.BlurStyle = Engine.skia.BlurStyle.Normal,
   ) {
     super(color, offset, blurRadius)
 

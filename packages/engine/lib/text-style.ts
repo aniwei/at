@@ -2,7 +2,7 @@ import { Color } from '@at/basic'
 import { invariant } from '@at/utils'
 import { Shadow } from './shadow'
 import { Paint } from './paint'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import { FontFeature } from './font-feature'
 import { TextDecoration } from './text-decoration'
 
@@ -80,7 +80,7 @@ export class TextStyle extends Skia.ManagedSkiaRef<Skia.TextStyle> {
     foreground: Paint | null = null,
     shadows: Shadow[] | null = null
   ): Skia.TextStyle {
-    return new AtEngine.skia.TextStyle({
+    return new Engine.skia.TextStyle({
       fontFamilies: fontFamily ? [fontFamily] : undefined,
       backgroundColor: background ? background.color.fresh : undefined,
       color: color ? color.fresh : undefined,

@@ -281,14 +281,14 @@ export class Vector4 extends Array<number> {
   }
 
   relativeError (correct: Vector4) {
-    this.substract(correct)
+    this.subtract(correct)
     const correctNorm = correct.length
     const diffNorm = this.length
     return diffNorm / correctNorm
   }
 
   absoluteError (correct: Vector4) {
-    this.substract(correct)
+    this.subtract(correct)
     return this.length
   }
 
@@ -309,7 +309,7 @@ export class Vector4 extends Array<number> {
     this[3] = this[3] + arg[3] * factor
   }
 
-  substract (arg: Vector4) {
+  subtract (arg: Vector4) {
     this[0] = this[0] - arg[0]
     this[1] = this[1] - arg[1]
     this[2] = this[2] - arg[2]

@@ -1,6 +1,6 @@
 import { Color } from '@at/basic'
 import { invariant } from '@at/utils'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import { Shader } from './shader'
 import { ImageFilter } from './image-filter'
 import { MaskFilter } from './mask-filter'
@@ -93,7 +93,7 @@ export class Stroke extends PaintRefBox {
   }
 
   // => cap
-  protected _cap: Skia.StrokeCap = AtEngine.skia.StrokeCap.Butt
+  protected _cap: Skia.StrokeCap = Engine.skia.StrokeCap.Butt
   public get cap () {
     return this._cap
   }
@@ -114,7 +114,7 @@ export class Stroke extends PaintRefBox {
       this.skia.setStrokeJoin(join)
     }
   }
-  protected _join: Skia.StrokeJoin = AtEngine.skia.StrokeJoin.Miter
+  protected _join: Skia.StrokeJoin = Engine.skia.StrokeJoin.Miter
 
   constructor (...rests: unknown[])
   constructor (ref: Skia.Paint)
@@ -213,7 +213,7 @@ export class Filter extends PaintRefBox {
   }
 
   // => filter quality
-  protected _quality: Skia.FilterQualityKind = AtEngine.skia.FilterQualityKind.None
+  protected _quality: Skia.FilterQualityKind = Engine.skia.FilterQualityKind.None
   public get quality () {
     return this._quality
   }
@@ -242,11 +242,11 @@ export class Filter extends PaintRefBox {
 //// => Paint
 export class Paint extends PaintRefBox {
   static create () {
-    return super.create(new AtEngine.skia.Paint()) as Paint
+    return super.create(new Engine.skia.Paint()) as Paint
   }
 
   static resurrect (): Skia.Paint {
-    const paint = new AtEngine.skia.Paint()
+    const paint = new Engine.skia.Paint()
     return paint
   }
 
@@ -272,7 +272,7 @@ export class Paint extends PaintRefBox {
   }
 
   // => blendMode
-  protected _blendMode: Skia.BlendMode = AtEngine.skia.BlendMode.SrcOver
+  protected _blendMode: Skia.BlendMode = Engine.skia.BlendMode.SrcOver
   public get blendMode () {
     return this._blendMode
   }
@@ -285,7 +285,7 @@ export class Paint extends PaintRefBox {
 
   // => style
   // 画笔样式
-  protected _style: Skia.PaintStyle = AtEngine.skia.PaintStyle.Fill
+  protected _style: Skia.PaintStyle = Engine.skia.PaintStyle.Fill
   public get style () {
     return this._style
   }
@@ -338,7 +338,7 @@ export class Paint extends PaintRefBox {
    * @return {AtPaint}
    */  
   constructor () {
-    super(new AtEngine.skia.Paint())
+    super(new Engine.skia.Paint())
 
     this.skia.setAntiAlias(this.isAntiAlias)
     this.skia.setColorInt(this.color.value)

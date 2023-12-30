@@ -1,5 +1,5 @@
 import { invariant, listEquals } from '@at/utils'
-import { Skia, ParagraphBuilder, TextPosition, AtEngine } from '@at/engine'
+import { Skia, ParagraphBuilder, TextPosition, Engine } from '@at/engine'
 import { PlaceholderDimensions } from './text-painter'
 import { TextPaintingStyle } from './text-style'
 import { 
@@ -114,11 +114,11 @@ export class TextSpan extends InlineSpan {
 
     if (
       offset.value === targetOffset && 
-      affinity === AtEngine.skia.Affinity.Downstream ||
+      affinity === Engine.skia.Affinity.Downstream ||
       offset.value < targetOffset && 
       targetOffset < endOffset ||
       endOffset === targetOffset && 
-      affinity === AtEngine.skia.Affinity.Upstream
+      affinity === Engine.skia.Affinity.Upstream
     ) {
       return this
     }

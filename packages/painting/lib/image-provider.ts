@@ -2,7 +2,7 @@ import { invariant } from '@at/utils'
 import { Equalable } from '@at/basic'
 import { Size } from '@at/geometry'
 import { AssetBundle } from '@at/asset'
-import { AtEngine, Skia, AnimatedImage } from '@at/engine'
+import { Engine, Skia, AnimatedImage } from '@at/engine'
 import { Painting } from './painting'
 import { ImageCacheStatus } from './image-cache'
 import { 
@@ -60,7 +60,7 @@ export class ImageConfiguration extends Equalable<ImageConfiguration> {
   constructor (
     bundle: AssetBundle | null = null,
     devicePixelRatio: number | null = 2.0,
-    textDirection: Skia.TextDirection = AtEngine.skia.TextDirection.LTR,
+    textDirection: Skia.TextDirection = Engine.skia.TextDirection.LTR,
     size: Size | null = null,
   ) {
     super()
@@ -80,7 +80,7 @@ export class ImageConfiguration extends Equalable<ImageConfiguration> {
   copyWith (
     bundle: AssetBundle | null = null,
     devicePixelRatio: number = 2.0,
-    textDirection: Skia.TextDirection = AtEngine.skia.TextDirection.LTR,
+    textDirection: Skia.TextDirection = Engine.skia.TextDirection.LTR,
     size: Size | null = null,
   ): ImageConfiguration  {
     return ImageConfiguration.create({
@@ -183,7 +183,7 @@ export abstract class ImageProvider<T extends ImageProviderKey = ImageProviderKe
     if (stream.box !== null) {
       Painting.cached.images.putIfAbsent(key, () => stream.box as ImageStreamRefBox)
     } else {
-      const box = Painting.cached.images.putIfAbsent(key, () => this.load(key, AtEngine.instantiateImageCodec))
+      const box = Painting.cached.images.putIfAbsent(key, () => this.load(key, Engine.instantiateImageCodec))
       if (box !== null) {
         stream.box = box
       }
@@ -318,7 +318,7 @@ export class NetworkImage extends ImageProvider<NetworkImageKey> {
    * @return
    */
   loadAsync (key: NetworkImage, decode: ImageDecodeCallback, chunks: ImageChunk[]) {
-    return AtEngine.instantiateImageCodec(key.url)
+    return Engine.instantiateImageCodec(key.url)
   }
 
   /**

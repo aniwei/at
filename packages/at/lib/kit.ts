@@ -10,10 +10,10 @@ import {
   ViewConfiguration 
 } from '@at/ui'
 import { 
-  AtEngineLifecycleKind,
-  AtEngineConfiguration,
-  AtEngineEnvironments,
-  AtEngine,
+  EngineLifecycleKind,
+  EngineConfiguration,
+  EngineEnvironments,
+  Engine,
 } from '@at/engine'
 import { AtManifest } from './manifest'
 
@@ -24,7 +24,7 @@ export enum AtKitEnvKind {
   Production = 'producation'
 }
 
-export interface AtKitEnvironments extends AtEngineEnvironments {
+export interface AtKitEnvironments extends EngineEnvironments {
   ATKIT_ENV: AtKitEnvKind,
   ATKIT_WIDTH: number,
   ATKIT_HEIGHT: number,
@@ -33,13 +33,13 @@ export interface AtKitEnvironments extends AtEngineEnvironments {
 
 //// => AtKit
 export interface AtKitFactory<T> {
-  new (configuration?: AtEngineConfiguration): T
-  create (configuration?: AtEngineConfiguration): T
+  new (configuration?: EngineConfiguration): T
+  create (configuration?: EngineConfiguration): T
 }
 export abstract class AtKit extends Gesture {
   // 创建 At 全局对象
   static create <T extends AtKit> (...rests: unknown[]): AtKit
-  static create <T extends AtKit> (configuration?: AtEngineConfiguration): AtKit {
+  static create <T extends AtKit> (configuration?: EngineConfiguration): AtKit {
     const AtKitFactory = this as unknown as AtKitFactory<T>
     return new AtKitFactory(configuration) as AtKit
   }
@@ -72,7 +72,7 @@ export abstract class AtKit extends Gesture {
   public get state () {
     return super.state
   }
-  public set state (state: AtEngineLifecycleKind) {
+  public set state (state: EngineLifecycleKind) {
     if (super.state !== state) {
       nextTick(() => this.api.Engine.events.publish('runtime.lifecycle.change',[{
         state: state
@@ -112,7 +112,7 @@ export abstract class AtKit extends Gesture {
   public api: ApiService = ApiService.create()
   public environments: AtKitEnvironments
 
-  constructor (configuration?: AtEngineConfiguration) {
+  constructor (configuration?: EngineConfiguration) {
     super({
       width: configuration?.width ?? 800,
       height: configuration?.height ?? 800,
@@ -141,8 +141,8 @@ export abstract class AtKit extends Gesture {
       return Promise.all(fonts.map(font => {
         return this.load(font.dir)
           .then(res => res.arrayBuffer())
-          .then(data => AtEngine.fonts.register(data, font.family))
-      })).then(() => AtEngine.fonts.ensure())
+          .then(data => Engine.fonts.register(data, font.family))
+      })).then(() => Engine.fonts.ensure())
     }).then(() => this.api.Engine.events.publish('resource.fonts.loader.change', [{
       state: 'loaded'
     }]))
@@ -197,8 +197,8 @@ export abstract class AtKit extends Gesture {
       })
     })
     .then(() => this.prepare())
-    .then(() => this.state = AtEngineLifecycleKind.Ready)
-    .then(() => AtEngine.skia)
+    .then(() => this.state = EngineLifecycleKind.Ready)
+    .then(() => Engine.skia)
   }
 
   flush () {
@@ -213,7 +213,7 @@ export abstract class AtKit extends Gesture {
 
   dispose () {
     this.rasterizer.dispose()
-    this.state = AtEngineLifecycleKind.Destory
+    this.state = EngineLifecycleKind.Destory
   }
 }
 
@@ -228,11 +228,11 @@ export enum AssetsStateKind {
 //// => AtInstance
 export interface AtInstanceFactory<T> {
   new (...rests: unknown[]): T
-  create <T extends AtInstance> (configuration?: AtEngineConfiguration): T
+  create <T extends AtInstance> (configuration?: EngineConfiguration): T
 } 
 export abstract class AtInstance extends AtKit {
   static create <T extends AtInstance> (...rests: unknown[]): AtInstance
-  static create <T extends AtInstance> (configuration?: AtEngineConfiguration): AtInstance {
+  static create <T extends AtInstance> (configuration?: EngineConfiguration): AtInstance {
     const AtKitFactory = this as unknown as AtInstanceFactory<T>
     return new AtKitFactory(configuration) as AtInstance
   }

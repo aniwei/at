@@ -195,7 +195,7 @@ export class Size extends Point {
      * @param {Size | Offset | null} size 
      * @returns 
      */
-    substract (size: Size): Size {
+    subtract (size: Size): Size {
       return new Size(
         this.width - size.width, 
         this.height - size.width

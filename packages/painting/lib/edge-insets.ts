@@ -1,7 +1,7 @@
 import { invariant, clamp, lerp } from '@at/utils'
 import { Padding } from './basic'
 import { Offset, Rect, Size } from '@at/geometry'
-import { AtEngine, Skia } from '@at/engine'
+import { Engine, Skia } from '@at/engine'
 
 const POSITIVE_INFINITY = Number.POSITIVE_INFINITY
 
@@ -114,7 +114,7 @@ export abstract class EdgeInsetsGeometry {
   }
 
   abstract add (other: EdgeInsetsGeometry): EdgeInsetsGeometry
-  abstract substract (other: EdgeInsetsGeometry): EdgeInsetsGeometry
+  abstract subtract (other: EdgeInsetsGeometry): EdgeInsetsGeometry
   abstract inverse (): EdgeInsetsGeometry
   abstract multiply (other: number): EdgeInsetsGeometry
   abstract divide (other: number): EdgeInsetsGeometry
@@ -125,9 +125,9 @@ export abstract class EdgeInsetsGeometry {
     invariant(axis !== null)
 
     switch (axis) {
-      case AtEngine.skia.AxisKind.Horizontal:
+      case Engine.skia.AxisKind.Horizontal:
         return this.horizontal
-      case AtEngine.skia.AxisKind.Vertical:
+      case Engine.skia.AxisKind.Vertical:
         return this.vertical
     }
   }
@@ -355,7 +355,7 @@ export class EdgeInsets extends EdgeInsetsGeometry {
     )
   }
 
-  substract (other: EdgeInsets) {
+  subtract (other: EdgeInsets) {
     return EdgeInsets.fromLTRB(
       this.left - other.left,
       this.top - other.top,
@@ -536,7 +536,7 @@ export class EdgeInsetsDirectional extends EdgeInsetsGeometry {
     )
   }
 
-  substract (other: EdgeInsetsDirectional): EdgeInsetsDirectional {
+  subtract (other: EdgeInsetsDirectional): EdgeInsetsDirectional {
     return EdgeInsetsDirectional.fromSTEB(
       -this.start - other.start,
       -this.top - other.top,
@@ -589,7 +589,7 @@ export class EdgeInsetsDirectional extends EdgeInsetsGeometry {
   resolve (direction: Skia.TextDirection | null): EdgeInsets {
     invariant(direction !== null)
 
-    if (direction === AtEngine.skia.TextDirection.RTL) {
+    if (direction === Engine.skia.TextDirection.RTL) {
       return EdgeInsets.fromLTRB(
         this.end, 
         this.top, 
@@ -659,7 +659,7 @@ export class MixedEdgeInsets extends EdgeInsetsGeometry {
     )
   }
 
-  substract (other: MixedEdgeInsets): MixedEdgeInsets {
+  subtract (other: MixedEdgeInsets): MixedEdgeInsets {
     return MixedEdgeInsets.fromLRSETB(
       this.left - other.left,
       this.right - other.right,
@@ -704,7 +704,7 @@ export class MixedEdgeInsets extends EdgeInsetsGeometry {
   }
 
   resolve (direction: Skia.TextDirection): EdgeInsets {
-    if (direction === AtEngine.skia.TextDirection.RTL) {
+    if (direction === Engine.skia.TextDirection.RTL) {
       return EdgeInsets.fromLTRB(
         this.end + this.left,
         this.top, 

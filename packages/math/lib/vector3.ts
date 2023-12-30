@@ -256,7 +256,7 @@ export class Vector3 extends ArrayLike<Vector3> {
   }
 
   
-  substract (v3: Vector3) {
+  subtract (v3: Vector3) {
     this[0] = this[0] - v3[0]
     this[1] = this[1] - v3[1]
     this[2] = this[2] - v3[2]

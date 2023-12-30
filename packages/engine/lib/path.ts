@@ -2,7 +2,7 @@ import { invariant } from '@at/utils'
 import { Matrix4 } from '@at/math'
 import { Offset, Radius, Rect, RRect } from '@at/geometry'
 import { toMatrix, toPoints } from './to'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 
 import * as Skia from './skia'
 
@@ -25,7 +25,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @returns {Path}
    */
   static fromSVGString (svg: string) {
-    return Path.create(AtEngine.skia.Path.MakeFromSVGString(svg) as Skia.Path)
+    return Path.create(Engine.skia.Path.MakeFromSVGString(svg) as Skia.Path)
   }
 
   /**
@@ -35,7 +35,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @returns {Skia.Path}
    */
   static resurrect (cachedCommands: number[], fillType: Skia.FillType): Skia.Path {
-    const path = AtEngine.skia.Path.MakeFromCmds(cachedCommands) as Skia.Path
+    const path = Engine.skia.Path.MakeFromCmds(cachedCommands) as Skia.Path
     path.setFillType(fillType)
     return path as Skia.Path
   }
@@ -71,7 +71,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @return {Path}
    */
   static combine (op: Skia.PathOp, pathA: Path, pathB: Path) {
-    const skia = AtEngine.skia.Path.MakeFromOp(
+    const skia = Engine.skia.Path.MakeFromOp(
       pathA.skia, 
       pathB.skia, 
       op
@@ -87,7 +87,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
 
   // => fillType
   // 填充方式
-  private _fillType: Skia.FillType = AtEngine.skia.FillType.Winding 
+  private _fillType: Skia.FillType = Engine.skia.FillType.Winding 
   public set fillType (fillType: Skia.FillType) {
     if (this._fillType !== fillType) {
       this._fillType = fillType
@@ -102,7 +102,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
   public cachedCommands: number[] | null = null
 
   constructor (skia: Path) {
-    super(skia ?? Path.resurrect([], AtEngine.skia.FillType.Winding))
+    super(skia ?? Path.resurrect([], Engine.skia.FillType.Winding))
   }
 
   /**
@@ -513,7 +513,7 @@ export class Path extends Skia.ManagedSkiaRef<Skia.Path> {
    * @return {*}
    */
   reset () {
-    this._fillType = AtEngine.skia.FillType.Winding
+    this._fillType = Engine.skia.FillType.Winding
     this.skia.close()
   }
 

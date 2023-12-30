@@ -395,7 +395,7 @@ export class Quaternion extends Array<number> {
   }
 
   
-  substract (arg: Quaternion) {
+  subtract (arg: Quaternion) {
     this[0] = this[0] - arg[0]
     this[1] = this[1] - arg[1]
     this[2] = this[2] - arg[2]
@@ -466,7 +466,7 @@ export class Quaternion extends Array<number> {
 
   relativeError (correct: Quaternion) {
     const diff = correct.clone()
-    diff.substract(this)
+    diff.subtract(this)
     const normDiff = diff.length
     const correctNorm = correct.length
     return normDiff / correctNorm

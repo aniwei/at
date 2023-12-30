@@ -1,7 +1,7 @@
 import { Equalable } from '@at/basic'
 import { Rect } from '@at/geometry'
 
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import * as Skia from './skia'
 
 //// => TextBox
@@ -33,7 +33,7 @@ export class TextBox implements Equalable<TextBox> {
   // => start
   // 开始位置
   public get start () {
-    return this.direction === AtEngine.skia.TextDirection.LTR
+    return this.direction === Engine.skia.TextDirection.LTR
       ? this.left 
       : this.right
   }
@@ -41,7 +41,7 @@ export class TextBox implements Equalable<TextBox> {
   // => end
   // 结束为止
   public get end () {
-    return this.direction === AtEngine.skia.TextDirection.LTR
+    return this.direction === Engine.skia.TextDirection.LTR
       ? this.right 
       : this.left
   }

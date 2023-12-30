@@ -1,5 +1,5 @@
 import { Equalable } from '@at/basic'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import * as Skia from './skia'
 
 //// => TextPosition
@@ -24,7 +24,7 @@ export class TextPosition implements Equalable<TextPosition> {
    * @param {Skia.Affinity} affinity
    * @return {*}
    */
-  constructor (offset: number, affinity: Skia.Affinity = AtEngine.skia.Affinity.Downstream) {
+  constructor (offset: number, affinity: Skia.Affinity = Engine.skia.Affinity.Downstream) {
     this.offset = offset
     this.affinity = affinity
   }

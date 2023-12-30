@@ -3,7 +3,7 @@ import { Color, Equalable } from '@at/basic'
 import { Offset } from '@at/geometry'
 import { toSigma } from './to'
 import { Paint } from './paint'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import { MaskFilter } from './mask-filter'
 
 
@@ -166,7 +166,7 @@ export class Shadow extends Equalable<Shadow> {
     const paint = new Paint()
     
     paint.color = this.color
-    paint.filter.mask = MaskFilter.blur(AtEngine.skia.BlurStyle.Normal, this.blurSigma)
+    paint.filter.mask = MaskFilter.blur(Engine.skia.BlurStyle.Normal, this.blurSigma)
 
     return paint
   }

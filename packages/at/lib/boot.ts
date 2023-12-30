@@ -1,6 +1,6 @@
 import { fetch } from '@at/basic'
 import { ApiStateKind, ApiTransport } from '@at/api'
-import { AtEngineConfiguration } from '@at/engine'
+import { EngineConfiguration } from '@at/engine'
 import { Alignment, TextPaintingStyle, TextSpan } from '@at/painting'
 import { Image, Stack, ParagraphDelegate, Paragraph } from '@at/ui'
 import { AtInstance } from './kit'
@@ -11,7 +11,7 @@ interface ConnectionPayload {
   type: string,
   port: MessagePort,
   element: OffscreenCanvas,
-  configuration: AtEngineConfiguration
+  configuration: EngineConfiguration
 }
 
 //// => AtBoot
@@ -29,10 +29,17 @@ export class App extends AtInstance {
       
         if (payload.type === 'connection') {
           const { element, configuration } = payload
+
+          this.configuration.uri = configuration.uri
+          this.configuration.width = configuration.width
+          this.configuration.height = configuration.height
+          this.configuration.devicePixelRatio = configuration.devicePixelRatio
+          this.configuration.assets.baseURI = configuration.assets.baseURI
+          this.configuration.assets.rootDir = configuration.assets.rootDir
+
           this.element = element
           this.baseURI = configuration.assets.baseURI
           this.rootDir = configuration.assets.rootDir
-          
           
           this.api.connect(ApiTransport.connect(payload.port)) 
           this.api.state &= ~ApiStateKind.Connecting
@@ -69,7 +76,7 @@ App.ready((instance) => {
           text: '相亲，竟不可接近',
           style: TextPaintingStyle.create({
             fontFamily: 'SourceHanSansSC-VF',
-            fontSize: 40
+            fontSize: 30
           })
         })
       })
@@ -88,12 +95,13 @@ App.ready((instance) => {
 
       const stack = Stack.create({ 
         alignment: Alignment.TOP_CENTER,
-      }, [image, paragraph])
+      }, [image, paragraph])    
       
-      
-      instance.view.append(stack)
-      // stack.append(image)
+      paragraph.onTap = () => {
+        debugger
+      }
 
+      instance.view.append(stack)
       instance.flush()
     })
  

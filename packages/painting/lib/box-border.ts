@@ -1,7 +1,7 @@
 import { invariant } from '@at/utils'
 import { Rect } from '@at/geometry'
 import { Color } from '@at/basic'
-import { AtEngine, Canvas, Paint, Path, Skia } from '@at/engine'
+import { Engine, Canvas, Paint, Path, Skia } from '@at/engine'
 import { BorderRadius } from './border-radius'
 import { Painting } from './painting'
 import { EdgeInsets, EdgeInsetsGeometry } from './edge-insets'
@@ -82,7 +82,7 @@ export class BoxBorder extends ShapeBorder<BoxBorder> {
     const outer = borderRadius.toRRect(rect)
     const width = side.width
     if (width === 0) {
-      paint.style = AtEngine.skia.PaintStyle.Stroke
+      paint.style = Engine.skia.PaintStyle.Stroke
       paint.stroke.width = 0.0
       canvas.drawRRect(outer, paint)
     } else {

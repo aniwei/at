@@ -1,5 +1,5 @@
 import { invariant } from '@at/utils'
-import { AtEngine, Skia } from '@at/engine'
+import { Engine, Skia } from '@at/engine'
 import { Radius, Rect, RRect } from '@at/geometry'
 import { Equalable } from 'packages/basic/types/lib'
 
@@ -484,7 +484,7 @@ export class BorderRadiusDirectional extends BorderRadiusGeometry {
   resolve (direction: Skia.TextDirection | null): BorderRadius {
     invariant(direction !== null)
 
-    if (direction === AtEngine.skia.TextDirection.RTL) {
+    if (direction === Engine.skia.TextDirection.RTL) {
       return BorderRadius.only(
         this.topEnd,
         this.topStart,
@@ -606,7 +606,7 @@ export class MixedBorderRadius extends BorderRadiusGeometry {
   resolve (direction: Skia.TextDirection | null): BorderRadius {
     invariant(direction !== null)
 
-    if (direction === AtEngine.skia.TextDirection.RTL) {
+    if (direction === Engine.skia.TextDirection.RTL) {
       return BorderRadius.only(
         this.topLeft.add(this.topEnd),
         this.topRight.add(this.topStart),

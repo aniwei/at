@@ -1,6 +1,6 @@
 import { invariant, lerp } from '@at/utils'
 import { Color } from '@at/basic'
-import { Canvas, Path, Paint, Skia, PathDashEffect, AtEngine } from '@at/engine'
+import { Canvas, Path, Paint, Skia, PathDashEffect, Engine } from '@at/engine'
 import { BorderRadius } from './border-radius'
 
 
@@ -227,7 +227,7 @@ export class BorderSide {
       case BorderStyle.Dotted:
         paint.color = this.color
         paint.stroke.width = this.width
-        paint.style = AtEngine.skia.PaintStyle.Stroke
+        paint.style = Engine.skia.PaintStyle.Stroke
         break
     }
 
@@ -241,7 +241,7 @@ export class BorderSide {
       case BorderStyle.None: {
         paint.color = Color.create(0x00000000)
         paint.stroke.width = 0
-        paint.style = AtEngine.skia.PaintStyle.Stroke
+        paint.style = Engine.skia.PaintStyle.Stroke
         break
       }
     }

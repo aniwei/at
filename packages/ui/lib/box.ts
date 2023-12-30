@@ -1,7 +1,9 @@
 import { invariant } from '@at/utils'
 import { Offset, Size } from '@at/geometry'
-import { Matrix4, MatrixUtils, Vector3 } from '@at/math'
 import { Skia } from '@at/engine'
+import { TapDetail } from '@at/gesture'
+import { Matrix4, MatrixUtils, Vector3 } from '@at/math'
+import { Gesture, GestureDetector, GestureEventCallback, SanitizedPointerEvent } from '@at/gesture'
 
 import { Object } from './object'
 import { PaintingContext } from './painting-context'
@@ -10,7 +12,8 @@ import { Container } from './container'
 import { Constraints } from './constraints'
 import { BoxHitTestEntry, BoxHitTestResult } from './box-hit-test'
 
-import type { SanitizedPointerEvent } from '@at/gesture'
+
+import { PipelineOwner } from './pipeline-owner'
 
 
 export enum IntrinsicDimensionKind { 
@@ -53,11 +56,66 @@ export interface BoxFactory<T> {
   new (...rests: unknown[]): T,
   create (...rests: unknown[]): T
 }
-
 export abstract class Box extends Container {
   static create <T extends Box> (...rests: unknown[]): Box {
     const BoxFactory = this as unknown as BoxFactory<T>
     return new BoxFactory(...rests) 
+  }
+
+  // => onTap
+  protected _onTap: GestureEventCallback<TapDetail> | null = null
+  public get onTap () {
+    return this._onTap
+  }
+  public set onTap (onTap: GestureEventCallback<TapDetail> | null) {
+    if (this._onTap !== onTap) {
+      this._onTap = onTap
+      if (this.detector) {
+        this.detector.onTap = onTap
+      }
+    }
+  }
+
+  // => onTapDown
+  protected _onTapDown: GestureEventCallback<TapDetail> | null = null
+  public get onTapDown () {
+    return this._onTapDown
+  }
+  public set onTapDown (onTapDown: GestureEventCallback<TapDetail> | null) {
+    if (this._onTapDown !== onTapDown) {
+      this._onTapDown = onTapDown
+      if (this.detector) {
+        this.detector.onTapDown = onTapDown
+      }
+    }
+  }
+
+  // => onTapUp
+  protected _onTapUp: GestureEventCallback<TapDetail> | null = null
+  public get onTapUp () {
+    return this._onTapUp
+  }
+  public set ononTapUpTap (onTapUp: GestureEventCallback<TapDetail> | null) {
+    if (this._onTapUp !== onTapUp) {
+      this._onTapUp = onTapUp
+      if (this.detector) {
+        this.detector.onTapUp = onTapUp
+      }
+    }
+  }
+
+  // => onTapCancel
+  protected _onTapCancel: GestureEventCallback<TapDetail> | null = null
+  public get onTapCancel () {
+    return this._onTapCancel
+  }
+  public set onTapCancel (onTapCancel: GestureEventCallback<TapDetail> | null) {
+    if (this._onTapCancel !== onTapCancel) {
+      this._onTapCancel = onTapCancel
+      if (this.detector) {
+        this.detector.onTapCancel = onTapCancel
+      }
+    }
   }
 
   // => left
@@ -197,6 +255,47 @@ export abstract class Box extends Container {
     )
   }
 
+  // => detector
+  protected _detector: GestureDetector | null = null
+  public get detector () {
+    return this._detector as GestureDetector
+  }
+  public set detector (detector: GestureDetector | null) {
+    if (detector === null || detector !== this._detector) {
+      if (this._detector !== null) {
+        this._detector.onTap = null
+        this._detector.onTapDown = null
+        this._detector.onTapUp = null
+        this._detector.onTapCancel = null
+      }
+
+      this._detector = detector
+      if (this._detector !== null) {
+        this._detector.onTap = this.onTap
+        this._detector.onTapDown = this.onTapDown
+        this._detector.onTapUp = this.onTapUp
+        this._detector.onTapCancel = this.onTapCancel
+      }
+    }
+  }
+
+  // => owner
+  public set owner (owner: PipelineOwner | null) {
+    if (super.owner === null || super.owner !== owner) {
+      if (owner === null) {
+        this.detector = null
+      }
+      
+      super.owner = owner
+      if (super.owner !== null) {
+        this.detector = GestureDetector.create(owner?.instance as Gesture)
+      }
+    }
+  }
+  public get owner () {
+    return super.owner
+  }
+
   public transform: Matrix4 | null = null
   public computingThisDryLayout: boolean = false
   public cachedDryLayoutSizes: Map<BoxConstraints, Size> | null = null
@@ -230,10 +329,9 @@ export abstract class Box extends Container {
     }
   }
 
-  handleEvent (
-    event: SanitizedPointerEvent, 
-    entry: BoxHitTestEntry
-  ) { }
+  handleEvent (event: SanitizedPointerEvent, entry: BoxHitTestEntry) {
+    this.detector?.handleEvent(event, entry)
+  }
 
   computeIntrinsicDimension (
     dimension: IntrinsicDimensionKind, 
@@ -476,8 +574,8 @@ export abstract class Box extends Container {
     const d = transform.perspectiveTransform(new Vector3(0.0, 0.0, 1.0))
     const s = transform.perspectiveTransform(new Vector3(point.dx, point.dy, 0.0))
 
-    d.substract(i)
-    // s.substract(d.multiply(n.dot(s) / n.dot(d)))
+    d.subtract(i)
+    // s.subtract(d.multiply(n.dot(s) / n.dot(d)))
 
     return Offset.create(s.x, s.y)
   }

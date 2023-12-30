@@ -3,16 +3,16 @@ import { invariant } from '@at/utils'
 import { ImageRepeat, Painting, Alignment, BoxFit, AlignmentGeometry } from '@at/painting'
 import { Offset, Rect, Size } from '@at/geometry'
 import { Color } from '@at/basic'
-import { AtEngine, Canvas, ColorFilter, Skia } from '@at/engine'
+import { Engine, Canvas, ColorFilter, Skia } from '@at/engine'
 import { PipelineOwner } from './pipeline-owner'
 import { PaintingContext } from './painting-context'
 import { Box } from './box'
 import { BoxConstraints } from './constraints'
-import * as Engine from '@at/engine'
+import * as AtEngine from '@at/engine'
 
 //// => Image
-export type ImageOptions = {
-  image?: Engine.Image | null,
+export interface ImageOptions {
+  image?: AtEngine.Image | null,
   width?: number | null,
   height?: number | null,
   left?: number | null,
@@ -84,11 +84,11 @@ export class Image extends Box {
   
 
   // => image
-  protected _image: Engine.Image | null = null
+  protected _image: AtEngine.Image | null = null
   public get image () {
     return this._image
   }
-  public set image (image: Engine.Image | null) {
+  public set image (image: AtEngine.Image | null) {
     if (image !== this._image) {
       if (this.image !== null && image !== null && image.isCloneOf(this.image) ) {
         this.image.dispose()
@@ -246,7 +246,7 @@ export class Image extends Box {
   public filter: ColorFilter | null = null
 
   constructor (
-    image: Engine.Image | null = null,
+    image: AtEngine.Image | null = null,
     left: number | null = null,
     top: number | null = null,
     right: number | null = null,
@@ -265,7 +265,7 @@ export class Image extends Box {
     textDirection: Skia.TextDirection | null = null,
     invertColors: boolean = false,
     isAntiAlias: boolean = false,
-    quality: Skia.FilterQualityKind = AtEngine.skia.FilterQualityKind.Low,
+    quality: Skia.FilterQualityKind = Engine.skia.FilterQualityKind.Low,
   ) {
     super(
       null,
@@ -303,7 +303,7 @@ export class Image extends Box {
       this.resolvedAlignment = this.alignment.resolve(this.textDirection)
       this.flipHorizontally = (
         this.matchTextDirection && 
-        this.textDirection === AtEngine.skia.TextDirection.RTL
+        this.textDirection === Engine.skia.TextDirection.RTL
       )
     }
   }

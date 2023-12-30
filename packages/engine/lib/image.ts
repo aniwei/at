@@ -1,4 +1,4 @@
-import { AtEngine } from '.'
+import { Engine } from './engine'
 import * as Skia from './skia'
 
 export interface ImageRefBoxFactory<T> {
@@ -51,7 +51,7 @@ export abstract class ImageRefBox {
     this.box.ref(this)
   }
 
-  async toByteData (format: Skia.ImageByteFormatKind = AtEngine.skia.ImageByteFormatKind.RawRGBA) {
+  async toByteData (format: Skia.ImageByteFormatKind = Engine.skia.ImageByteFormatKind.RawRGBA) {
     return this.readPixelsFromSkiaImage(format)
   }
 
@@ -60,21 +60,21 @@ export abstract class ImageRefBox {
    * @return {ArrayBuffer | Buffer}
    */
   readPixelsFromSkiaImage (format: Skia.ImageByteFormatKind) {
-    const alphaType = AtEngine.skia.ImageByteFormatKind.RawStraightRGBA 
-      ? AtEngine.skia.AlphaType.Unpremul 
-      : AtEngine.skia.AlphaType.Premul
+    const alphaType = Engine.skia.ImageByteFormatKind.RawStraightRGBA 
+      ? Engine.skia.AlphaType.Unpremul 
+      : Engine.skia.AlphaType.Premul
 
     let bytes: Uint8Array
     if (
-      format === AtEngine.skia.ImageByteFormatKind.RawRGBA || 
-      format === AtEngine.skia.ImageByteFormatKind.RawStraightRGBA
+      format === Engine.skia.ImageByteFormatKind.RawRGBA || 
+      format === Engine.skia.ImageByteFormatKind.RawStraightRGBA
     ) {
       bytes = this.skia.readPixels(0, 0, {
         width: this.width,
         height: this.height,
         alphaType,
-        colorType: AtEngine.skia.ColorType.RGBA_8888,
-        colorSpace: AtEngine.skia.ColorSpace.SRGB
+        colorType: Engine.skia.ColorType.RGBA_8888,
+        colorSpace: Engine.skia.ColorSpace.SRGB
       }) as Uint8Array
     } else {
       bytes = this.skia?.encodeToBytes() as Uint8Array
@@ -104,7 +104,6 @@ export abstract class ImageRefBox {
   }
 
 }
-
 export class Image extends ImageRefBox {
   // => image
   public get image () {

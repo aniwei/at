@@ -455,8 +455,8 @@ export abstract class AtLayoutBox extends AtLayoutContainer {
     const d = transform.perspectiveTransform(new Vector3(0.0, 0.0, 1.0))
     const s = transform.perspectiveTransform(new Vector3(point.dx, point.dy, 0.0))
 
-    d.substract(i)
-    s.substract(d.multiply(n.dot(s) / n.dot(d)))
+    d.subtract(i)
+    s.subtract(d.multiply(n.dot(s) / n.dot(d)))
 
     return new Offset(s.x, s.y)
   }

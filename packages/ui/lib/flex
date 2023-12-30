@@ -1,0 +1,182 @@
+import { Skia } from '@at/engine'
+import { Size } from '@at/geometry'
+import { invariant } from '@at/utils'
+import { Box } from './box'
+import { BoxConstraints } from './constraints'
+import { LayoutChildHandle } from './stack'
+
+
+export interface LayoutSizes {
+  mainSize: number
+  crossSize: number
+  allocatedSize: number
+}
+
+export class Flex extends Box {
+
+  protected _direction: Skia.AxisKind = Skia.AxisKind.Horizontal
+  public get direction () {
+    return this._direction
+  }
+  public set direction (direction: Skia.AxisKind) {
+    if (this._direction !== direction) {
+      this._direction = direction
+      this.markNeedsLayout()
+    }
+  }
+
+  constructor (
+    children: Box[],
+    direction: Skia.AxisKind.Horizontal
+  ) {
+    super(
+      children
+    )
+
+    this.direction = direction
+  }
+
+  computeSizes (constraints: BoxConstraints, layoutChild: LayoutChildHandle) {
+    invariant(constraints !== null)
+
+    let totalFlex = 0
+    final double maxMainSize = _direction == Axis.horizontal ? constraints.maxWidth : constraints.maxHeight;
+    final bool canFlex = maxMainSize < double.infinity;
+
+    double crossSize = 0.0;
+    double allocatedSize = 0.0; // Sum of the sizes of the non-flexible children.
+    RenderBox? child = firstChild;
+    RenderBox? lastFlexChild;
+    while (child != null) {
+      final FlexParentData childParentData = child.parentData! as FlexParentData;
+      final int flex = _getFlex(child);
+      if (flex > 0) {
+        totalFlex += flex;
+        lastFlexChild = child;
+      } else {
+        final BoxConstraints innerConstraints;
+        if (crossAxisAlignment == CrossAxisAlignment.stretch) {
+          switch (_direction) {
+            case Axis.horizontal:
+              innerConstraints = BoxConstraints.tightFor(height: constraints.maxHeight);
+              break;
+            case Axis.vertical:
+              innerConstraints = BoxConstraints.tightFor(width: constraints.maxWidth);
+              break;
+          }
+        } else {
+          switch (_direction) {
+            case Axis.horizontal:
+              innerConstraints = BoxConstraints(maxHeight: constraints.maxHeight);
+              break;
+            case Axis.vertical:
+              innerConstraints = BoxConstraints(maxWidth: constraints.maxWidth);
+              break;
+          }
+        }
+        final Size childSize = layoutChild(child, innerConstraints);
+        allocatedSize += _getMainSize(childSize);
+        crossSize = math.max(crossSize, _getCrossSize(childSize));
+      }
+      assert(child.parentData == childParentData);
+      child = childParentData.nextSibling;
+    }
+
+    // Distribute free space to flexible children.
+    final double freeSpace = math.max(0.0, (canFlex ? maxMainSize : 0.0) - allocatedSize);
+    double allocatedFlexSpace = 0.0;
+    if (totalFlex > 0) {
+      final double spacePerFlex = canFlex ? (freeSpace / totalFlex) : double.nan;
+      child = firstChild;
+      while (child != null) {
+        final int flex = _getFlex(child);
+        if (flex > 0) {
+          final double maxChildExtent = canFlex ? (child == lastFlexChild ? (freeSpace - allocatedFlexSpace) : spacePerFlex * flex) : double.infinity;
+          late final double minChildExtent;
+          switch (_getFit(child)) {
+            case FlexFit.tight:
+              assert(maxChildExtent < double.infinity);
+              minChildExtent = maxChildExtent;
+              break;
+            case FlexFit.loose:
+              minChildExtent = 0.0;
+              break;
+          }
+          assert(minChildExtent != null);
+          final BoxConstraints innerConstraints;
+          if (crossAxisAlignment == CrossAxisAlignment.stretch) {
+            switch (_direction) {
+              case Axis.horizontal:
+                innerConstraints = BoxConstraints(
+                  minWidth: minChildExtent,
+                  maxWidth: maxChildExtent,
+                  minHeight: constraints.maxHeight,
+                  maxHeight: constraints.maxHeight,
+                );
+                break;
+              case Axis.vertical:
+                innerConstraints = BoxConstraints(
+                  minWidth: constraints.maxWidth,
+                  maxWidth: constraints.maxWidth,
+                  minHeight: minChildExtent,
+                  maxHeight: maxChildExtent,
+                );
+                break;
+            }
+          } else {
+            switch (_direction) {
+              case Axis.horizontal:
+                innerConstraints = BoxConstraints(
+                  minWidth: minChildExtent,
+                  maxWidth: maxChildExtent,
+                  maxHeight: constraints.maxHeight,
+                );
+                break;
+              case Axis.vertical:
+                innerConstraints = BoxConstraints(
+                  maxWidth: constraints.maxWidth,
+                  minHeight: minChildExtent,
+                  maxHeight: maxChildExtent,
+                );
+                break;
+            }
+          }
+          final Size childSize = layoutChild(child, innerConstraints);
+          final double childMainSize = _getMainSize(childSize);
+          assert(childMainSize <= maxChildExtent);
+          allocatedSize += childMainSize;
+          allocatedFlexSpace += maxChildExtent;
+          crossSize = math.max(crossSize, _getCrossSize(childSize));
+        }
+        final FlexParentData childParentData = child.parentData! as FlexParentData;
+        child = childParentData.nextSibling;
+      }
+    }
+
+    final double idealSize = canFlex && mainAxisSize == MainAxisSize.max ? maxMainSize : allocatedSize;
+    
+    return {
+      mainSize: idealSize,
+      crossSize: crossSize,
+      allocatedSize: allocatedSize,
+    }
+  }
+
+  computeDryLayout (constraints: BoxConstraints) {
+    if (!_canComputeIntrinsics) {
+      return Size.ZERO
+    }
+   
+    const sizes = this.computeSizes(
+      dryLayoutChild,
+      constraints,
+    )
+
+    switch (this.direction) {
+      case Skia.AxisKind.Horizontal:
+        return constraints.constrain(Size.create(sizes.mainSize, sizes.crossSize))
+      case Skia.AxisKind.Vertical:
+        return constraints.constrain(Size.create(sizes.crossSize, sizes.mainSize))
+    }
+  }
+}

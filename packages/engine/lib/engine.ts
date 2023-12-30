@@ -14,7 +14,7 @@ import * as Skia from './skia'
 
 
 //// => AtRasterizer
-export class AtRasterizer extends Rasterizer {
+export class EngineRasterizer extends Rasterizer {
   static create (
     surface: Skia.Surface,
     devicePixelRatio: number
@@ -22,13 +22,13 @@ export class AtRasterizer extends Rasterizer {
     return super.create(
       surface, 
       devicePixelRatio
-    ) as AtRasterizer
+    ) as EngineRasterizer
   }
 }
 
 //// => basic types
 // 基础类型定义
-export interface AtEngineSkia extends CanvasKit {
+export interface EngineSkia extends CanvasKit {
   AxisKind: typeof Skia.AxisKind,
   ClipKind: typeof Skia.ClipKind,
   FilterQualityKind: typeof Skia.FilterQualityKind,
@@ -39,7 +39,7 @@ export interface AtEngineSkia extends CanvasKit {
 }
 
 // 环境变量
-export interface AtEngineEnvironments {
+export interface EngineEnvironments {
   SKIA_URI: string,
   ATKIT_ASSETS_BASE_URI: string,
   ATKIT_ASSETS_ROOT_DIR: string,
@@ -51,7 +51,7 @@ export interface AtEngineEnvironments {
 
 
 // 运行时生命周期
-export enum AtEngineLifecycleKind {
+export enum EngineLifecycleKind {
   Created = 'created',
   Initializing = 'initializing',
   Ready = 'ready',
@@ -59,7 +59,7 @@ export enum AtEngineLifecycleKind {
   Destory = 'destroy'
 }
 
-export interface AtEngineConfiguration {
+export interface EngineConfiguration {
   uri: string,  
   width: number,
   height: number,
@@ -70,17 +70,17 @@ export interface AtEngineConfiguration {
   }
 }
 
-export abstract class AtEngine extends AssetsManager {  
+export abstract class Engine extends AssetsManager {  
   // => instance
-  static instances: AtEngine[] = []
+  static instances: Engine[] = []
 
-  static register (engine: AtEngine) {
-    if (!AtEngine.instances.includes(engine)) {
+  static register (engine: Engine) {
+    if (!Engine.instances.includes(engine)) {
       this.instances.push(engine)
     }
   }
 
-  static unregister (engine: AtEngine) {
+  static unregister (engine: Engine) {
     const index = this.instances.findIndex(e => e === engine)
     if (index > -1) {
       this.instances.splice(index, 1)
@@ -89,12 +89,12 @@ export abstract class AtEngine extends AssetsManager {
 
   // => engine
   // Skia Runtime 对象
-  static _skia: AtEngineSkia | null = null
+  static _skia: EngineSkia | null = null
   static get skia () {
     invariant(this._skia)
     return this._skia
   }
-  static set skia (skia: AtEngineSkia) {
+  static set skia (skia: EngineSkia) {
     /// => extending skia
     // 扩展 Skia
     defineReadOnly(skia, 'AxisDirectionKind', Skia.AxisDirectionKind)
@@ -142,7 +142,7 @@ export abstract class AtEngine extends AssetsManager {
    */
   static tryCreateSurface (size: Size, canvas: OffscreenCanvas) {
     try {
-      return AtEngine.skia.MakeWebGLCanvasSurface(canvas as unknown as HTMLCanvasElement)
+      return Engine.skia.MakeWebGLCanvasSurface(canvas as unknown as HTMLCanvasElement)
     } catch (error: any) {
       console.warn(`Caught ProgressEvent with target: ${error.message}`)
     }
@@ -150,22 +150,22 @@ export abstract class AtEngine extends AssetsManager {
     const versions = [ WebGLMajorKind.WebGL1, WebGLMajorKind.WebGL2 ]
 
     for (const ver of versions) {
-      const glContext = AtEngine.skia.GetWebGLContext(canvas as unknown as HTMLCanvasElement, {
+      const glContext = Engine.skia.GetWebGLContext(canvas as unknown as HTMLCanvasElement, {
         antialias: 1,
         majorVersion: ver
       })
 
       if (glContext !== 0) {
-        const grContext = AtEngine.skia.MakeWebGLContext(glContext) ?? null
+        const grContext = Engine.skia.MakeWebGLContext(glContext) ?? null
         if (grContext === null) {
           continue
         }
 
-        const surface = AtEngine.skia.MakeOnScreenGLSurface(
+        const surface = Engine.skia.MakeOnScreenGLSurface(
           grContext,
           Math.ceil(size.width),
           Math.ceil(size.height),
-          AtEngine.skia.ColorSpace.SRGB
+          Engine.skia.ColorSpace.SRGB
         )
 
         return surface
@@ -173,7 +173,7 @@ export abstract class AtEngine extends AssetsManager {
     }
 
     console.warn(`Caught ProgressEvent with target: Cannot create WebGL context.`)
-    return AtEngine.skia.MakeSWCanvasSurface(canvas as unknown as HTMLCanvasElement)
+    return Engine.skia.MakeSWCanvasSurface(canvas as unknown as HTMLCanvasElement)
   }
 
   /**
@@ -182,7 +182,7 @@ export abstract class AtEngine extends AssetsManager {
    * @param {string?} defaultEnv 
    * @returns 
    */
-  static env <T extends string | number> (key: string, defaultEnv?: T): T {
+  static env <T extends string | number | unknown> (key: string, defaultEnv?: T): T {
     if (Reflect.has(process.env, key)) {
       return Reflect.get(process.env, key) as T
     }
@@ -192,18 +192,18 @@ export abstract class AtEngine extends AssetsManager {
 
   //  Engine 生命周期
   // => 
-  public _state: AtEngineLifecycleKind = AtEngineLifecycleKind.Created
+  public _state: EngineLifecycleKind = EngineLifecycleKind.Created
   public get state () {
     return this._state
   }
-  public set state (state: AtEngineLifecycleKind) {
+  public set state (state: EngineLifecycleKind) {
     if (this._state !== state) {
       this._state = state
     }
   }
 
   // => rasterizer
-  public _rasterizer: AtRasterizer | null = null
+  public _rasterizer: EngineRasterizer | null = null
   public get rasterizer () {
     if (this._rasterizer === null) {
       const width = this.configuration.width
@@ -218,13 +218,13 @@ export abstract class AtEngine extends AssetsManager {
         }
       })
 
-      const surface = AtEngine.tryCreateSurface(
+      const surface = Engine.tryCreateSurface(
         Size.create(width, height), 
         this.element
-      ) 
+      ) ?? null
 
-      invariant(surface)
-      this._rasterizer = AtRasterizer.create(surface, devicePixelRatio)
+      invariant(surface, 'The "surface" cannot be null.')
+      this._rasterizer = EngineRasterizer.create(surface, devicePixelRatio)
     }
 
     return this._rasterizer
@@ -244,14 +244,14 @@ export abstract class AtEngine extends AssetsManager {
   // skia 队列
   protected queue: VoidFunction[] = []  
   // 配置
-  public configuration: AtEngineConfiguration
+  public configuration: EngineConfiguration
 
-  constructor (configuration: AtEngineConfiguration) {
+  constructor (configuration: EngineConfiguration) {
     const assets = configuration.assets
     super(assets.baseURI, assets.rootDir)
 
     this.configuration = configuration
-    AtEngine.register(this)
+    Engine.register(this)
   } 
 
   abstract prepare (): Promise<void>
@@ -277,19 +277,19 @@ export abstract class AtEngine extends AssetsManager {
    * @param {string} uri 
    * @returns {CanvasKit}
    */
-  ensure (): Promise<AtEngineSkia> {
-    if (this.state === AtEngineLifecycleKind.Ready) {
-      invariant(AtEngine.skia !== null)
-      return Promise.resolve(AtEngine.skia as AtEngineSkia)
-    } else if (this.state === AtEngineLifecycleKind.Initializing) {
-      return new Promise((resolve) => this.queue.push(() => resolve(AtEngine.skia as AtEngineSkia)))
+  ensure (): Promise<EngineSkia> {
+    if (this.state === EngineLifecycleKind.Ready) {
+      invariant(Engine.skia !== null)
+      return Promise.resolve(Engine.skia as EngineSkia)
+    } else if (this.state === EngineLifecycleKind.Initializing) {
+      return new Promise((resolve) => this.queue.push(() => resolve(Engine.skia as EngineSkia)))
     } else {
-      this.state = AtEngineLifecycleKind.Initializing
+      this.state = EngineLifecycleKind.Initializing
       return CanvasKitInit({
         locateFile: () => this.configuration.uri
       }).then((skia: CanvasKit) => {
-        AtEngine.skia = skia as AtEngineSkia
-        this.state = AtEngineLifecycleKind.Ready
+        Engine.skia = skia as EngineSkia
+        this.state = EngineLifecycleKind.Ready
 
         do {
           const callback = this.queue.shift() ?? null
@@ -298,12 +298,12 @@ export abstract class AtEngine extends AssetsManager {
           }
         } while (this.queue.length > 0)
 
-        return AtEngine.skia
+        return Engine.skia
       })
     }
   }
 
   dispose () {
-    AtEngine.unregister(this)
+    Engine.unregister(this)
   }
 }

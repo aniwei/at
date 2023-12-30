@@ -1,5 +1,5 @@
 import { ApiSubscribables, EventEmitter } from '@at/basic'
-import { AtEngineLifecycleKind } from '@at/engine'
+import { EngineLifecycleKind } from '@at/engine'
 
 export type EngineApiEvents = (
   "runtime.state.change" |
@@ -10,7 +10,7 @@ export type EngineApiEvents = (
 
 // => 生命周期事件对象
 export interface EngineApiLifecycleEvent {
-  state: AtEngineLifecycleKind
+  state: EngineLifecycleKind
 }
 
 export interface EngineApiCommand extends ApiSubscribables {

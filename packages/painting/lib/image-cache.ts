@@ -1,7 +1,7 @@
 import { Equalable, bytes } from '@at/basic'
 import { invariant } from '@at/utils'
 import { ImageProviderKey } from './image-provider'
-import { AtEngine } from '@at/engine'
+import { Engine } from '@at/engine'
 import { ImageInfo, ImageStream, ImageStreamRefBox } from './image-stream'
 
 /**
@@ -180,7 +180,7 @@ export class ImageCache<T extends ImageProviderKey = ImageProviderKey> {
 
   // => maximumSizeBytes
   // 图片最大字节
-  protected _maximumSizeBytes: number = bytes.parse(AtEngine.env('IMAGE_CACHE_MAXIMUM_BYTES', '2m'))
+  protected _maximumSizeBytes: number = bytes.parse(Engine.env('IMAGE_CACHE_MAXIMUM_BYTES', '2m'))
   public get maximumSizeBytes () {
     return this._maximumSizeBytes
   }
@@ -198,7 +198,7 @@ export class ImageCache<T extends ImageProviderKey = ImageProviderKey> {
 
   // => _maximumSize
   // 图片最大缓存字节
-  protected _maximumSize: number = bytes.parse(AtEngine.env('IMAGE_CACHE_MAXIMUM_SIZE', '100m'))
+  protected _maximumSize: number = bytes.parse(Engine.env('IMAGE_CACHE_MAXIMUM_SIZE', '100m'))
   public get maximumSize () {
     return this._maximumSize
   }

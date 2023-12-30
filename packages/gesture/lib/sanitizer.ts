@@ -22,6 +22,12 @@ export enum PointerDeviceKind {
   Unknown
 }
 
+export enum PointerEventButtonKind {
+  Primary = 1,
+  Secondary,
+  Tertiary
+}
+
 export function toDeviceKind (type: string) {
   switch (type) {
     case 'mouse':
@@ -181,6 +187,21 @@ export class SanitizedPointerEvent {
     return Offset.create(transformed3.x, transformed3.y)
   }
 
+  static transformDeltaViaPositions(
+    untransformedEndPosition: Offset ,
+    transformedEndPosition: Offset | null = null,
+    untransformedDelta: Offset,
+    transform: Matrix4 | null = null,
+  ) {
+    if (transform === null) {
+      return untransformedDelta
+    }
+   
+    transformedEndPosition ??= SanitizedPointerEvent.transformPosition(transform, untransformedEndPosition)
+    const transformedStartPosition = SanitizedPointerEvent.transformPosition(transform, untransformedEndPosition.subtract(untransformedDelta))
+    return transformedEndPosition.subtract(transformedStartPosition)
+  }
+
   // => localPosition
   public get localPosition () {
     return this.position
@@ -277,7 +298,6 @@ export class SanitizedPointerEvent {
 
   }
 }
-
 export interface SanitizedDetail {
   change: PointerChangeKind,
   buttons: number
@@ -397,10 +417,9 @@ export class PointerEventSanitizer {
   }
 
   protected devicePixelRatio: number = 2.0
-
+  // pointer 状态
   protected states: PointerStateManager = PointerStateManager.create()
   protected sanitizers: PointerSanitizerManager = PointerSanitizerManager.create()
-  
   protected activeButtons: number = 0
 
   constructor (devicePixelRatio: number) {
@@ -490,8 +509,8 @@ export class PointerEventSanitizer {
           kind,
           device,
           change,
-          state.x,
-          state.y,
+          x,
+          y,
           buttons
         )
 
@@ -509,8 +528,8 @@ export class PointerEventSanitizer {
             kind,
             device,
             PointerChangeKind.Add,
-            state.x,
-            state.y,
+            x,
+            y,
             buttons
           ))
         }
@@ -520,8 +539,8 @@ export class PointerEventSanitizer {
           kind,
           device,
           change,
-          state.x,
-          state.y,
+          x,
+          y,
           buttons
         ))
 
@@ -540,8 +559,8 @@ export class PointerEventSanitizer {
             kind,
             device,
             PointerChangeKind.Add,
-            state.x,
-            state.y,
+            x,
+            y,
             buttons,
           ))
         }
@@ -552,8 +571,8 @@ export class PointerEventSanitizer {
             kind,
             device,
             PointerChangeKind.Hover,
-            state.x,
-            state.y,
+            x,
+            y,
             buttons
           ))
         }
@@ -563,10 +582,11 @@ export class PointerEventSanitizer {
           kind,
           device,
           change,
-          state.x,
-          state.y,
+          x,
+          y,
           buttons
         ))
+
         this.activeButtons = buttons
         break
       }
@@ -586,8 +606,8 @@ export class PointerEventSanitizer {
             kind,
             device,
             PointerChangeKind.Move,
-            state.x,
-            state.y,
+            x,
+            y,
             buttons
           ))
         }
@@ -597,8 +617,8 @@ export class PointerEventSanitizer {
           kind,
           device,
           change,
-          state.x,
-          state.y,
+          x,
+          y,
           buttons
         ))
 
@@ -608,8 +628,8 @@ export class PointerEventSanitizer {
             kind,
             device,
             PointerChangeKind.Remove,
-            state.x,
-            state.y,
+            x,
+            y,
             buttons
           ))
         }
@@ -618,16 +638,14 @@ export class PointerEventSanitizer {
       }
 
       case PointerChangeKind.Remove: {
-        invariant(this.states.has(device), 'Cannot get a pointer state which has not added.')
-        const state = this.states.get(device) as PointerState
-          
+        invariant(this.states.has(device), 'Cannot get a pointer state which has not added.')          
         events.push(this.generate(
           timeStamp,
           kind,
           device,
           change,
-          state.x,
-          state.y,
+          x,
+          y,
           buttons,
         ))
 

@@ -1,6 +1,6 @@
 import { invariant, UnimplementedError } from '@at/utils'
 import { Equalable } from '@at/basic'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 
 import type * as CanvasKit from 'canvaskit-wasm'
 
@@ -47,11 +47,11 @@ export abstract class ManagedSkiaRef<T extends SkiaRef = SkiaRef> extends Equala
   }
   set skia (skia: T | null) {
     if (this.ref !== null) {
-      AtEngine.refs.unregister(this)
+      Engine.refs.unregister(this)
     }
 
     if (skia !== null) {
-      AtEngine.refs.register(this, skia)
+      Engine.refs.register(this, skia)
     }
 
     this.delete()
@@ -145,7 +145,7 @@ export class SkiaRefBox<R, T extends SkiaRef = SkiaRef> {
    */
   constructor (skia: T) {
     this.skia = skia
-    AtEngine.refs.register(this, skia)
+    Engine.refs.register(this, skia)
   }
   
   /**
@@ -173,7 +173,7 @@ export class SkiaRefBox<R, T extends SkiaRef = SkiaRef> {
 
     if (this.count === 0) {
       if (this.skia) {
-        AtEngine.refs.cleanUp(this.skia)
+        Engine.refs.cleanUp(this.skia)
       }
 
       this.delete()

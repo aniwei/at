@@ -1,6 +1,6 @@
 import { Rect } from '@at/geometry'
 import { Equalable } from '@at/basic'
-import { AtEngine, Canvas, Path, Skia, ColorFilter } from '@at/engine'
+import { Engine, Canvas, Path, Skia, ColorFilter } from '@at/engine'
 import { Alignment, AlignmentGeometry } from './alignment'
 import { ImageConfiguration, ImageProvider } from './image-provider'
 import { ImageErrorHandle, ImageInfo, ImageStream } from './image-stream'
@@ -77,7 +77,7 @@ export class DecorationImage extends Equalable<DecorationImage> {
     matchTextDirection: boolean = false,
     scale: number = 1,
     opacity: number = 1,
-    quality: Skia.FilterQualityKind = AtEngine.skia.FilterQualityKind.Low,
+    quality: Skia.FilterQualityKind = Engine.skia.FilterQualityKind.Low,
     invertColors: boolean = false,
     isAntiAlias: boolean = false,
   ) {
@@ -180,7 +180,7 @@ export class DecorationImagePainter {
   ) {
     let flipHorizontally = false
     if (this.details.matchTextDirection) {
-      if (configuration.textDirection === AtEngine.skia.TextDirection.RTL) {
+      if (configuration.textDirection === Engine.skia.TextDirection.RTL) {
         flipHorizontally = true
       }
     }

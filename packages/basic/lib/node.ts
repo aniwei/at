@@ -7,9 +7,17 @@ export abstract class AbstractNode<T extends AbstractNode<T>> {
   get attached () {
     return this.owner !== null
   }
-    
+  
+  // => owner
+  protected _owner: unknown | null = null
+  public get owner () {
+    return this._owner
+  }
+  public set owner (owner: unknown | null) {
+    this._owner = owner
+  }
+
   public depth = 0
-  public owner: unknown | null = null
   public parent: T | null = null
 
   /**

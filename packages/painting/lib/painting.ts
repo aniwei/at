@@ -1,4 +1,4 @@
-import { Canvas, Paint, Path, AtEngine, Image, ColorFilter, Skia, ImageFilter } from '@at/engine'
+import { Canvas, Paint, Path, Engine, Image, ColorFilter, Skia, ImageFilter } from '@at/engine'
 import { Offset, Rect, Size } from '@at/geometry'
 import { invariant } from '@at/utils'
 import { Color } from '@at/basic'
@@ -48,9 +48,9 @@ export class Painting {
         path.lineTo(rect.right, rect.top)
 
         if (top.width === 0.0) {
-          paint.style = AtEngine.skia.PaintStyle.Stroke
+          paint.style = Engine.skia.PaintStyle.Stroke
         } else {
-          paint.style = AtEngine.skia.PaintStyle.Fill
+          paint.style = Engine.skia.PaintStyle.Fill
           path.lineTo(rect.right - right.width, rect.top + top.width)
           path.lineTo(rect.left + left.width, rect.top + top.width)
         }
@@ -71,9 +71,9 @@ export class Painting {
         path.lineTo(rect.right, rect.bottom)
         
         if (right.width === 0.0)  {
-          paint.style = AtEngine.skia.PaintStyle.Stroke
+          paint.style = Engine.skia.PaintStyle.Stroke
         } else {
-          paint.style = AtEngine.skia.PaintStyle.Fill
+          paint.style = Engine.skia.PaintStyle.Fill
           path.lineTo(rect.right - right.width, rect.bottom - bottom.width)
           path.lineTo(rect.right - right.width, rect.top + top.width)
         }
@@ -93,9 +93,9 @@ export class Painting {
         path.lineTo(rect.left, rect.bottom)
 
         if (bottom.width === 0.0) {
-          paint.style = AtEngine.skia.PaintStyle.Stroke
+          paint.style = Engine.skia.PaintStyle.Stroke
         } else {
-          paint.style = AtEngine.skia.PaintStyle.Fill
+          paint.style = Engine.skia.PaintStyle.Fill
           path.lineTo(rect.left + left.width, rect.bottom - bottom.width)
           path.lineTo(rect.right - right.width, rect.bottom - bottom.width)
         }
@@ -113,9 +113,9 @@ export class Painting {
         path.lineTo(rect.left, rect.top)
 
         if (left.width === 0.0) {
-          paint.style = AtEngine.skia.PaintStyle.Stroke
+          paint.style = Engine.skia.PaintStyle.Stroke
         } else {
-          paint.style = AtEngine.skia.PaintStyle.Fill
+          paint.style = Engine.skia.PaintStyle.Fill
           path.lineTo(rect.left + left.width, rect.top + top.width)
           path.lineTo(rect.left + left.width, rect.bottom - bottom.width)
         }
@@ -143,7 +143,7 @@ export class Painting {
         break
 
       case BorderStyle.Solid:
-        paint.style = AtEngine.skia.PaintStyle.Stroke
+        paint.style = Engine.skia.PaintStyle.Stroke
         paint.stroke.width = side.width
         canvas.drawPath(path, paint)
         break
@@ -163,7 +163,7 @@ export class Painting {
     repeat: ImageRepeat = ImageRepeat.NoRepeat,
     flipHorizontally: boolean = false,
     invertColors: boolean = false,
-    quality: Skia.FilterQualityKind = AtEngine.skia.FilterQualityKind.Low,
+    quality: Skia.FilterQualityKind = Engine.skia.FilterQualityKind.Low,
     isAntiAlias: boolean = false,
   ) {
     if (rect.isEmpty) {
@@ -175,9 +175,9 @@ export class Painting {
     let slice: Size | null  
 
     if (center !== null) {
-      slice = input.divide(scale).substract(center.size)
-      output = output.substract(slice)
-      input = input.substract(slice.multiply(scale))
+      slice = input.divide(scale).subtract(center.size)
+      output = output.subtract(slice)
+      input = input.subtract(slice.multiply(scale))
     }
 
     fit ??= center == null ? BoxFit.ScaleDown : BoxFit.Fill
@@ -203,8 +203,8 @@ export class Painting {
     paint.isAntiAlias = isAntiAlias
 
     // @TODO
-    //paint.filter.image = ImageFilter.blur(9, 9, AtEngine.skia.TileMode.Clamp)
-    ImageFilter.blur(9, 9, AtEngine.skia.TileMode.Clamp)
+    //paint.filter.image = ImageFilter.blur(9, 9, Engine.skia.TileMode.Clamp)
+    ImageFilter.blur(9, 9, Engine.skia.TileMode.Clamp)
 
     if (filter !== null) {
       // @TODO
@@ -238,7 +238,7 @@ export class Painting {
     }
     
     if (repeat !== ImageRepeat.NoRepeat) {
-      canvas.clipRect(rect, AtEngine.skia.ClipOp.Intersect)
+      canvas.clipRect(rect, Engine.skia.ClipOp.Intersect)
     }
   
     if (flipHorizontally) {

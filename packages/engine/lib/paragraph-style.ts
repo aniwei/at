@@ -1,5 +1,5 @@
 import { StrutStyle } from './struct-style'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import { TextLeadingDistributionKind, TextStyle } from './text-style'
 import { TextHeightBehavior } from './text-height-behavior'
 
@@ -56,7 +56,7 @@ export class ParagraphStyle extends Skia.ManagedSkiaRef<Skia.ParagraphStyle> {
     strutStyle: StrutStyle | null = null,
     ellipsis: string | null = null,
   ) {
-    return new AtEngine.skia.ParagraphStyle({
+    return new Engine.skia.ParagraphStyle({
       textAlign: textAlign 
         ? textAlign
         : undefined,
@@ -132,7 +132,7 @@ export class ParagraphStyle extends Skia.ManagedSkiaRef<Skia.ParagraphStyle> {
     ellipsis: string | null = null,
   ) {
 
-    textDirection ??= AtEngine.skia.TextDirection.LTR 
+    textDirection ??= Engine.skia.TextDirection.LTR 
 
     const skia = ParagraphStyle.resurrect(
       textAlign,

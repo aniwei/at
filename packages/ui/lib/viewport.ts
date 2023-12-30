@@ -1,5 +1,5 @@
 import { invariant } from '@at/utils'
-import { Skia, AtEngine } from '@at/engine'
+import { Skia, Engine } from '@at/engine'
 
 
 export abstract class ViewportOffset {
@@ -63,7 +63,7 @@ export class FixedViewportOffset extends ViewportOffset {
   public pixels: number
 
   public get userScrollDirection (): Skia.ScrollDirectionKind {
-    return AtEngine.skia.ScrollDirectionKind.Idle
+    return Engine.skia.ScrollDirectionKind.Idle
   }
 
   public get hasPixels () {

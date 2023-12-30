@@ -2,7 +2,7 @@ import { invariant } from '@at/utils'
 import { Offset } from '@at/geometry'
 import { Equalable } from '@at/basic'
 
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import { TextPosition } from './text-position'
 import { TextRange } from './text-range'
 import { TextBox } from './text-box'
@@ -242,8 +242,8 @@ export class Paragraph extends Skia.ManagedSkiaRef<Skia.Paragraph> {
   getBoxesForRange (
     start: number,
     end: number, 
-    boxHeightStyle: Skia.RectHeightStyle = AtEngine.skia.RectHeightStyle.Tight,
-    boxWidthStyle: Skia.RectHeightStyle = AtEngine.skia.RectWidthStyle.Tight,
+    boxHeightStyle: Skia.RectHeightStyle = Engine.skia.RectHeightStyle.Tight,
+    boxWidthStyle: Skia.RectHeightStyle = Engine.skia.RectWidthStyle.Tight,
   ): TextBox[] {
     if (start < 0 || end < 0) {
       return []

@@ -1,5 +1,5 @@
 import { listEquals } from '@at/utils'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import * as Skia from './skia'
 
 //// => PathDashEffect
@@ -13,7 +13,7 @@ export class PathDashEffect extends Skia.ManagedSkiaRef<Skia.PathEffect> {
   }
 
   static resurrect (pettern: number[], phase: number): Skia.PathEffect {
-    return AtEngine.skia.PathEffect.MakeDash(pettern, phase) as Skia.PathEffect
+    return Engine.skia.PathEffect.MakeDash(pettern, phase) as Skia.PathEffect
   }
 
   // => pattern

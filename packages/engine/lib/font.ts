@@ -1,5 +1,5 @@
 import { invariant } from '@at/utils'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 
 
 import * as Skia from './skia'
@@ -50,7 +50,7 @@ export class RegisteredFont {
     this.buffer = buffer
     this.typeface = typeface
 
-    const font = new AtEngine.skia.Font(typeface)
+    const font = new Engine.skia.Font(typeface)
     font.getGlyphBounds([0], null)
   }
 }
@@ -97,7 +97,7 @@ export class Fonts {
     }
 
     this.familyToFont.clear()
-    this.provider = AtEngine.skia.TypefaceFontProvider.Make()
+    this.provider = Engine.skia.TypefaceFontProvider.Make()
 
     for (const font of this.registered) {
       this.provider.registerFont(font.buffer, font.family)
@@ -107,7 +107,7 @@ export class Fonts {
         this.familyToFont.set(font.family, families = [])
       }
 
-      families.push(new AtEngine.skia.Font(font.typeface))
+      families.push(new Engine.skia.Font(font.typeface))
     }
   }
 
@@ -119,7 +119,7 @@ export class Fonts {
    */
 
   register (data: ArrayBuffer, family: string): Promise<void> {
-    const typeface = AtEngine.skia.Typeface.MakeFreeTypeFaceFromData(data)
+    const typeface = Engine.skia.Typeface.MakeFreeTypeFaceFromData(data)
     invariant(typeface)
     const font = RegisteredFont.create(family, data, typeface)
     this.registered.push(font)

@@ -1,4 +1,4 @@
-import { Skia, Canvas, Paint, Path, AtEngine } from '@at/engine'
+import { Skia, Canvas, Paint, Path, Engine } from '@at/engine'
 import { Rect, RRect } from '@at/geometry'
 
 //// => ClipContext
@@ -21,15 +21,15 @@ export abstract class ClipContext {
     this.canvas?.save()
 
     switch (clipBehavior) {
-      case AtEngine.skia.ClipKind.None:
+      case Engine.skia.ClipKind.None:
         break
-      case AtEngine.skia.ClipKind.HardEdge:
+      case Engine.skia.ClipKind.HardEdge:
         clipCallback(false)
         break
-      case AtEngine.skia.ClipKind.AntiAlias:
+      case Engine.skia.ClipKind.AntiAlias:
         clipCallback(true)
         break
-      case AtEngine.skia.ClipKind.AntiAliasWithSaveLayer:
+      case Engine.skia.ClipKind.AntiAliasWithSaveLayer:
         clipCallback(true)
         this.canvas?.saveLayer(bounds, Paint.create())
         break
@@ -37,7 +37,7 @@ export abstract class ClipContext {
 
     painter()
     
-    if (clipBehavior === AtEngine.skia.ClipKind.AntiAliasWithSaveLayer) {
+    if (clipBehavior === Engine.skia.ClipKind.AntiAliasWithSaveLayer) {
       this.canvas?.restore()
     }
 
@@ -101,7 +101,7 @@ export abstract class ClipContext {
   ) {
     this.clipAndPaint(
       (doAntiAlias: boolean) => {
-        this.canvas?.clipRect(rect, AtEngine.skia.ClipOp.Intersect, doAntiAlias)
+        this.canvas?.clipRect(rect, Engine.skia.ClipOp.Intersect, doAntiAlias)
       }, 
       clipBehavior, 
       bounds, 

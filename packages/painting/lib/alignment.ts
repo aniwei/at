@@ -1,6 +1,6 @@
 import { Equalable } from '@at/basic'
 import { invariant, lerp } from '@at/utils'
-import { AtEngine, Skia } from '@at/engine'
+import { Engine, Skia } from '@at/engine'
 import { Offset, Rect, Size } from '@at/geometry'
 
 //// => AlignmentGeometry
@@ -75,7 +75,7 @@ export abstract class AlignmentGeometry extends Equalable<AlignmentGeometry> {
   }
   
   abstract add (other: AlignmentGeometry): AlignmentGeometry
-  abstract substract (other: AlignmentGeometry): AlignmentGeometry 
+  abstract subtract (other: AlignmentGeometry): AlignmentGeometry 
   abstract multiply (other: number): AlignmentGeometry 
   abstract divide (other: number): AlignmentGeometry
   abstract modulo (other: number): AlignmentGeometry
@@ -181,7 +181,7 @@ export class Alignment extends AlignmentGeometry {
    * @param {Alignment} other
    * @return {*}
    */  
-  substract (other: Alignment): Alignment {
+  subtract (other: Alignment): Alignment {
     return new Alignment(
       this.x - other.x,
       this.y - other.y
@@ -337,7 +337,7 @@ export class AlignmentDirectional extends AlignmentGeometry {
     )
   }
   
-  substract (other: AlignmentDirectional): AlignmentGeometry {
+  subtract (other: AlignmentDirectional): AlignmentGeometry {
     return new AlignmentDirectional(
       this.start - other.start, 
       this.y - other.y
@@ -375,7 +375,7 @@ export class AlignmentDirectional extends AlignmentGeometry {
   resolve (direction: Skia.TextDirection | null): Alignment {
     invariant(direction !== null, 'Cannot resolve AlignmentDirectional without a TextDirection.')
 
-    if (direction === AtEngine.skia.TextDirection.RTL) {
+    if (direction === Engine.skia.TextDirection.RTL) {
       return new Alignment(-this.start, this.y)
     } else {
       return new Alignment(this.start, this.y) 
@@ -418,7 +418,7 @@ export class MixedAlignment extends AlignmentGeometry {
     )
   }
 
-  substract (other: MixedAlignment): MixedAlignment {
+  subtract (other: MixedAlignment): MixedAlignment {
     return new MixedAlignment(
       this.x - other.x,
       this.y - other.y,
@@ -461,7 +461,7 @@ export class MixedAlignment extends AlignmentGeometry {
    * @return {*}
    */  
   resolve (direction: Skia.TextDirection): Alignment {
-    if (direction === AtEngine.skia.TextDirection.RTL) {
+    if (direction === Engine.skia.TextDirection.RTL) {
       return new Alignment(
         this.x - this.start, 
         this.y

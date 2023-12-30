@@ -1,6 +1,6 @@
 import { invariant } from '@at/utils' 
 import { 
-  AtEngine, 
+  Engine, 
   Canvas, 
   ColorFilter, 
   Path, 
@@ -100,8 +100,9 @@ export class PaintingContext extends ClipContext {
     if (this._canvas === null) {
       this.startRecording()
     }
-    
-    return this._canvas
+
+    invariant(this._canvas, 'The property "canvas" cannot be null.')
+    return this._canvas as Canvas
   }
   public set canvas (canvas: Canvas | null) {
     this._canvas = canvas
@@ -240,7 +241,7 @@ export class PaintingContext extends ClipContext {
     offset: Offset,
     clipRect: Rect, 
     painter: PaintingContextCallback,
-    clipBehavior: Skia.ClipKind = AtEngine.skia.ClipKind.HardEdge, 
+    clipBehavior: Skia.ClipKind = Engine.skia.ClipKind.HardEdge, 
     oldLayer?: ClipRectLayer | null
   ): ClipRectLayer | null {
     const offsetClipRect = clipRect.shift(offset)
@@ -265,7 +266,7 @@ export class PaintingContext extends ClipContext {
     bounds: Rect, 
     clipRRect: RRect, 
     painter: PaintingContextCallback,
-    clipBehavior: Skia.ClipKind = AtEngine.skia.ClipKind.AntiAlias, 
+    clipBehavior: Skia.ClipKind = Engine.skia.ClipKind.AntiAlias, 
     oldLayer?: ClipRRectLayer | null
   ): ClipRRectLayer | null  {
     invariant(clipBehavior !== null)
@@ -291,7 +292,7 @@ export class PaintingContext extends ClipContext {
     bounds: Rect,
     clipPath: Path, 
     painter: PaintingContextCallback,
-    clipBehavior: Skia.ClipKind = AtEngine.skia.ClipKind.AntiAlias, 
+    clipBehavior: Skia.ClipKind = Engine.skia.ClipKind.AntiAlias, 
     oldLayer?: ClipPathLayer | null
   ): ClipPathLayer | null {
     invariant(clipBehavior !== null, `The argument "clipBehavior" cannot be null.`)

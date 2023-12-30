@@ -64,7 +64,7 @@ export abstract class AtAlignmentGeometry {
   }
   
   abstract add (other: AtAlignmentGeometry): AtAlignmentGeometry
-  abstract substract (other: AtAlignmentGeometry): AtAlignmentGeometry 
+  abstract subtract (other: AtAlignmentGeometry): AtAlignmentGeometry 
   abstract multiply (other: number): AtAlignmentGeometry 
   abstract divide (other: number): AtAlignmentGeometry
   abstract modulo (other: number): AtAlignmentGeometry
@@ -157,7 +157,7 @@ export class AtAlignment extends AtAlignmentGeometry {
    * @param {AtAlignment} other
    * @return {*}
    */  
-  substract (other: AtAlignment): AtAlignment {
+  subtract (other: AtAlignment): AtAlignment {
     return new AtAlignment(
       this.x - other.x,
       this.y - other.y
@@ -305,7 +305,7 @@ export class AtAlignmentDirectional extends AtAlignmentGeometry {
     )
   }
   
-  substract (other: AtAlignmentDirectional): AtAlignmentGeometry {
+  subtract (other: AtAlignmentDirectional): AtAlignmentGeometry {
     return new AtAlignmentDirectional(
       this.start - other.start, 
       this.y - other.y
@@ -383,7 +383,7 @@ export class AtMixedAlignment extends AtAlignmentGeometry {
     )
   }
 
-  substract (other: AtMixedAlignment): AtMixedAlignment {
+  subtract (other: AtMixedAlignment): AtMixedAlignment {
     return new AtMixedAlignment(
       this.x - other.x,
       this.y - other.y,

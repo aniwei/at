@@ -248,7 +248,7 @@ export class Vector3 extends Array<number> {
   }
 
   reflect (normal: Vector3) {
-    this.substract(normal.scaled(2.0 * normal.dot(this)))
+    this.subtract(normal.scaled(2.0 * normal.dot(this)))
   }
 
   reflected (normal: Vector3) {
@@ -331,14 +331,14 @@ export class Vector3 extends Array<number> {
   relativeError (correct: Vector3) {
     const correctNorm = correct.length
     const diff = this.clone()
-    diff.substract(correct)
+    diff.subtract(correct)
     const diffNorm = diff.length
     return diffNorm / correctNorm
   }
 
   absoluteError (correct: Vector3) {
     const diff = this.clone()
-    diff.substract(correct)
+    diff.subtract(correct)
     return diff.length
   }
 
@@ -354,7 +354,7 @@ export class Vector3 extends Array<number> {
     this[2] = this[2] + v[2] * factor
   }
 
-  substract (v: Vector3) {
+  subtract (v: Vector3) {
     this[0] = this[0] - v[0]
     this[1] = this[1] - v[1]
     this[2] = this[2] - v[2]

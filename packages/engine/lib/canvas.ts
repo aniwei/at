@@ -9,7 +9,7 @@ import { Paint } from './paint'
 import { Picture } from './picture'
 import { Image } from './image'
 import { ImageFilter } from './image-filter'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import { Paragraph } from './paragraph'
 import { 
   ClearCommand, 
@@ -137,7 +137,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
     invariant(offsetIsValid(point), `The argument point is invalid.`)
     const quality = paint.filter?.quality
     
-    if (quality === AtEngine.skia.FilterQualityKind.High) {
+    if (quality === Engine.skia.FilterQualityKind.High) {
       this.skia.drawImageCubic(
         image.skia,
         point.dx,
@@ -151,12 +151,12 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
         image.skia,
         point.dx,
         point.dy,
-        quality === AtEngine.skia.FilterQualityKind.None 
-          ? AtEngine.skia.FilterMode.Nearest 
-          : AtEngine.skia.FilterMode.Linear,
-          quality === AtEngine.skia.FilterQualityKind.Medium 
-          ? AtEngine.skia.MipmapMode.Linear 
-          : AtEngine.skia.MipmapMode.None,
+        quality === Engine.skia.FilterQualityKind.None 
+          ? Engine.skia.FilterMode.Nearest 
+          : Engine.skia.FilterMode.Linear,
+          quality === Engine.skia.FilterQualityKind.Medium 
+          ? Engine.skia.MipmapMode.Linear 
+          : Engine.skia.MipmapMode.None,
         paint.skia,
       )
     }
@@ -174,7 +174,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
     invariant(rectIsValid(dst), 'The "dst" argument was invalid.')
 
     const quality = paint.filter?.quality
-    if (quality === AtEngine.skia.FilterQualityKind.High) {
+    if (quality === Engine.skia.FilterQualityKind.High) {
       this.skia.drawImageRectCubic(
         image.skia,
         src,
@@ -188,12 +188,12 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
         image.skia,
         src,
         dst,
-        quality === AtEngine.skia.FilterQualityKind.None 
-          ? AtEngine.skia.FilterMode.Nearest 
-          : AtEngine.skia.FilterMode.Linear,
-          quality === AtEngine.skia.FilterQualityKind.Medium 
-          ? AtEngine.skia.MipmapMode.Linear 
-          : AtEngine.skia.MipmapMode.None,
+        quality === Engine.skia.FilterQualityKind.None 
+          ? Engine.skia.FilterMode.Nearest 
+          : Engine.skia.FilterMode.Linear,
+          quality === Engine.skia.FilterQualityKind.Medium 
+          ? Engine.skia.MipmapMode.Linear 
+          : Engine.skia.MipmapMode.None,
         paint.skia,
       )
     }
@@ -214,9 +214,9 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
       image.skia,
       center,
       dist,
-      paint.filter?.quality === AtEngine.skia.FilterQualityKind.None 
-        ? AtEngine.skia.FilterMode.Nearest 
-        : AtEngine.skia.FilterMode.Linear,
+      paint.filter?.quality === Engine.skia.FilterQualityKind.None 
+        ? Engine.skia.FilterMode.Nearest 
+        : Engine.skia.FilterMode.Linear,
       paint.skia,
     )
   }
@@ -343,7 +343,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
     path: Path, 
     doAntiAlias: boolean = true
   ) {
-    this.skia.clipPath(path.skia, AtEngine.skia.ClipOp.Intersect, doAntiAlias)
+    this.skia.clipPath(path.skia, Engine.skia.ClipOp.Intersect, doAntiAlias)
   }
 
   /**
@@ -354,7 +354,7 @@ export class Canvas extends Skia.ManagedSkiaRef<Skia.Canvas> {
    */
   clipRRect (rrect: RRect, doAntiAlias: boolean = true) {
     invariant(rrectIsValid(rrect), 'The argument "rrect" is invalid.')
-    this.skia.clipRRect(rrect, AtEngine.skia.ClipOp.Intersect, doAntiAlias)
+    this.skia.clipRRect(rrect, Engine.skia.ClipOp.Intersect, doAntiAlias)
   }
 
   /**
@@ -485,7 +485,7 @@ export class Recorder extends Canvas {
    * @param {Rect} bounds 
    */
   constructor (bounds: Rect | null = null) {
-    const prictue = new AtEngine.skia.PictureRecorder()
+    const prictue = new Engine.skia.PictureRecorder()
     const cullRect = bounds ?? Rect.LARGEST
     super(prictue.beginRecording(cullRect))
 

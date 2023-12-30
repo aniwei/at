@@ -477,7 +477,7 @@ export class Matrix3 extends Array<number> {
 
    elativeError (correct: Matrix3) {
     const diff = correct.clone() 
-    diff.substract(this)
+    diff.subtract(this)
     const correctNorm = correct.infinityNorm()
     const diffNorm = diff.infinityNorm()
     return diffNorm / correctNorm
@@ -660,7 +660,7 @@ export class Matrix3 extends Array<number> {
     this[8] = this[8] + o[8]
   }
 
-  substract (o: Matrix3) {
+  subtract (o: Matrix3) {
     this[0] = this[0] - o[0]
     this[1] = this[1] - o[1]
     this[2] = this[2] - o[2]

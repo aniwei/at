@@ -1,5 +1,5 @@
 import { invariant } from '@at/utils'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import { Image } from './image'
 import * as Skia from './skia'
 
@@ -32,7 +32,7 @@ export class AnimatedImage extends Skia.ManagedSkiaRef<Skia.AnimatedImage> {
    * @return {AnimatedImage}
    */  
   constructor (bytes: Uint8Array, src: string) {
-    const skia = AtEngine.skia.MakeAnimatedImageFromEncoded(bytes)
+    const skia = Engine.skia.MakeAnimatedImageFromEncoded(bytes)
 
     if (skia === null) {
       throw new Error(`Failed to decode image data.\nImage source: ${src},`)
@@ -73,7 +73,7 @@ export class AnimatedImage extends Skia.ManagedSkiaRef<Skia.AnimatedImage> {
    * @return {Skia.AnimatedImage}
    */  
   resurrect (): Skia.AnimatedImage {
-    const image = AtEngine.skia.MakeAnimatedImageFromEncoded(this.bytes)
+    const image = Engine.skia.MakeAnimatedImageFromEncoded(this.bytes)
 
     if (image === null) {
       throw new Error(`Failed to decode image data.\nImage source: ${this.src}`)

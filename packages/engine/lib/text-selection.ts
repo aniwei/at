@@ -1,5 +1,5 @@
 import { TextRange } from './text-range'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import { TextPosition } from './text-position'
 
 import * as Skia from './skia'
@@ -26,7 +26,7 @@ export class TextSelection extends TextRange {
   constructor (
     baseOffset: number,
     extentOffset: number,
-    affinity = AtEngine.skia.Affinity.Downstream,
+    affinity = Engine.skia.Affinity.Downstream,
     isDirectional: boolean = false,
   ) {
     super(
@@ -42,7 +42,7 @@ export class TextSelection extends TextRange {
   
   static collapsed(
     offset: number,
-    affinity: Skia.Affinity = AtEngine.skia.Affinity.Downstream,
+    affinity: Skia.Affinity = Engine.skia.Affinity.Downstream,
   ) {
     return TextSelection.create({
       baseOffset: offset,
@@ -67,9 +67,9 @@ export class TextSelection extends TextRange {
     if (!this.valid || this.baseOffset === this.extentOffset) {
       affinity = this.affinity
     } else if (this.baseOffset < this.extentOffset) {
-      affinity = AtEngine.skia.Affinity.Downstream
+      affinity = Engine.skia.Affinity.Downstream
     } else {
-      affinity = AtEngine.skia.Affinity.Upstream
+      affinity = Engine.skia.Affinity.Upstream
     }
 
     return TextPosition.create({
@@ -83,9 +83,9 @@ export class TextSelection extends TextRange {
     if (!this.valid || this.baseOffset === this.extentOffset) {
       affinity = this.affinity
     } else if (this.baseOffset < this.extentOffset) {
-      affinity = AtEngine.skia.Affinity.Upstream
+      affinity = Engine.skia.Affinity.Upstream
     } else {
-      affinity = AtEngine.skia.Affinity.Downstream
+      affinity = Engine.skia.Affinity.Downstream
     }
     
     return new TextPosition(this.extentOffset, affinity)

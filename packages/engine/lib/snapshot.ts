@@ -7,7 +7,7 @@ import { Paint } from './paint'
 import { Image } from './image'
 import { Picture } from './picture'
 import { toMatrix } from './to'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import { ImageFilter } from './image-filter'
 import { Paragraph } from './paragraph'
 
@@ -69,7 +69,7 @@ export class ClipPathCommand extends PaintCommand {
   apply (canvas: Skia.Canvas) {
     canvas.clipPath(
       this.path.skia,
-      AtEngine.skia.ClipOp.Intersect,
+      Engine.skia.ClipOp.Intersect,
       this.doAntiAlias,
     )
   }
@@ -93,7 +93,7 @@ export class ClipRRectCommand extends PaintCommand {
   apply (canvas: Skia.Canvas) {
     canvas.clipRRect(
       this.rrect,
-      AtEngine.skia.ClipOp.Intersect,
+      Engine.skia.ClipOp.Intersect,
       this.doAntiAlias,
     )
   }
@@ -281,9 +281,9 @@ export class DrawImageNineCommand extends PaintCommand {
       this.image.skia,
       this.center,
       this.dest,
-      this.paint.filter?.quality === AtEngine.skia.FilterQualityKind.None 
-        ? AtEngine.skia.FilterMode.Nearest 
-        : AtEngine.skia.FilterMode.Linear,
+      this.paint.filter?.quality === Engine.skia.FilterQualityKind.None 
+        ? Engine.skia.FilterMode.Nearest 
+        : Engine.skia.FilterMode.Linear,
       this.paint.skia
     )
   }
@@ -694,7 +694,7 @@ export class Snapshot {
   }
 
   toPicture () {
-    const recorder: Skia.PictureRecorder = new AtEngine.skia.PictureRecorder()
+    const recorder: Skia.PictureRecorder = new Engine.skia.PictureRecorder()
     const canvas: Skia.Canvas = recorder.beginRecording(this.bounds)
     
     for (const command of this.commands) {

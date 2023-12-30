@@ -5,7 +5,7 @@ import { ProxyApp } from './lib/index'
 const proxy = ProxyApp.create(document.getElementById('webgl') as HTMLCanvasElement, {
   width:400,
   height: 400,
-  devicePixelRatio: 2.0
+  devicePixelRatio: window.devicePixelRatio
 })
 
 proxy.start(() => {

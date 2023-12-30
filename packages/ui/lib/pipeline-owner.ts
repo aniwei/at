@@ -3,7 +3,7 @@ import { Object } from './object'
 import { PaintingContext } from './painting-context'
 import { ViewConfiguration } from './view-configuration'
 
-import type { AtEngine, AtRasterizer } from '@at/engine'
+import type { Engine, EngineRasterizer } from '@at/engine'
 
 //// => ObjectNeedingUpdate
 export type RequestRasterizeHandle = () => void
@@ -21,8 +21,8 @@ export class ObjectNeedingUpdate extends Array<Object> {
 
 export class PipelineOwner {
   static create (
-    instance: AtEngine,
-    rasterizer: AtRasterizer, 
+    instance: Engine,
+    rasterizer: EngineRasterizer, 
     onNeedVisualUpdate: VoidFunction, 
     configuration: ViewConfiguration
   ) {
@@ -57,8 +57,8 @@ export class PipelineOwner {
   // => needs
   public onNeedVisualUpdate: VoidFunction | null = null
   
-  public instance: AtEngine
-  public rasterizer: AtRasterizer
+  public instance: Engine
+  public rasterizer: EngineRasterizer
   public configuration: ViewConfiguration
 
   public objectsNeedingLayout: ObjectNeedingUpdate = ObjectNeedingUpdate.create()
@@ -66,8 +66,8 @@ export class PipelineOwner {
   public objectsNeedingCompositingBitsUpdate: ObjectNeedingUpdate = ObjectNeedingUpdate.create()
   
   constructor (
-    instance: AtEngine,
-    rasterizer: AtRasterizer, 
+    instance: Engine,
+    rasterizer: EngineRasterizer, 
     onNeedVisualUpdate: VoidFunction, 
     configuration: ViewConfiguration
   ) {

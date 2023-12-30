@@ -1,7 +1,7 @@
 import { Offset, Rect } from '@at/geometry'
 import { Matrix4 } from '@at/math'
 import { Color } from '@at/basic'
-import { AtEngine } from './engine'
+import { Engine } from './engine'
 import { TransformError } from './transform-error'
 import { TextPosition } from './text-position'
 import { StrutStyle } from './struct-style'
@@ -39,7 +39,7 @@ export function toMatrix (matrix4: number[]): Float32Array {
  * @return {*}
  */
 export function toPoints (points: ArrayLike<Offset>): Skia.MallocObj {
-  const skia = AtEngine.skia.Malloc(Float32Array, points.length * 2)
+  const skia = Engine.skia.Malloc(Float32Array, points.length * 2)
   
   const typed = skia.toTypedArray()
   
@@ -97,22 +97,22 @@ export function toFilterQuality (filterQuality: Skia.FilterQualityKind): {
   B: number,
   C: number
 } {
-  if (filterQuality === AtEngine.skia.FilterQualityKind.None) {
+  if (filterQuality === Engine.skia.FilterQualityKind.None) {
    return {
-     filter: AtEngine.skia.FilterMode.Nearest,
-     mipmap: AtEngine.skia.MipmapMode.None
+     filter: Engine.skia.FilterMode.Nearest,
+     mipmap: Engine.skia.MipmapMode.None
    }
- } else if (filterQuality === AtEngine.skia.FilterQualityKind.Low) {
+ } else if (filterQuality === Engine.skia.FilterQualityKind.Low) {
    return {
-     filter: AtEngine.skia.FilterMode.Linear,
-     mipmap: AtEngine.skia.MipmapMode.None
+     filter: Engine.skia.FilterMode.Linear,
+     mipmap: Engine.skia.MipmapMode.None
    }
- } else if (filterQuality === AtEngine.skia.FilterQualityKind.Medium) {
+ } else if (filterQuality === Engine.skia.FilterQualityKind.Medium) {
    return {
-     filter: AtEngine.skia.FilterMode.Linear,
-     mipmap: AtEngine.skia.MipmapMode.Linear
+     filter: Engine.skia.FilterMode.Linear,
+     mipmap: Engine.skia.MipmapMode.Linear
    }
- } else if (filterQuality === AtEngine.skia.FilterQualityKind.High) {
+ } else if (filterQuality === Engine.skia.FilterQualityKind.High) {
    return {
      B: 1.0 / 3.0,
      C: 1.0 / 3.0
@@ -238,9 +238,9 @@ export function toColorStops (stops: number[] | null = null) {
  * @return {*}
  */
 export function toMipmapMode (filterQuality: Skia.FilterQualityKind) {
-  return filterQuality == AtEngine.skia.FilterQualityKind.Medium
-      ? AtEngine.skia.MipmapMode.Linear
-      : AtEngine.skia.MipmapMode.None
+  return filterQuality == Engine.skia.FilterQualityKind.Medium
+      ? Engine.skia.MipmapMode.Linear
+      : Engine.skia.MipmapMode.None
 }
 
 /**
@@ -248,9 +248,9 @@ export function toMipmapMode (filterQuality: Skia.FilterQualityKind) {
  * @return {*}
  */
 export function toFilterMode (filterQuality: Skia.FilterQualityKind) {
-  return filterQuality == AtEngine.skia.FilterQualityKind.None
-      ? AtEngine.skia.FilterMode.Nearest
-      : AtEngine.skia.FilterMode.Linear
+  return filterQuality == Engine.skia.FilterQualityKind.None
+      ? Engine.skia.FilterMode.Nearest
+      : Engine.skia.FilterMode.Linear
 }
 
 
@@ -265,8 +265,8 @@ export const toTextStyle = (
 ): Skia.TextStyle => {
   const style: Skia.TextStyle = {
     fontFamilies: fontFamily 
-      ? [fontFamily, AtEngine.env<string>('ATKIT_FONT_FAMILY', 'Rotobo')] 
-      : [AtEngine.env<string>('ATKIT_FONT_FAMILY', 'Rotobo')],
+      ? [fontFamily, Engine.env<string>('ATKIT_FONT_FAMILY', 'Rotobo')] 
+      : [Engine.env<string>('ATKIT_FONT_FAMILY', 'Rotobo')],
     fontStyle: toFontStyle(fontWeight, fontStyle),
     fontSize: fontSize 
       ? fontSize 
@@ -294,8 +294,8 @@ export const toStrutStyle = (
 
   const struct: Skia.StrutStyle = {
     fontFamilies: style.fontFamily 
-      ? [style.fontFamily, AtEngine.env<string>('FONT_FAMILY', 'Roboto')] 
-      : [AtEngine.env<string>('FONT_FAMILY', 'ROBOTO')],
+      ? [style.fontFamily, Engine.env<string>('FONT_FAMILY', 'Roboto')] 
+      : [Engine.env<string>('FONT_FAMILY', 'ROBOTO')],
     fontSize: style.fontSize 
       ? style.fontSize 
       : undefined,
@@ -325,10 +325,10 @@ let kSkiaTextHeightBehaviors: Skia.TextHeightBehavior[] | null = null
 export function toTextHeightBehavior (behavior: TextHeightBehavior) {
 
   kSkiaTextHeightBehaviors ??= [
-    AtEngine.skia.TextHeightBehavior.All,
-    AtEngine.skia.TextHeightBehavior.DisableFirstAscent,
-    AtEngine.skia.TextHeightBehavior.DisableLastDescent,
-    AtEngine.skia.TextHeightBehavior.DisableAll,
+    Engine.skia.TextHeightBehavior.All,
+    Engine.skia.TextHeightBehavior.DisableFirstAscent,
+    Engine.skia.TextHeightBehavior.DisableLastDescent,
+    Engine.skia.TextHeightBehavior.DisableAll,
   ]
 
   const index = (

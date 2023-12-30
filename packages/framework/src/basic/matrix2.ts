@@ -304,7 +304,7 @@ export class Matrix2 extends Array<number> {
 
   relativeError (correct: Matrix2) {
     const diff = correct.clone() 
-    diff.substract(this)
+    diff.subtract(this)
     const correctNorm = correct.infinityNorm()
     const diffNorm = diff.infinityNorm()
     return diffNorm / correctNorm
@@ -382,7 +382,7 @@ export class Matrix2 extends Array<number> {
     this[3] = this[3] + o[3]
   }
 
-  substract (o: Matrix2) {
+  subtract (o: Matrix2) {
     this[0] = this[0] - o[0]
     this[1] = this[1] - o[1]
     this[2] = this[2] - o[2]

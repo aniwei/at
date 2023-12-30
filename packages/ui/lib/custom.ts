@@ -2,13 +2,14 @@ import { invariant } from '@at/utils'
 import { Canvas } from '@at/engine'
 import { Offset, Size } from '@at/geometry'
 import { Subscribable } from '@at/basic'
+import { AlignmentDirectional } from '@at/painting'
+
+import { Box } from './box'
+import { Stack } from './stack'
 import { PaintingContext } from './painting-context'
 import { PipelineOwner } from './pipeline-owner'
 import { BoxConstraints } from './constraints'
-import { Box } from './box'
-import { Stack } from './stack'
-import { AlignmentDirectional } from 'packages/painting/types/lib'
-import { BoxHitTestResult } from '.'
+import { BoxHitTestResult } from './box-hit-test'
 
 
 export interface CustomOptions {
@@ -20,11 +21,14 @@ export class Custom<T extends CustomPainter = CustomPainter> extends Stack {
   // => preferredSize
   private _preferredSize: Size | null = null
   public get preferredSize () {
-    invariant(this._preferredSize)
+    invariant(this._preferredSize, 'The property "preferredSize" cannot be null.')
     return this._preferredSize
   }
   public set preferredSize (value: Size) {
-    if (this._preferredSize === null || this._preferredSize.notEqual(value)) {
+    if (
+      this._preferredSize === null || 
+      this._preferredSize.notEqual(value)
+    ) {
       this._preferredSize = value
       this.markNeedsLayout()
     }
@@ -37,7 +41,10 @@ export class Custom<T extends CustomPainter = CustomPainter> extends Stack {
     return this._painter
   }
   public set painter (painter: T | null) {
-    if (this._painter === null || this._painter !== painter) {
+    if (
+      this._painter === null || 
+      this._painter !== painter
+    ) {
       this._painter?.unsubscribe()
       this._painter = painter
       this._painter?.subscribe(() => this.markNeedsPaint())
@@ -51,7 +58,10 @@ export class Custom<T extends CustomPainter = CustomPainter> extends Stack {
     return this._foregroundPainter
   }
   public set foregroundPainter (foregroundPainter: T | null) {
-    if (this._foregroundPainter === null || this._foregroundPainter !== foregroundPainter) {
+    if (
+      this._foregroundPainter === null || 
+      this._foregroundPainter !== foregroundPainter
+    ) {
       this._foregroundPainter?.unsubscribe()
       this._foregroundPainter = foregroundPainter
       this._foregroundPainter?.subscribe(() => this.markNeedsPaint())
@@ -81,43 +91,6 @@ export class Custom<T extends CustomPainter = CustomPainter> extends Stack {
     this.preferredSize = preferredSize
   }
 
-  computeMinIntrinsicWidth (height: number) {
-    if (this.child === null) {
-      return Number.isFinite(this.preferredSize.width) 
-        ? this.preferredSize.width 
-        : 0
-    }
-    return super.computeMinIntrinsicWidth(height);
-  }
-
-  computeMaxIntrinsicWidth (height: number) {
-    if (this.child === null) {
-      return Number.isFinite(this.preferredSize.width) 
-        ? this.preferredSize.width 
-        : 0
-    }
-    return super.computeMaxIntrinsicWidth(height);
-  }
-
-  computeMinIntrinsicHeight (width: number) {
-    if (this.child === null) {
-      return Number.isFinite(this.preferredSize.height) 
-        ? this.preferredSize.height 
-        : 0
-    }
-    return super.computeMinIntrinsicHeight(width)
-  }
-
-  computeMaxIntrinsicHeight (width: number) {
-    if (this.child === null) {
-      return Number.isFinite(this.preferredSize.height) 
-        ? this.preferredSize.height 
-        : 0
-    }
-
-    return super.computeMaxIntrinsicHeight(width)
-  }
-
   computeSizeForNoChild (constraints: BoxConstraints) {
     return constraints.constrain(this.preferredSize)
   }
@@ -126,13 +99,16 @@ export class Custom<T extends CustomPainter = CustomPainter> extends Stack {
     if (this.isComplex) {
       context.setIsComplexHint()
     }
+
     if (this.willChange) {
       context.setWillChangeHint()
     }
   }
 
   hitTestChildren (result: BoxHitTestResult, position: Offset) {
-    if (this.foregroundPainter !== null && (this.foregroundPainter.hitTest(position) ?? false)) {
+    if (
+      this.foregroundPainter !== null && 
+      (this.foregroundPainter.hitTest(position) ?? false)) {
       return true
     }
 
@@ -144,16 +120,16 @@ export class Custom<T extends CustomPainter = CustomPainter> extends Stack {
   }
 
   paint (context: PaintingContext, offset: Offset) {
-    invariant(context.canvas !== null)
     if (this.painter !== null) {
       invariant(this.size !== null)
+
       this.paintWithPainter(
-        context.canvas, 
+        context.canvas as Canvas, 
         offset, 
         this.size,
         this.painter, 
-        DecorationPosition.Background
       )
+
       this.setRasterCacheHints(context)
     }
 
@@ -162,11 +138,10 @@ export class Custom<T extends CustomPainter = CustomPainter> extends Stack {
     if (this.foregroundPainter !== null) {
       invariant(this.size !== null)
       this.paintWithPainter(
-        context.canvas, 
+        context.canvas as Canvas, 
         offset, 
         this.size,
         this.foregroundPainter, 
-        DecorationPosition.Foreground
       )
       this.setRasterCacheHints(context)
     }
@@ -177,8 +152,14 @@ export class Custom<T extends CustomPainter = CustomPainter> extends Stack {
     offset: Offset, 
     size: Size,
     painter: T, 
-    position: DecorationPosition
-  ) {
+    ...rests: unknown[]
+  ): void
+  paintWithPainter (
+    canvas: Canvas, 
+    offset: Offset, 
+    size: Size,
+    painter: T, 
+  ): void {
     canvas.save()
     if (offset.notEqual(Offset.ZERO)) {
       canvas.translate(offset.dx, offset.dy)
@@ -201,7 +182,8 @@ export class Custom<T extends CustomPainter = CustomPainter> extends Stack {
 }
 
 export abstract class CustomPainter extends Subscribable {
-  abstract paint (canvas: Canvas, size: Size, ...rest: unknown[]): void
+  abstract paint (...rests: unknown[]): void
+  abstract paint (canvas: Canvas, size: Size, ...rests: unknown[]): void
   abstract hitTest (position: Offset): boolean
   // abstract shouldRepaint (delegate: AtLayoutCustomPainter): boolean
 }

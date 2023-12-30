@@ -10,13 +10,13 @@ export enum GestureDispositionKind {
 //// => GestureArenaMember
 // 竞技场成员
 export abstract class GestureArenaMember {
-  abstract accept (pointer: number): void
-  abstract reject (pointer: number): void
+  abstract accept (id: number): void
+  abstract reject (id: number): void
 }
 
 export interface GestureArenaEntryOptions {
   arena: GestureArenaManager,
-  pointer: number,
+  id: number,
   member: GestureArenaMember,
 }
 
@@ -26,7 +26,7 @@ export class GestureArenaEntry {
   static create (options: GestureArenaEntryOptions) {
     return new GestureArenaEntry(
       options.arena,
-      options.pointer,
+      options.id,
       options.member,
     )
   }
@@ -35,29 +35,29 @@ export class GestureArenaEntry {
   public arena: GestureArenaManager 
   // 成员
   public member: GestureArenaMember
-  
-  protected pointer: number
+  // id
+  protected id: number
 
   constructor (...rests: unknown[]) 
   /**
    * 构造函数
    * @param {GestureArenaManager} arena 
-   * @param {number} pointer 
+   * @param {number} id 
    * @param {GestureArenaMember} member 
    */
   constructor (
     arena: GestureArenaManager,
-    pointer: number,
+    id: number,
     member: GestureArenaMember,
   ) {
+    this.id = id
     this.arena = arena
-    this.pointer = pointer
     this.member = member
   }
 
   resolve (disposition: GestureDispositionKind) {
     this.arena.resolve(
-      this.pointer, 
+      this.id, 
       this.member, 
       disposition
     )
@@ -134,18 +134,18 @@ export class GestureArenaManager {
 
   /**
    * 
-   * @param pointer 
-   * @param state 
+   * @param {number} pointer 
+   * @param {GestureArena} state 
    */
-  tryToResolveArena (pointer: number, arena: GestureArena) {
-    invariant(this.arenas.get(pointer) === arena)
+  tryToResolveArena (id: number, arena: GestureArena) {
+    invariant(this.arenas.get(id) === arena)
     invariant(!arena.opened, 'The "arena" cannot be opened.')
     if (arena.members.length === 1) {
-      nextTick(() => this.resolveByDefault(pointer, arena))
+      nextTick(() => this.resolveByDefault(id, arena))
     } else if (arena.members.length === 0) {
-      this.arenas.delete(pointer)
+      this.arenas.delete(id)
     } else if (arena.eagerWinner !== null) {
-      this.resolveInFavorOf(pointer, arena, arena.eagerWinner as GestureArenaMember)
+      this.resolveInFavorOf(id, arena, arena.eagerWinner as GestureArenaMember)
     }
   }
 
@@ -155,43 +155,43 @@ export class GestureArenaManager {
    * @param state 
    * @param member 
    */
-  resolveInFavorOf (pointer: number, arena: GestureArena, member: GestureArenaMember) {
-    invariant(arena === this.arenas.get(pointer))
+  resolveInFavorOf (id: number, arena: GestureArena, member: GestureArenaMember) {
+    invariant(arena === this.arenas.get(id))
     invariant(arena !== null, 'The "arena" cannot be null.')
     invariant(arena.eagerWinner === null || arena.eagerWinner === member)
     invariant(!arena.opened)
     
-    this.arenas.delete(pointer)
+    this.arenas.delete(id)
     // 拒绝其他竞争成员
     for (const rejectedMember of arena.members) {
       if (rejectedMember !== member) {
-        rejectedMember.reject(pointer)
+        rejectedMember.reject(id)
       }
     }
     
-    member.accept(pointer)
+    member.accept(id)
   }
 
   /**
    * 
-   * @param {number} pointer 
+   * @param {number} id 
    * @param {GestureArenaMember} member 
    * @returns {GestureArenaEntry}
    */
   add (
-    pointer: number, 
+    id: number, 
     member: GestureArenaMember
   ): GestureArenaEntry {
-    if (!this.arenas.has(pointer)) {
-      this.arenas.set(pointer, GestureArena.create())
+    if (!this.arenas.has(id)) {
+      this.arenas.set(id, GestureArena.create())
     }
 
-    const arena = this.arenas.get(pointer) as GestureArena
+    const arena = this.arenas.get(id) as GestureArena
     arena.add(member)
 
     return GestureArenaEntry.create({ 
       arena: this, 
-      pointer, 
+      id, 
       member 
     })
   }
@@ -200,36 +200,35 @@ export class GestureArenaManager {
    * 关闭竞技场
    * @param pointer 
    */
-  close (pointer: number) {
-    const state: GestureArena | null = this.arenas.get(pointer) ?? null
+  close (id: number) {
+    const state: GestureArena | null = this.arenas.get(id) ?? null
     if (state !== null) {
       state.state |= GestureArenaStateKind.Open
-      this.tryToResolveArena(pointer, state)
+      this.tryToResolveArena(id, state)
     }
   }
 
   /**
    * 
-   * @param pointer 
+   * @param {number} id 
    * @returns 
    */
-  sweep (pointer: number) {
-    const arena: GestureArena | null = this.arenas.get(pointer) ?? null
+  sweep (id: number) {
+    const arena: GestureArena | null = this.arenas.get(id) ?? null
     
     if (arena !== null) {
-      invariant(!arena.opened)
       if (arena.held) {
         arena.hasPendingSweep = true
         return
       }
       
-      this.arenas.delete(pointer)
+      this.arenas.delete(id)
       if (arena.members.length > 0) {
         const member = arena.members[0]
-        member.accept(pointer)
+        member.accept(id)
       
         for (let i = 1; i < arena.members.length; i++) {
-          arena.members[i].reject(pointer)
+          arena.members[i].reject(id)
         }
       }
     }
@@ -237,10 +236,10 @@ export class GestureArenaManager {
 
   /**
    * 
-   * @param pointer 
+   * @param {number} id 
    */
-  hold (pointer: number) {
-    const arena: GestureArena | null = this.arenas.get(pointer) ?? null
+  hold (id: number) {
+    const arena: GestureArena | null = this.arenas.get(id) ?? null
     if (arena !== null) {
       arena.held = true
     }
@@ -248,30 +247,30 @@ export class GestureArenaManager {
 
   /**
    * 
-   * @param pointer 
+   * @param id 
    */
-  release (pointer: number) {
-    const state: GestureArena | null = this.arenas.get(pointer) ?? null
+  release (id: number) {
+    const state: GestureArena | null = this.arenas.get(id) ?? null
     if (state !== null) {
       state.held = false
       if (state.hasPendingSweep) {
-        this.sweep(pointer)
+        this.sweep(id)
       }
     }
   }
 
   /**
    * 
-   * @param {number} pointer 
+   * @param {number} id 
    * @param {GestureArenaMember} member 
    * @param {GestureDispositionKind} disposition 
    */
   resolve (
-    pointer: number, 
+    id: number, 
     member: GestureArenaMember, 
     disposition: GestureDispositionKind
   ) {
-    const arena: GestureArena | null = this.arenas.get(pointer) ?? null
+    const arena: GestureArena | null = this.arenas.get(id) ?? null
     
     if (arena !== null) {
       if (disposition === GestureDispositionKind.Rejected) {
@@ -280,16 +279,16 @@ export class GestureArenaManager {
           invariant(arena.members.includes(member))
           arena.members.splice(index, 1)
         }
-        member.reject(pointer)
+        member.reject(id)
         if (!arena.opened) {
-          this.tryToResolveArena(pointer, arena)
+          this.tryToResolveArena(id, arena)
         }
       } else {
         invariant(disposition === GestureDispositionKind.Accepted)
         if (arena.opened) {
           arena.eagerWinner ??= member
         } else {
-          this.resolveInFavorOf(pointer, arena, member)
+          this.resolveInFavorOf(id, arena, member)
         }
       }
     }
@@ -297,21 +296,21 @@ export class GestureArenaManager {
 
   /**
    * 
-   * @param {number} pointer 
+   * @param {number} id 
    * @param {GestureArena} arena 
    */
   resolveByDefault (
-    pointer: number, 
+    id: number, 
     arena: GestureArena
   ) {
-    if (this.arenas.has(pointer)) {
+    if (this.arenas.has(id)) {
       invariant(!arena.opened, 'The "arena" cannot be opened.')
 
       const members = arena.members
       invariant(members.length === 1)
-      this.arenas.delete(pointer)
+      this.arenas.delete(id)
       const member = arena.members[0]
-      member.accept(pointer)
+      member.accept(id)
     }
   }
 }

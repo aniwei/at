@@ -3,7 +3,7 @@ import { Offset, Rect, Size } from '@at/geometry'
 import { 
   Skia, 
   Canvas, 
-  AtEngine, 
+  Engine, 
   StrutStyle, 
   TextHeightBehavior, 
   Paragraph, 
@@ -39,7 +39,7 @@ export class PlaceholderDimensions {
   static get EMPTY (): PlaceholderDimensions {
     return PlaceholderDimensions.create({
       size: Size.ZERO,
-      alignment: AtEngine.skia.PlaceholderAlignment.Bottom
+      alignment: Engine.skia.PlaceholderAlignment.Bottom
     })
   }
 
@@ -62,7 +62,7 @@ export class PlaceholderDimensions {
   constructor (
     size: Size,
     alignment: Skia.PlaceholderAlignment,
-    baseline: Skia.TextBaseline = AtEngine.skia.TextBaseline.Alphabetic,
+    baseline: Skia.TextBaseline = Engine.skia.TextBaseline.Alphabetic,
     baselineOffset: number = 1.0,
   ) {
     this.size = size
@@ -334,29 +334,29 @@ export class TextPainter {
   public get empty (): Offset {
     invariant(this.textAlign !== null)
     switch (this.textAlign) {
-      case AtEngine.skia.TextAlign.Left:
+      case Engine.skia.TextAlign.Left:
         return Offset.ZERO
-      case AtEngine.skia.TextAlign.Right:
+      case Engine.skia.TextAlign.Right:
         return new Offset(this.width, 0)
-      case AtEngine.skia.TextAlign.Center:
+      case Engine.skia.TextAlign.Center:
         return new Offset(this.width / 2, 0)
-      case AtEngine.skia.TextAlign.Justify:
+      case Engine.skia.TextAlign.Justify:
         break
-      case AtEngine.skia.TextAlign.Start:
+      case Engine.skia.TextAlign.Start:
         invariant(this.textDirection !== null)
         switch (this.textDirection) {
-          case AtEngine.skia.TextDirection.RTL:
+          case Engine.skia.TextDirection.RTL:
             return new Offset(this.width, 0)
-          case AtEngine.skia.TextDirection.LTR:
+          case Engine.skia.TextDirection.LTR:
             return Offset.ZERO
         }
         break
-      case AtEngine.skia.TextAlign.End:
+      case Engine.skia.TextAlign.End:
         invariant(this.textDirection !== null)
         switch (this.textDirection) {
-          case AtEngine.skia.TextDirection.RTL:
+          case Engine.skia.TextDirection.RTL:
             return Offset.ZERO
-          case AtEngine.skia.TextDirection.LTR:
+          case Engine.skia.TextDirection.LTR:
             return new Offset(this.width, 0)
         }
     }
@@ -395,8 +395,8 @@ export class TextPainter {
     maxLines: number | null = null,
     ellipsis: string | null = null,
     strutStyle: StrutStyle | null = null,
-    textAlign: Skia.TextAlign = AtEngine.skia.TextAlign.Start,
-    textDirection: Skia.TextDirection = AtEngine.skia.TextDirection.LTR,
+    textAlign: Skia.TextAlign = Engine.skia.TextAlign.Start,
+    textDirection: Skia.TextDirection = Engine.skia.TextDirection.LTR,
     textScaleFactor: number = 1.0,
     textWidthBasis: TextWidthBasisKind = TextWidthBasisKind.Parent,
     textHeightBehavior: TextHeightBehavior | null = null,
@@ -442,14 +442,14 @@ export class TextPainter {
       textAlign: this.textAlign,
       textDirection: this.textDirection ?? defaultTextDirection,
       maxLines: this.maxLines,
-      fontSize: AtEngine.env<number>('TEXT_FONTSIZE', 12) * this.textScaleFactor,
+      fontSize: Engine.env<number>('TEXT_FONTSIZE', 12) * this.textScaleFactor,
       textHeightBehavior: this.textHeightBehavior,
       ellipsis: this.ellipsis,
     })
   }
   
   createLayoutTemplate () {
-    const builder = new ParagraphBuilder(this.createParagraphStyle(AtEngine.skia.TextDirection.RTL))
+    const builder = new ParagraphBuilder(this.createParagraphStyle(Engine.skia.TextDirection.RTL))
     invariant(this.text)
 
     let textStyle = this.text.style?.getTextStyle(this.textScaleFactor) ?? null
@@ -471,9 +471,9 @@ export class TextPainter {
   computeDistanceToActualBaseline (baseline: Skia.TextBaseline) {
     invariant(this.paragraph)
     switch (baseline) {
-      case AtEngine.skia.TextBaseline.Alphabetic:
+      case Engine.skia.TextBaseline.Alphabetic:
         return this.paragraph.alphabeticBaseline
-      case AtEngine.skia.TextBaseline.Ideographic:
+      case Engine.skia.TextBaseline.Ideographic:
         return this.paragraph.ideographicBaseline
     }
   }
@@ -609,7 +609,7 @@ export class TextPainter {
 
     while (boxes.length === 0) {
       const prevRuneOffset = offset - graphemeClusterLength
-      boxes = this.paragraph.getBoxesForRange(prevRuneOffset, offset, AtEngine.skia.RectHeightStyle.Strut)
+      boxes = this.paragraph.getBoxesForRange(prevRuneOffset, offset, Engine.skia.RectHeightStyle.Strut)
       
       if (boxes.length === 0) {
         if (!needsSearch && prevCodeUnit == kNewLineCodeUnit) {
@@ -636,7 +636,7 @@ export class TextPainter {
       }
 
       const caretEnd = box.end
-      const dx = box.direction == AtEngine.skia.TextDirection.RTL 
+      const dx = box.direction == Engine.skia.TextDirection.RTL 
         ? caretEnd - caretPrototype.width 
         : caretEnd
 
@@ -668,7 +668,7 @@ export class TextPainter {
 
     while (boxes.length === 0) {
       const nextRuneOffset = offset + graphemeClusterLength
-      boxes = this.paragraph.getBoxesForRange(offset, nextRuneOffset, AtEngine.skia.RectHeightStyle.Strut)
+      boxes = this.paragraph.getBoxesForRange(offset, nextRuneOffset, Engine.skia.RectHeightStyle.Strut)
       
       if (boxes.length === 0) {
         if (!needsSearch) {
@@ -685,7 +685,7 @@ export class TextPainter {
 
       const box = boxes[boxes.length - 1]
       const caretStart = box.start
-      const dx = box.direction === AtEngine.skia.TextDirection.RTL 
+      const dx = box.direction === Engine.skia.TextDirection.RTL 
         ? caretStart - caretPrototype.width 
         : caretStart
       
@@ -723,11 +723,11 @@ export class TextPainter {
       let rect: Rect | null = null
       
       switch (position.affinity) {
-        case AtEngine.skia.Affinity.Upstream: {
+        case Engine.skia.Affinity.Upstream: {
           rect = this.getRectFromUpstream(offset, caretPrototype) ?? this.getRectFromDownstream(offset, caretPrototype)
           break
         }
-        case AtEngine.skia.Affinity.Downstream: {
+        case Engine.skia.Affinity.Downstream: {
           rect = this.getRectFromDownstream(offset, caretPrototype) ?? this.getRectFromUpstream(offset, caretPrototype)
           break
         }
@@ -751,8 +751,8 @@ export class TextPainter {
 
   getBoxesForSelection (
     selection: TextSelection,
-    boxHeightStyle: Skia.RectHeightStyle = AtEngine.skia.RectHeightStyle.Tight,
-    boxWidthStyle: Skia.RectWidthStyle = AtEngine.skia.RectWidthStyle.Tight,
+    boxHeightStyle: Skia.RectHeightStyle = Engine.skia.RectHeightStyle.Tight,
+    boxWidthStyle: Skia.RectWidthStyle = Engine.skia.RectWidthStyle.Tight,
   ) {
     invariant(this.paragraph)
     return this.paragraph.getBoxesForRange(

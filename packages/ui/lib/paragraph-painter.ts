@@ -1,6 +1,6 @@
 import { invariant } from '@at/utils'
 import { Offset, Radius, Rect, RRect, Size } from '@at/geometry'
-import { Paint, Canvas, AtEngine } from '@at/engine'
+import { Paint, Canvas, Engine } from '@at/engine'
 import { TextRange, TextSelection } from '@at/engine'
 import { Subscribable } from '@at/basic'
 
@@ -198,9 +198,9 @@ export class ParagraphCaretPainter extends ParagraphPainter {
     const position = selection.extent
     const rect = Rect.fromLTWH(
       0.0, 
-      AtEngine.env('ATKIT_PARAGRAPH_CARET_HEIGHT', 2), 
+      Engine.env('ATKIT_PARAGRAPH_CARET_HEIGHT', 2), 
       this.width, 
-      this.height ?? paragraph.preferredLineHeight - 2.0 * AtEngine.env('ATKIT_PARAGRAPH_CARET_HEIGHT', 2)
+      this.height ?? paragraph.preferredLineHeight - 2.0 * Engine.env('ATKIT_PARAGRAPH_CARET_HEIGHT', 2)
     )
 
     const offset = paragraph.getOffsetForCaret(position, rect)
@@ -210,7 +210,7 @@ export class ParagraphCaretPainter extends ParagraphPainter {
     if (height !== null) {
       crect = Rect.fromLTWH(
         crect.left,
-        crect.top - AtEngine.env('ATKIT_PARAGRAPH_CARET_HEIGHT', 2),
+        crect.top - Engine.env('ATKIT_PARAGRAPH_CARET_HEIGHT', 2),
         crect.width,
         height,
       )
@@ -281,7 +281,7 @@ export class ParagraphHighlightPainter extends ParagraphPainter {
   }
 
   // => heightStyle
-  private _heightStyle: Skia.RectHeightStyle = AtEngine.skia.RectHeightStyle.Tight
+  private _heightStyle: Skia.RectHeightStyle = Engine.skia.RectHeightStyle.Tight
   public get heightStyle () {
     return this._heightStyle
   }
@@ -294,7 +294,7 @@ export class ParagraphHighlightPainter extends ParagraphPainter {
   }
 
   // => widthStyle
-  private _widthStyle: Skia.RectWidthStyle = AtEngine.skia.RectWidthStyle.Tight
+  private _widthStyle: Skia.RectWidthStyle = Engine.skia.RectWidthStyle.Tight
   public get widthStyle () {
     return this._widthStyle
   }

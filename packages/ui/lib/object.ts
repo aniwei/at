@@ -71,6 +71,14 @@ export abstract class Object extends AbstractNode<Object> implements HitTestTarg
     this.layerRef.layer = layer
   }
 
+  // => owner
+  public get owner () : PipelineOwner | null {
+    return super.owner as PipelineOwner
+  }
+  public set owner (owner: PipelineOwner | null) {
+    super.owner = owner
+  }
+
   /// => 对象相关
   // 子对象个数
   public count: number = 0
@@ -85,7 +93,7 @@ export abstract class Object extends AbstractNode<Object> implements HitTestTarg
 
   /// => 对象引用相关
   // 绘制管线
-  public owner: PipelineOwner | null = null
+
   // 绘制层
   public layerRef: LayerRef<ContainerLayer> = new LayerRef<ContainerLayer>()
 
