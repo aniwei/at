@@ -1,10 +1,12 @@
 import { fetch } from '@at/basic'
+import { invariant } from '@at/utils'
 import { ApiStateKind, ApiTransport } from '@at/api'
 import { EngineConfiguration } from '@at/engine'
 import { Alignment, TextPaintingStyle, TextSpan } from '@at/painting'
-import { Image, Stack, ParagraphDelegate, Paragraph } from '@at/ui'
+import { Image, Stack, ParagraphDelegate, Paragraph, Dragger } from '@at/ui'
 import { AtInstance } from './kit'
 import * as Engine from '@at/engine'
+
 
 //// => ConnectionPayload
 interface ConnectionPayload {
@@ -87,27 +89,27 @@ App.ready((instance) => {
       })
 
       const image = Image.create({
-        left: 100,
-        width: 100,
-        height: 100,
+        left: 120,
+        top: 0,
+        width: 800,
+        height: 800,
         image: Engine.Image.create(App.skia.MakeImageFromEncoded(data))
       })  
 
+      const dragger = Dragger.create(image)
+
+
+      dragger.onDragUpdate = (detail) => {
+        invariant(detail && detail.delta)
+        invariant(image.left !== null && image.top !== null)
+        image.left = image.left + detail.delta.dx
+        image.top = image.top + detail.delta.dy
+      }
+      
+
       const stack = Stack.create({ 
         alignment: Alignment.TOP_CENTER,
-      }, [image, paragraph])    
-      
-      paragraph.onTap = () => {
-        debugger
-      }
-
-      image.onTap = () => {
-        debugger
-      }
-
-      stack.onTap = () => {
-        debugger
-      }
+      }, [paragraph, dragger])    
 
       instance.view.append(stack)
       instance.flush()

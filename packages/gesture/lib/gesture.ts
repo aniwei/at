@@ -1,11 +1,17 @@
 import { invariant } from '@at/utils'
 import { Offset } from '@at/geometry'
 import { Engine, EngineConfiguration, EngineEnvironments } from '@at/engine'
+import { GestureArenaManager } from './arena'
 import { SanitizedEventDispatcher } from './dispatcher'
 import { HitTestEntry, HitTestResult } from './hit-test'
 import { PointerChangeKind, PointerEventSanitizer, SanitizedPointerEvent } from './sanitizer'
-import { GestureArenaManager } from './arena'
 
+
+// 手势处置
+export enum GestureDispositionKind {
+  Accepted,
+  Rejected,
+}
 
 export interface Gesture extends EngineEnvironments {
   ATKIT_GESTURE_TOUCH_SLOP: number,
@@ -78,6 +84,9 @@ export abstract class Gesture extends Engine {
       }
 
       default: {
+        if (event.down) {
+          hitTestResult = this.hitTests.get(event.id) ?? null
+        }
         break
       }
     }
@@ -97,7 +106,7 @@ export abstract class Gesture extends Engine {
    * @param {Offset} position 
    */
   hitTest (result: HitTestResult, position: Offset) {
-    result.add(new HitTestEntry(this))
+    result.add(HitTestEntry.create(this))
   }
 
   /**
@@ -118,9 +127,9 @@ export abstract class Gesture extends Engine {
    * 
    * @param {Pointer} event 
    */
-  handlePointerEvent (pointer: SanitizedPointerEvent) {
+  handlePointerEvent (event: SanitizedPointerEvent) {
     invariant(!this.locked, 'Cannot handle pointer event when "Gesture" was locked.')
-    this.handlePointerEventImmediately(pointer)
+    this.handlePointerEventImmediately(event)
   }
 
   /**

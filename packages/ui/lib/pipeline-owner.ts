@@ -130,7 +130,6 @@ export class PipelineOwner {
         if (node.needsPaint && node.owner === this) {
           if (node.layerRef.layer.attached) {
             PaintingContext.repaintCompositedChild(node)
-            break
           } else {
             node.skippedPaintingOnLayer()
           }

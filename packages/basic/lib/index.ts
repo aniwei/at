@@ -1,5 +1,6 @@
 import bytes from 'bytes'
 import * as idle from './idle'
+import * as raf from './raf'
 
 export * from './api'
 export * from './array-like'
@@ -15,5 +16,6 @@ export * from './work'
 
 export {
   bytes,
-  idle
+  idle,
+  raf
 }

@@ -1,9 +1,9 @@
-import ManifestApiJSON from './manifest.json'
+import Protocol from './protocol.json'
 import pkg from '../package.json'
 
-ManifestApiJSON.version = pkg.version
+Protocol.version = pkg.version
 
-export { ManifestApiJSON }
+export { Protocol }
 
 export * from './client'
 export * from './engine'

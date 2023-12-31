@@ -1,12 +1,11 @@
 import { invariant } from '@at/utils'
 import { Matrix4 } from '@at/math'
 import { Offset } from '@at/geometry'
-import { GestureDispositionKind } from './arena'
+import { GestureDispositionKind } from './gesture'
 import { PointerChangeKind, PointerDeviceKind, PointerEventButtonKind, SanitizedPointerEvent } from './sanitizer'
 import { GestureRecognizerStateKind, PrimaryPointerGestureRecognizer } from './recognizer'
 
 import { Gesture } from './gesture'
-
 
 // => common
 export interface TapDetail {

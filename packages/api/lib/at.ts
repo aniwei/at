@@ -6,7 +6,7 @@ import {
   MessageOwner, 
   MessageTransport 
 } from '@at/basic'
-import ApiManifestJSON from './manifest.json'
+import ApiProtocolJSON from './protocol.json'
 
 import { ApiTransport } from './transport'
 import { EngineApiService } from './engine'
@@ -40,7 +40,7 @@ export class ApiService extends BaseApi<ApiEventKind> {
   public queue: VoidFunction[] = []
   
   constructor (transport?: MessageTransport) {
-    super(ApiManifestJSON as ApiJSON, transport ?? null)
+    super(ApiProtocolJSON as ApiJSON, transport ?? null)
 
     this.once('connected', () => {
       if (this.queue.length > 0) {

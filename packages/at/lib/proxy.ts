@@ -104,9 +104,7 @@ export class ProxyApp extends EventEmitter<string> {
     this.element = element
   }
 
-  private handlePointerEvent = (event: PointerEvent) => {
-    console.log(event.type, event.button, event.buttons)
-    
+  protected handlePointerEvent = (event: PointerEvent) => {    
     this.api.Client.events.publish('client.pointer.event', [{
       button: event.button,
       buttons: event.buttons,
@@ -127,14 +125,14 @@ export class ProxyApp extends EventEmitter<string> {
     }])
   }
 
-  private registerPointerEvents () {
+  protected registerPointerEvents () {
     this.element?.addEventListener('pointerdown', this.handlePointerEvent)
-    // this.element?.addEventListener('pointermove', this.handlePointerEvent)
+    this.element?.addEventListener('pointermove', this.handlePointerEvent)
     this.element?.addEventListener('pointerup', this.handlePointerEvent)
     this.element?.addEventListener('pointercancel', this.handlePointerEvent)
   }
 
-  private connect (): Promise<void> {
+  protected connect (): Promise<void> {
     return new Promise((resolve) => {
       const channel = new MessageChannel()
       const port1 = channel.port1
@@ -173,7 +171,7 @@ export class ProxyApp extends EventEmitter<string> {
     })
   }
 
-  private onWindowResize = () => {
+  protected onWindowResize = () => {
     this.api.Client.events.publish('client.viewport.resize', [
       window.innerWidth,
       window.innerHeight

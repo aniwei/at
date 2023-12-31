@@ -1,11 +1,7 @@
 import { invariant } from '@at/utils'
 import { nextTick } from '@at/basic'
+import { GestureDispositionKind } from './gesture'
 
-// 手势处置
-export enum GestureDispositionKind {
-  Accepted,
-  Rejected,
-}
 
 //// => GestureArenaMember
 // 竞技场成员
@@ -15,8 +11,8 @@ export abstract class GestureArenaMember {
 }
 
 export interface GestureArenaEntryOptions {
-  arena: GestureArenaManager,
   id: number,
+  arena: GestureArenaManager,
   member: GestureArenaMember,
 }
 
@@ -68,7 +64,7 @@ export class GestureArenaEntry {
 //// => GestureArena
 // 竞技场状态
 export enum GestureArenaStateKind {
-  Open,
+  Open = 1,
   Held
 }
 
@@ -201,10 +197,10 @@ export class GestureArenaManager {
    * @param pointer 
    */
   close (id: number) {
-    const state: GestureArena | null = this.arenas.get(id) ?? null
-    if (state !== null) {
-      state.state |= GestureArenaStateKind.Open
-      this.tryToResolveArena(id, state)
+    const arena: GestureArena | null = this.arenas.get(id) ?? null
+    if (arena !== null) {
+      arena.state = arena.state &~ GestureArenaStateKind.Open
+      this.tryToResolveArena(id, arena)
     }
   }
 

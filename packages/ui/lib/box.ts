@@ -51,7 +51,6 @@ export class IntrinsicDimensionsCacheEntry {
 
 //// => Box
 // 
-
 export interface BoxFactory<T> {
   new (...rests: unknown[]): T,
   create (...rests: unknown[]): T
@@ -128,6 +127,7 @@ export abstract class Box extends Container {
     if (this._left === null || this._left !== left) {
       this._left = left
       this.markNeedsLayout()
+      this.markParentNeedsLayout()
     }
   }
 
@@ -141,6 +141,7 @@ export abstract class Box extends Container {
     if (this._top === null || this._top !== top) {
       this._top = top
       this.markNeedsLayout()
+      this.markParentNeedsLayout()
     }
   }
 
@@ -154,6 +155,7 @@ export abstract class Box extends Container {
     if (this._right === null || this._right !== right) {
       this._right = right
       this.markNeedsLayout()
+      this.markParentNeedsLayout()
     }
   }
 
@@ -167,6 +169,7 @@ export abstract class Box extends Container {
     if (this._bottom === null || this._bottom !== bottom) {
       this._bottom = bottom
       this.markNeedsLayout()
+      this.markParentNeedsLayout()
     }
   }
   
@@ -316,6 +319,10 @@ export abstract class Box extends Container {
   ) {
     super()
 
+    if (child !== null) {
+      this.append(child)
+    }
+
     this.left = left
     this.top = top
     this.right = right
@@ -323,10 +330,6 @@ export abstract class Box extends Container {
     this.width = width
     this.height = height
     this.scale = scale
-
-    if (child !== null) {
-      this.append(child)
-    }
   }
 
   handleEvent (event: SanitizedPointerEvent, entry: BoxHitTestEntry) {
@@ -462,6 +465,12 @@ export abstract class Box extends Container {
   computeDistanceToActualBaseline (baseline: Skia.TextBaseline): number | null {
     return null
   }
+
+  markParentNeedsLayout () {
+    if (this.parent !== null) {
+      super.markParentNeedsLayout()
+    }
+  }
   
   markNeedsLayout() {
     if (
@@ -474,8 +483,7 @@ export abstract class Box extends Container {
       this.cachedDryLayoutSizes?.clear()
       
       if (parent !== null) {
-        this.markParentNeedsLayout()
-        return
+        return this.markParentNeedsLayout()
       }
     }
 

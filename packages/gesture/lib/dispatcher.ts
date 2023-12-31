@@ -27,7 +27,7 @@ export class SanitizedEventDispatcher {
 
   use (route: RouteHandle, transform: Matrix4 | null): void
   use (id: number, route: RouteHandle, transform: Matrix4 | null): void
-  use (id: number | RouteHandle, route: RouteHandle | Matrix4 | null, transform?: Matrix4 | null): void {
+  use (id: number | RouteHandle, route: RouteHandle | Matrix4 | null, transform: Matrix4 | null = null): void {
     if (typeof id === 'function') {
       transform = route as Matrix4
       route = id as RouteHandle

@@ -158,7 +158,7 @@ export class VelocityTracker {
     let count = 0
     let index = this.index
 
-    const newest = this.samples[index]
+    const newest = this.samples[index] ?? null
 
     if (newest === null) {
       return null
@@ -168,7 +168,7 @@ export class VelocityTracker {
     let oldest = newest
 
     do {
-      const sample = this.samples[index]
+      const sample = this.samples[index] ?? null
 
       if (sample === null) {
         break

@@ -1,6 +1,6 @@
 import { invariant } from '@at/utils'
 import { ApiService } from '@at/api'
-import { nextTick } from '@at/basic'
+import { nextTick, raf } from '@at/basic'
 import { Offset } from '@at/geometry'
 import { Gesture, HitTestResult } from '@at/gesture'
 import { 
@@ -103,14 +103,26 @@ export abstract class AtKit extends Gesture {
   public get pipeline (): PipelineOwner {
     if (this._pipeline === null) {
       this._pipeline = PipelineOwner.create(this, this.rasterizer, () => {
+        if (this.raf !== null) {
+          raf.cancel(this.raf)
+        }
+        
+        this.raf = raf.request(() => {
+          this.api.Engine.events.publish('pipeline.flush.start', [])
+          this.flush()
+          this.api.Engine.events.publish('pipeline.flush.end', [])
+        })
 
       }, this.view.configuration)
     }
     return this._pipeline
   }  
   
+
   public api: ApiService = ApiService.create()
   public environments: AtKitEnvironments
+
+  protected raf: number | null = null
 
   constructor (configuration?: EngineConfiguration) {
     super({
@@ -205,10 +217,16 @@ export abstract class AtKit extends Gesture {
     invariant(this.pipeline, `The "AtKit.pipeline" cannot be null.`)
     invariant(this.view, `The "AtKit.view" cannot be null.`)
     
+    this.api.Engine.events.publish('pipeline.layout.start', [])
     this.pipeline.flushLayout()
+    this.api.Engine.events.publish('pipeline.layout.end', [])
     this.pipeline.flushCompositingBits()
+    this.api.Engine.events.publish('pipeline.paint.start', [])
     this.pipeline.flushPaint()
+    this.api.Engine.events.publish('pipeline.paint.end', [])
+    this.api.Engine.events.publish('view.composite.start', [])
     this.view.composite()
+    this.api.Engine.events.publish('view.composite.end', [])
   }
 
   dispose () {

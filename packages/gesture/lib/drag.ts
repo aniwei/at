@@ -1,25 +1,17 @@
-import { invariant } from '@at/utils'
-import { Matrix4 } from '@at/math'
 import { Offset } from '@at/geometry'
-import { GestureDispositionKind } from './arena'
-import { Gesture } from './gesture'
-import { PointerChangeKind } from './sanitizer'
+import { invariant } from '@at/utils'
+import { GestureArenaEntry } from './arena'
 import { DeviceGestureSettings } from './device-gesture-settings'
-import { Velocity, VelocityEstimate, VelocityTracker } from './velocity'
-import { PointerDeviceKind, PointerEventButtonKind, SanitizedPointerEvent } from './sanitizer'
-import { AllowedButtonsHandle, OffsetPair, OneSequenceGestureRecognizer } from './recognizer'
-
-export enum DragStartBehaviorKind {
-  Start,
-  Down,
-}
-
-// 拖拽状态枚举
-export enum DragStateKind {
-  Ready,
-  Possible,
-  Accepted,
-}
+import { GestureRecognizer } from './recognizer'
+import { Velocity, VelocityTracker } from './velocity'
+import { Gesture, GestureDispositionKind } from './gesture'
+import { 
+  PointerChangeKind, 
+  PointerDeviceKind, 
+  PointerEventButtonKind, 
+  SanitizedPointerEvent 
+} from './sanitizer'
+import { GestureEventCallback } from './detector'
 
 export interface DragDetail {
   globalPosition?: Offset | null,
@@ -32,401 +24,406 @@ export interface DragDetail {
   primaryVelocity?: number | null
 }
 
-export interface GestureMultiDragCallback {
-  (position: Offset): Drag | null
+// 拖拽
+export interface Drag {
+  update (detail: DragDetail): void
+  end (detail: DragDetail): void
+  cancel (): void
 }
 
-export interface GestureDragCallback {
-  (...rests: unknown[]): void
-  (detail?: DragDetail): void
-}
-
-export interface GestureVelocityTrackerBuilder {
-  (event: SanitizedPointerEvent): VelocityTracker
-}
-
-// 拖拽类
-export abstract class Drag {
-  update (detail: DragDetail) { }
-  end (detail: DragDetail) { }
-  cancel () { }
-}
-
-// 拖拽手势识别
-export abstract class DragGestureRecognizer extends OneSequenceGestureRecognizer {
-
-  static defaultBuilder (event: SanitizedPointerEvent): VelocityTracker {
-    return VelocityTracker.withKind(event.kind)
+export class DragTarget {
+  static create () {
+    return new DragTarget()
   }
 
-  static defaultButtonAcceptBehavior (buttons: number) {
-    return buttons === 1
+  // => onDragStart
+  protected _onDragStart: GestureEventCallback<DragDetail> | null = null
+  public get onDragStart () {
+    return this._onDragStart
   }
-
-  public behavior: DragStartBehaviorKind
-  // 最小距离
-  public minFlingDistance: number | null = null
-  // 最小速度
-  public minFlingVelocity: number | null = null
-  // 最大速度
-  public maxFlingVelocity: number | null = null
-
-  public acceptedActivePointers: Set<number> = new Set()
-
-  public onDown: GestureDragCallback | null = null
-  public onStart: GestureDragCallback | null = null
-  public onUpdate: GestureDragCallback | null = null
-  public onEnd: GestureDragCallback | null = null
-  public onCancel: GestureDragCallback | null = null
-  
-  public velocityTrackerBuilder: GestureVelocityTrackerBuilder 
-
-  // 拖拽状态
-  protected state: DragStateKind = DragStateKind.Ready
-  // 位置
-  protected position: OffsetPair | null = null
-  
-  protected pendingDragOffset: OffsetPair | null = null
-  protected lastPendingEventTimeStamp: number | null = null
-  protected trackers: Map<number, VelocityTracker> = new Map()
-  
-  protected buttons: number | null = null
-  protected lastTransform: Matrix4 | null = null
-  // 移动距离
-  protected globalDistanceMoved: number | null = null
-
-  constructor (
-    gesture: Gesture,
-    behavior: DragStartBehaviorKind = DragStartBehaviorKind.Start,
-    velocityTrackerBuilder = DragGestureRecognizer.defaultBuilder,
-    devices: Set<PointerDeviceKind> | null = null,
-    allowedButtonsHandle: AllowedButtonsHandle | null = null
-  ) {
-    super(
-      gesture, 
-      devices, 
-      allowedButtonsHandle ?? DragGestureRecognizer.defaultButtonAcceptBehavior
-    )
-  
-    this.behavior = behavior
-    this.velocityTrackerBuilder = velocityTrackerBuilder
-  } 
-
-  isFlingGesture (estimate: VelocityEstimate, kind: PointerDeviceKind): boolean {
-    const minVelocity = this.minFlingVelocity ?? Gesture.env<number>('ATKIT_GESTURE_MIN_FLING_VELOCITY', 50)
-    const minDistance = this.minFlingDistance ?? computeHitSlop(kind, this.settings)
-    return (
-      estimate.pixelsPerSecond.distanceSquared > minVelocity * minVelocity && 
-      estimate.offset.distanceSquared > minDistance * minDistance
-    )
-  }
-  
-  hasSufficientGlobalDistanceToAccept (
-    pointerDeviceKind: PointerDeviceKind, 
-    deviceTouchSlop: number | null
-  ): boolean {
-    invariant(this.globalDistanceMoved !== null)
-    return Math.abs(this.globalDistanceMoved) > computePanSlop(pointerDeviceKind, this.settings)
-  }
-
-  /**
-   * 
-   * @param {SanitizedPointerEvent} event 
-   * @returns {boolean}
-   */
-  isPointerAllowed (event: SanitizedPointerEvent) {
-    if (this.buttons === null) {
-      switch (event.buttons) {
-        case PointerEventButtonKind.Primary:
-          if (
-            this.onDown === null &&
-            this.onStart === null &&
-            this.onUpdate === null &&
-            this.onEnd === null &&
-            this.onCancel === null
-          ) {
-            return false
-          }
-          break
-        default:
-          return false
-      }
-    } else if (event.buttons !== this.buttons) {
-      return false
-    }
-
-    return super.isPointerAllowed(event as SanitizedPointerEvent)
-  }
-
-  addAllowedPointer (event: SanitizedPointerEvent) {
-    super.addAllowedPointer(event)
-    this.trackers.set(event.id, this.velocityTrackerBuilder(event))
-
-    // 如果就绪，则处理 
-    if (this.state === DragStateKind.Ready) {
-      this.buttons = event.buttons
-      this.state = DragStateKind.Possible
-      this.position = OffsetPair.create(event.position, event.localPosition)
-      this.pendingDragOffset = OffsetPair.ZERO
-      this.globalDistanceMoved = 0.0
-      this.lastPendingEventTimeStamp = event.timeStamp
-      this.lastTransform = event.transform
-      this.checkDown()
-    } else if (this.state === DragStateKind.Accepted) {
-      this.resolve(GestureDispositionKind.Accepted)
+  public set onDragStart (onDragStart: GestureEventCallback<DragDetail> | null) {
+    if (this._onDragStart !== onDragStart) {
+      this._onDragStart = onDragStart
     }
   }
 
-  handleEvent (event: SanitizedPointerEvent) {
-    invariant(this.state !== DragStateKind.Ready)
-
-    if (
-      !event.synthesized && 
-      (
-        event.change === PointerChangeKind.Down || 
-        event.change === PointerChangeKind.Move
-      )
-    ) {
-      const tracker = this.trackers.get(event.id) ?? null
-      invariant(tracker !== null, 'The tracker cannot be null.')
-      tracker.addPosition(event.timeStamp, event.localPosition)
-    }
-
-    if (event.change === PointerChangeKind.Move) {
-      if (event.buttons !== this.buttons) {
-        this.giveUp(event.id)
-        return
-      }
-
-      if (this.state === DragStateKind.Accepted) {
-        this.checkUpdate(
-          event.timeStamp,
-          event.localDelta,
-          null,
-          event.position,
-          event.localPosition,
-        )
-      } else {
-        invariant(this.pendingDragOffset)
-        this.pendingDragOffset = this.pendingDragOffset?.add(OffsetPair.create(event.localDelta, event.delta))
-        this.lastPendingEventTimeStamp = event.timeStamp
-        this.lastTransform = event.transform
-        const movedLocally = event.localDelta
-        const localToGlobalTransform = event.transform === null 
-          ? null 
-          : Matrix4.tryInvert(event.transform)
-
-        invariant(this.globalDistanceMoved !== null)
-         
-        this.globalDistanceMoved += SanitizedPointerEvent.transformDeltaViaPositions(
-          event.localPosition,
-          null,
-          movedLocally,
-          localToGlobalTransform,
-        ).distance
-        
-        if (this.hasSufficientGlobalDistanceToAccept(event.kind, this.settings?.slop ?? null)) {
-          this.resolve(GestureDispositionKind.Accepted)
-        }
-      }
-    }
-
-    if (
-      event.change === PointerChangeKind.Up || 
-      event.change === PointerChangeKind.Cancel
-    ) {
-      this.giveUp(event.id)
+  // => onDragUpdate
+  protected _onDragUpdate: GestureEventCallback<DragDetail> | null = null
+  public get onDragUpdate () {
+    return this._onDragUpdate
+  }
+  public set onDragUpdate (onDragUpdate: GestureEventCallback<DragDetail> | null) {
+    if (this._onDragUpdate !== onDragUpdate) {
+      this._onDragUpdate = onDragUpdate
     }
   }
 
-  accept (pointer: number) {
-    invariant(!this.acceptedActivePointers.has(pointer))
-    this.acceptedActivePointers.add(pointer)
-
-    if (this.state !== DragStateKind.Accepted) {
-      this.state = DragStateKind.Accepted;
-      const delta = this.pendingDragOffset
-      const timestamp = this.lastPendingEventTimeStamp
-      const transform = this.lastTransform
-      let localUpdateDelta: Offset      
-      
-      switch (this.behavior) {
-        case DragStartBehaviorKind.Start:
-          invariant(this.position)
-          invariant(delta)
-          this.position = this.position.add(delta)
-          localUpdateDelta = Offset.ZERO
-          break
-        case DragStartBehaviorKind.Down:
-          invariant(delta)
-          localUpdateDelta = delta.local
-          break
-      }
-      this.pendingDragOffset = OffsetPair.ZERO
-      this.lastPendingEventTimeStamp = null
-      this.lastTransform = null
-
-      invariant(timestamp)
-      this.checkStart(timestamp, pointer)
-      
-      if (localUpdateDelta.notEqual(Offset.ZERO) && this.onUpdate !== null) {
-        const localToGlobal = transform !== null 
-          ? Matrix4.tryInvert(transform) 
-          : null
-
-        invariant(this.position)
-        const correctedLocalPosition = this.position.local.add(localUpdateDelta)
-        const globalUpdateDelta = SanitizedPointerEvent.transformDeltaViaPositions(
-          correctedLocalPosition,
-          null,
-          localUpdateDelta,
-          localToGlobal,
-        )
-        const updateDelta = OffsetPair.create(localUpdateDelta, globalUpdateDelta)
-        const correctedPosition = this.position.add(updateDelta)
-        this.checkUpdate(
-          timestamp,
-          localUpdateDelta,
-          null,
-          correctedPosition.global,
-          correctedPosition.local,
-        )
-      }
-      this.resolve(GestureDispositionKind.Accepted)
+  // => onDragEnd
+  protected _onDragEnd: GestureEventCallback<DragDetail> | null = null
+  public get onDragEnd () {
+    return this._onDragEnd
+  }
+  public set onDragEnd (onDragEnd: GestureEventCallback<DragDetail> | null) {
+    if (this._onDragEnd !== onDragEnd) {
+      this._onDragEnd = onDragEnd
     }
   }
 
-  reject (pointer: number) {
-    this.giveUp(pointer)
+  // => onDragCancel
+  protected _onDragCancel: GestureEventCallback<DragDetail> | null = null
+  public get onDragCancel () {
+    return this._onDragCancel
   }
-
-  didStopTrackingLastPointer (pointer: number) {
-    switch(this.state) {
-      case DragStateKind.Ready:
-        break
-
-      case DragStateKind.Possible:
-        this.resolve(GestureDispositionKind.Rejected)
-        this.checkCancel()
-        break
-
-      case DragStateKind.Accepted:
-        this.checkEnd(pointer)
-        break
-    }
-    this.buttons = null
-    this.trackers.clear()
-    this.state = DragStateKind.Ready
-  }
-
-  private giveUp (pointer: number) {
-    this.stopTrackingPointer(pointer)
-   
-    if (!this.acceptedActivePointers.delete(pointer)) {
-      this.resolvePointer(pointer, GestureDispositionKind.Rejected)
+  public set onDragCancel (onDragCancel: GestureEventCallback<DragDetail> | null) {
+    if (this._onDragCancel !== onDragCancel) {
+      this._onDragCancel = onDragCancel
     }
   }
 
-  protected checkDown () {
-    if (this.onDown !== null) {
-      invariant(this.position, 'The "Drag.position" cannot be null before call onDown.')
-      const detail = {
-        globalPosition: this.position.global,
-        localPosition: this.position.local,
-      }
-
-      this.onDown(detail)
+  start (detail: DragDetail) {
+    if (this.onDragStart !== null) {
+      this.onDragStart(detail)
     }
   }
 
-  protected checkStart (timestamp: number, pointer: number) {
-    if (this.onStart !== null) {
-      invariant(this.position)
-      const details = {
-        sourceTimeStamp: timestamp,
-        globalPosition: this.position.global,
-        localPosition: this.position.local,
-        kind: this.getKindForPointer(pointer),
-      }
-      this.onStart(details)
+  update (detail: DragDetail) {
+    if (this.onDragUpdate !== null) {
+      this.onDragUpdate(detail)
     }
   }
 
-  protected checkUpdate (
-    sourceTimeStamp: number | null = null,
-    delta: Offset,
-    primaryDelta: number | null = null,
-    globalPosition: Offset ,
-    localPosition: Offset | null = null,
-  ) {
-    if (this.onUpdate !== null) {
-      const details = {
-        sourceTimeStamp,
-        delta,
-        primaryDelta,
-        globalPosition,
-        localPosition
-      }
-      this.onUpdate(details)
+  end (detail: DragDetail) {
+    if (this.onDragEnd !== null) {
+      this.onDragEnd(detail)
     }
   }
 
-  protected checkEnd (pointer: number) {
-    if (this.onEnd !== null) {
-      const tracker = this.trackers.get(pointer) ?? null
-      invariant(tracker !== null)
-  
-      let details: DragDetail
-      const estimate = tracker.estimate
-  
-      if (estimate !== null && this.isFlingGesture(estimate, tracker.kind)) {
-        const velocity = Velocity.create(estimate.pixelsPerSecond)
-        velocity.clampMagnitude(
-          this.minFlingVelocity ?? Gesture.env<number>('ATKIT_GESTURE_MIN_FLING_VELOCITY', 50), 
-          this.maxFlingVelocity ?? Gesture.env<number>('ATKIT_GESTURE_MIN_FLING_VELOCITY', 8000), 
-        )
-
-        details = {
-          velocity,
-          primaryVelocity: null,
-        }
-      } else {
-        details = {
-          primaryVelocity: 0.0,
-        }
-      }
-
-      this.onEnd(details)
-    }
-
-  }
-
-  private checkCancel () {
-    if (this.onCancel !== null) {
-      this.onCancel()
+  cancel () {
+    if (this.onDragCancel !== null) {
+      this.onDragCancel()
     }
   }
 
   dispose () {
-    this.trackers.clear()
+    this.onDragStart = null
+    this.onDragUpdate = null
+    this.onDragEnd = null
+    this.onDragCancel = null
+  }
+}
+
+export interface GestureDragStartCallback {
+  (position: Offset): DragTarget | null
+}
+
+export interface DragPointerStateFactory <T> {
+  new (
+    position: Offset, 
+    kind: PointerDeviceKind, 
+    settings: DeviceGestureSettings
+  ): T
+  create (
+    position: Offset, 
+    kind: PointerDeviceKind, 
+    settings: DeviceGestureSettings
+  ): T
+}
+export abstract class DragPointerState {
+  static create <T> (
+    position: Offset, 
+    kind: PointerDeviceKind, 
+    settings: DeviceGestureSettings
+  ): T {
+    const DragPointerStateFactory = this as unknown as DragPointerStateFactory<T>
+    return new DragPointerStateFactory(position, kind, settings) as T
+  }
+
+  // => delta
+  protected _delta: Offset | null = Offset.ZERO
+  public get delta () {
+    return this._delta
+  }
+  public set delta (delta: Offset | null) {
+    this._delta = delta
+  }
+
+  protected position: Offset
+  protected velocityTracker: VelocityTracker
+  protected kind: PointerDeviceKind
+  protected client: DragTarget | null = null
+  protected settings: DeviceGestureSettings | null = null
+
+  protected setttings: DeviceGestureSettings
+  protected entry: GestureArenaEntry | null = null
+  protected lastPendingEventTimestamp: number | null = null
+
+  constructor (
+    position: Offset, 
+    kind: PointerDeviceKind, 
+    settings: DeviceGestureSettings
+  ) {
+    this.kind = kind
+    this.position = position
+    this.setttings = settings
+    this.velocityTracker = VelocityTracker.withKind(kind)
+  }
+
+  abstract accepted (starter: GestureDragStartCallback): void
+
+  setArenaEntry (entry: GestureArenaEntry) {
+    invariant(this.delta !== null, 'The "DragPointerState.delta" cannot be null.')
+    invariant(this.client === null)
+    this.entry = entry
+  }
+
+  resolve (disposition: GestureDispositionKind) {
+    invariant(this.entry, 'The "DragPointerState.entry" cannot be null.')
+    this.entry.resolve(disposition)
+  }
+
+  move (event: SanitizedPointerEvent) {
+    invariant(this.entry !== null, 'The "DragPointerState.entry" cannot be null.')
+    
+    if (!event.synthesized) {
+      this.velocityTracker.addPosition(event.timeStamp, event.position)
+    }
+
+    if (this.client !== null) {
+      invariant(this.delta === null)
+      
+      this.client.update({
+        delta: event.delta,
+        globalPosition: event.position,
+        sourceTimeStamp: event.timeStamp,
+      })
+    } else {
+      invariant(this.delta !== null, 'The "DragPointerState.delta" cannot be null.')
+      this.delta = this.delta.add(event.delta)
+      this.lastPendingEventTimestamp = event.timeStamp
+      this.checkForResolutionAfterMove()
+    }
+  }
+
+  checkForResolutionAfterMove () { }
+
+  rejected () {
+    invariant(this.entry !== null, 'The "DragPointerState.entry" cannot be null.')
+    invariant(this.client === null)
+    invariant(this.delta !== null)
+    this.delta = null
+    this.lastPendingEventTimestamp = null
+    this.entry = null
+  }
+
+  start (client: DragTarget) {
+    invariant(this.entry !== null, 'The "DragPointerState.entry" cannot be null.')
+    invariant(this.client === null)
+    invariant(this.delta !== null, 'The "DragPointerState.delta" cannot be null.')
+    this.client = client
+    
+    const detail = {
+      sourceTimeStamp: this.lastPendingEventTimestamp,
+      delta: this.delta,
+      globalPosition: this.position,
+    }
+
+    this.delta = null
+    this.lastPendingEventTimestamp = null
+    this.client.start(detail)
+    this.client.update(detail)
+  }
+
+  up () {
+    invariant(this.entry !== null, 'The "DragPointerState.entry" cannot be null.')
+    if (this.client !== null) {
+      invariant(this.delta === null, 'The "DragPointerState.delta" cannot be null.')
+      const detail = {
+        velocity: this.velocityTracker.velocity
+      }
+
+      const client = this.client
+      this.client = null
+      
+      client.end(detail)
+    } else {
+      invariant(this.delta === null, 'The "DragPointerState.delta" cannot be null.')
+      this.delta = null
+      this.lastPendingEventTimestamp = null
+    }
+  }
+
+  cancel () {
+    invariant(this.entry !== null, 'The "DragPointerState.entry" cannot be null.')
+    if (this.client !== null) {
+      invariant(this.delta === null, 'The "DragPointerState.delta" cannot be null.')
+      
+      const client = this.client
+      this.client = null
+      client.cancel()
+    } else {
+      invariant(this.delta === null, 'The "DragPointerState.delta" cannot be null.')
+      this.delta = null
+      this.lastPendingEventTimestamp = null
+    }
+  }
+
+  dispose () {
+    this.entry?.resolve(GestureDispositionKind.Rejected)
+    this.entry = null
+  }
+}
+
+
+export abstract class DragGestureRecognizer extends GestureRecognizer {
+  static defaultButtonAcceptBehavior (buttons: number) {
+    return buttons == PointerEventButtonKind.Primary
+  }
+
+  static create (
+    gesture: Gesture, 
+    kind: PointerDeviceKind | null = null, 
+    settings: DeviceGestureSettings | null = null
+  ): DragGestureRecognizer {
+    return super.create(
+      gesture, 
+      kind, 
+      settings
+    ) as DragGestureRecognizer
+  }
+
+  protected pointers: Map<number, DragPointerState> | null = new Map()
+  public onStart: GestureDragStartCallback | null = null
+
+  abstract createNewPointerState (event: SanitizedPointerEvent): DragPointerState
+  
+  /**
+   * 
+   * @param {SanitizedPointerEvent} event 
+   */
+  addAllowedPointer (event: SanitizedPointerEvent) {
+    invariant(this.pointers !== null, 'The "DragGestureRecognizer.pointers" cannot be null.')
+    invariant(!this.pointers.has(event.id))
+
+    const state = this.createNewPointerState(event)
+    this.pointers.set(event.id, state)
+    this.gesture.dispatcher.use(event.id, this.handleEvent.bind(this), null)
+
+    state.setArenaEntry(this.gesture.arena.add(event.id, this))
+  }
+
+  handleEvent (event: SanitizedPointerEvent) {
+    invariant(this.pointers !== null, 'The "DragGestureRecognizer.pointers" cannot be null.')
+    const state = this.pointers.get(event.id) as unknown as DragPointerState
+
+    if (event.change === PointerChangeKind.Move) {
+      state.move(event)
+    } else if (event.change === PointerChangeKind.Up) {
+      invariant(event.delta.equal(Offset.ZERO))
+      state.up()
+      this.destory(event.id)
+    } else if (event.change === PointerChangeKind.Cancel) {
+      invariant(event.delta.equal(Offset.ZERO))
+      state.cancel()
+      this.destory(event.id)
+    }
+  }
+
+  accept (id: number) {
+    invariant(this.pointers !== null, 'The "DragGestureRecognizer.pointers" cannot be null.')
+    const state = this.pointers.get(id) ?? null
+
+    if (state !== null) {
+      state.accepted((position: Offset) => this.start(position, id))
+    }
+  }
+
+  start (position: Offset, id: number) {
+    invariant(this.pointers !== null, 'The "DragGestureRecognizer.pointer" cannot be null.')
+    const state = this.pointers.get(id) ?? null
+
+    invariant(state !== null, 'The "state" cannot be null.')
+    invariant(state.delta !== null, 'The "DragPointerState.delta" cannot be null.')
+
+    let drag: DragTarget | null = null
+    if (this.onStart !== null) {
+      drag = this.onStart(position) ?? null
+    }
+
+    if (drag !== null) {
+      state.start(drag)
+    } else {
+      this.destory(id)
+    }
+
+    return drag
+  }
+
+  reject (id: number) {
+    invariant(this.pointers !== null, 'The "DragGestureRecognizer.pointer" cannot be null.')
+    
+    if (this.pointers.has(id)) {
+      const state = this.pointers.get(id) ?? null
+      invariant(state !== null, 'The "DragPointerState" cannot be null.')
+      state.rejected()
+      this.destory(id)
+    }
+  }
+
+  destory (id: number) {
+    if (this.pointers !== null) {
+      invariant(this.pointers.has(id))
+
+      const state = this.pointers.get(id) ?? null
+      this.gesture.dispatcher.delete(id, this.handleEvent)
+
+      if (state !== null) {
+        this.pointers.delete(id)
+        state.dispose()
+      }
+    }
+  }
+  
+  dispose () {
+    if (this.pointers !== null) {
+      Array.from(this.pointers.keys()).forEach(this.destory)
+    }
+    
+    this.pointers = null
     super.dispose()
   }
 }
 
-
-function computePanSlop (kind: PointerDeviceKind, settings: DeviceGestureSettings | null) {
-  switch (kind) {
-    case PointerDeviceKind.Mouse:
-      return Gesture.env<number>('ATKIT_GESTURE_PRECISE_PAN_SLOP', 2.0)
-    case PointerDeviceKind.Stylus:
-    case PointerDeviceKind.InvertedStylus:
-    case PointerDeviceKind.Unknown:
-    case PointerDeviceKind.Touch:
-      return settings?.slop ?? Gesture.env<number>('ATKIT_GESTURE_PAN_SLOP', Gesture.env<number>('ATKIT_GESTURE_TOUCH_SLOP', 18) * 2)
+class ImmediatePointerState extends DragPointerState {
+  checkForResolutionAfterMove () {
+    invariant(this.delta !== null, 'The "ImmediatePointerState.delta" cannot be null.')
+    
+    if (this.delta.distance > computeHitSlop(this.kind, this.settings)) {
+      this.resolve(GestureDispositionKind.Accepted)
+    }
+  }
+  
+  accepted (starter: GestureDragStartCallback) {
+    starter(this.position)
   }
 }
 
-export function computeHitSlop (kind: PointerDeviceKind, settings: DeviceGestureSettings | null) {
+export class ImmediateMultiDragGestureRecognizer extends DragGestureRecognizer { 
+  createNewPointerState (event: SanitizedPointerEvent): DragPointerState {
+    return ImmediatePointerState.create(
+      event.position, 
+      event.kind, 
+      this.settings as DeviceGestureSettings
+    )
+  }
+}
+
+/**
+ * 
+ * @param {PointerDeviceKind} kind 
+ * @param {DeviceGestureSettings | null} settings 
+ * @returns {number}
+ */
+function computeHitSlop (kind: PointerDeviceKind, settings: DeviceGestureSettings | null) {
   switch (kind) {
     case PointerDeviceKind.Mouse:
       return Gesture.env<number>('ATKIT_GESTURE_PRECISE_HIT_SLOP', 1.0)

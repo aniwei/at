@@ -1,13 +1,13 @@
-import { Offset } from '@at/geometry'
 import { HitTestEntry } from './hit-test'
 import { TapGestureRecognizer, TapDetail } from './tap'
+import { DragDetail, ImmediateMultiDragGestureRecognizer, GestureDragStartCallback } from './drag'
 import { Gesture } from './gesture'
 import { 
   PointerChangeKind, 
   PointerDeviceKind,
   SanitizedPointerEvent 
 } from './sanitizer'
-import { DragStartBehaviorKind } from './drag'
+
 
 export interface GestureEventCallback<T> {
   (detail: T): void
@@ -30,6 +30,9 @@ export interface GestureDetectorOptions {
   onTapUp?: GestureEventCallback<TapDetail> | null,
   onTap?: GestureEventCallback<TapDetail> | null,
   onTapCancel?: GestureEventCallback<TapDetail> | null,
+  onDragStart?: GestureEventCallback<DragDetail> | null,
+  onDragUpdate?: GestureEventCallback<DragDetail> | null,
+  onDragEnd?: GestureEventCallback<DragDetail> | null,
 }
 
 //// => GestureDetector
@@ -92,14 +95,24 @@ export class GestureDetector {
     }
   }
 
+  // => onDragStart
+  protected _onDragStart: GestureDragStartCallback | null = null
+  public get onDragStart () {
+    return this._onDragStart
+  }
+  public set onDragStart (onDragStart: GestureDragStartCallback | null) {
+    if (this._onDragStart !== onDragStart) {
+      this._onDragStart = onDragStart
+      this.markNeedsCreateDragGestureRecognizer()
+    }
+  }
+
   public behavior: HitTestBehavior
-  public dragStartBehavior: DragStartBehaviorKind
   public devices: Set<PointerDeviceKind> | null
-  public trackpadScrollCausesScale: boolean
-  public trackpadScrollToScaleFactor: Offset
 
   protected gesture: Gesture
   protected tap: TapGestureRecognizer | null = null
+  protected drag: ImmediateMultiDragGestureRecognizer | null = null
   
   constructor (
     gesture: Gesture,
@@ -109,26 +122,26 @@ export class GestureDetector {
     onTapCancel: GestureEventCallback<TapDetail> | null = null,
 
     behavior: HitTestBehavior = HitTestBehavior.DeferToChild,
-    dragStartBehavior: DragStartBehaviorKind = DragStartBehaviorKind.Start,
-    trackpadScrollCausesScale: boolean = false,
-    trackpadScrollToScaleFactor = Gesture.env<Offset>(
-      'ATKIT_GESTURE_TRACK_SCROLL_TO_SCALE_FACTOR', 
-      Offset.create(0, -1 / Gesture.env<number>('ATKIT_GESTURE_MOUSE_SCROLL_TO_SCALE_FACTOR', 200))
-    ),
-
     devices: Set<PointerDeviceKind> | null = null,
   ) {
     this.gesture = gesture
     this.behavior = behavior
-    this.dragStartBehavior = dragStartBehavior
-    this.trackpadScrollCausesScale = trackpadScrollCausesScale
-    this.trackpadScrollToScaleFactor = trackpadScrollToScaleFactor
     this.devices = devices
 
+    this.onTap = onTap
     this.onTapDown = onTapDown
     this.onTapUp = onTapUp
-    this.onTap = onTap
     this.onTapCancel = onTapCancel
+  }
+
+  markNeedsCreateDragGestureRecognizer () {
+    if (this.onDragStart !== null) {
+      this.drag ??= ImmediateMultiDragGestureRecognizer.create(this.gesture)
+      this.drag.onStart = this.onDragStart
+    } else {
+      this.drag?.dispose()
+      this.drag = null
+    }
   }
 
   markNeedsCreateTapGestureRecognizer () {
@@ -139,9 +152,9 @@ export class GestureDetector {
       this.onTapCancel !== null
     ) {
       this.tap ??= TapGestureRecognizer.create(this.gesture)
+      this.tap.onTap = this.onTap
       this.tap.onTapDown = this.onTapDown
       this.tap.onTapUp = this.onTapUp
-      this.tap.onTap = this.onTap
       this.tap.onTapCancel = this.onTapCancel
     } else {
       this.tap?.dispose()
@@ -152,11 +165,14 @@ export class GestureDetector {
   handleEvent (event: SanitizedPointerEvent, entry: HitTestEntry) {
     if (event.change === PointerChangeKind.Down) {
       this.tap?.addPointer(event)
+      this.drag?.addPointer(event)
     }
   }
 
   dispose () {
     this.tap?.dispose()
+    this.drag?.dispose()
     this.tap = null
+    this.drag = null
   }
 }

@@ -1,6 +1,7 @@
 import { invariant } from '@at/utils'
 import { Offset } from '@at/geometry'
 import { Matrix4 } from '@at/math'
+import { Equalable } from '@at/basic'
 import { 
   PointerChangeKind, 
   PointerDeviceKind, 
@@ -8,12 +9,10 @@ import {
 } from './sanitizer'
 import { 
   GestureArenaEntry, 
-  GestureArenaMember, 
-  GestureDispositionKind 
+  GestureArenaMember,  
 } from './arena'
 import { DeviceGestureSettings } from './device-gesture-settings'
-import { Gesture } from './gesture'
-import { Equalable } from 'packages/basic/types/lib'
+import { Gesture, GestureDispositionKind } from './gesture'
 
 export interface AllowedButtonsHandle {
   (buttons: number): boolean

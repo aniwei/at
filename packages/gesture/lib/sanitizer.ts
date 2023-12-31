@@ -132,6 +132,7 @@ export interface SanitizedEvent {
   device: number,
   change: PointerChangeKind,
   buttons: number,
+  down: boolean,
   x: number,
   y: number,
   physicalX: number,
@@ -164,7 +165,8 @@ export class SanitizedPointerEvent {
       physicalPosition,
       physicalDelta,
       event.synthesized,
-      event.buttons
+      event.buttons,
+      event.down,
     )
   }
 
@@ -235,6 +237,7 @@ export class SanitizedPointerEvent {
   public transform: Matrix4 | null
   public origin: SanitizedPointerEvent | null
   public synthesized: boolean
+  public down: boolean
 
   constructor (
     id: number,
@@ -250,6 +253,7 @@ export class SanitizedPointerEvent {
     physicalDelta: Offset,
     synthesized: boolean = false,
     buttons: number = 0,
+    down: boolean = false
   ) {
     this.id = id
     this.timeStamp = timeStamp
@@ -264,6 +268,7 @@ export class SanitizedPointerEvent {
     this.physicalDelta = physicalDelta
     this.synthesized = synthesized
     this.buttons = buttons
+    this.down = down
   }
 
   transformed (transform: Matrix4 | null): SanitizedPointerEvent {
@@ -288,7 +293,8 @@ export class SanitizedPointerEvent {
       physicalDeltaY: event.physicalDelta.dy,
       physicalX: event.physicalPosition.dx,
       physicalY: event.physicalPosition.dy,
-      synthesized: event.synthesized
+      synthesized: event.synthesized,
+      down: event.down,
     }, transform)
   }
 
@@ -455,6 +461,7 @@ export class PointerEventSanitizer {
     x: number,
     y: number,
     buttons: number = 0,
+    down: boolean = false,
     synthesized: boolean = false,
   ) {
     invariant(this.states.has(device), 'Cannot generate before the state has not add.')
@@ -479,6 +486,7 @@ export class PointerEventSanitizer {
       kind,
       device,
       buttons,
+      down,
       synthesized
     })
   }
@@ -588,6 +596,21 @@ export class PointerEventSanitizer {
         ))
 
         this.activeButtons = buttons
+        break
+      }
+
+      case PointerChangeKind.Move: {
+        invariant(this.states.has(device), `Cannot get a pointer state which has not added.`)
+        events.push(this.generate(
+          timeStamp,
+          kind,
+          device,
+          change,
+          x,
+          y,
+          buttons,
+          true
+        ))
         break
       }
 

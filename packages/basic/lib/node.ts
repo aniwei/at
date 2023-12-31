@@ -76,7 +76,6 @@ export abstract class AbstractNode<T extends AbstractNode<T>> {
    */
   dropChild (child: T) {
     invariant(child.parent === this as unknown as T, 'The "child.parent" cannot refer to itself.')
-    invariant(child.attached === this.attached)
     child.parent = null
     
     if (this.attached) {
