@@ -75,7 +75,7 @@ App.ready((instance) => {
     .then(data => {
       const delegate = ParagraphDelegate.create({
         text: TextSpan.create({
-          text: '相亲，竟不可接近',
+          text: '相亲，竟不可接近相亲，竟不可接近相亲，竟不可接近',
           style: TextPaintingStyle.create({
             fontFamily: 'SourceHanSansSC-VF',
             fontSize: 30
@@ -84,32 +84,41 @@ App.ready((instance) => {
       })
 
       const paragraph = Paragraph.create({
-        width: 200,
+        left : 0,
+        width: 400,
         delegate,
       })
 
+      const dragger = Dragger.create(paragraph)
+      dragger.onDragUpdate = (detail) => {
+        invariant(detail && detail.delta)
+        // invariant(paragraph.left !== null && paragraph.top !== null)
+        paragraph.left = paragraph.left + detail.delta.dx
+        paragraph.top = paragraph.top + detail.delta.dy
+      }
+
+      const draggers = [dragger]
+
       const image = Image.create({
-        left: 120,
-        top: 0,
-        width: 800,
-        height: 800,
+        left: 10 ,
+        top: 10,
+        width: 50,
+        height: 50,
         image: Engine.Image.create(App.skia.MakeImageFromEncoded(data))
       })  
 
-      const dragger = Dragger.create(image)
-
-
-      dragger.onDragUpdate = (detail) => {
+      const dragger1 = Dragger.create(image)
+      dragger1.onDragUpdate = (detail) => {
         invariant(detail && detail.delta)
         invariant(image.left !== null && image.top !== null)
         image.left = image.left + detail.delta.dx
         image.top = image.top + detail.delta.dy
       }
-      
+
 
       const stack = Stack.create({ 
         alignment: Alignment.TOP_CENTER,
-      }, [paragraph, dragger])    
+      }, [...draggers, dragger1])    
 
       instance.view.append(stack)
       instance.flush()
