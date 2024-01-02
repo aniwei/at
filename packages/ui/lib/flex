@@ -13,7 +13,6 @@ export interface LayoutSizes {
 }
 
 export class Flex extends Box {
-
   protected _direction: Skia.AxisKind = Skia.AxisKind.Horizontal
   public get direction () {
     return this._direction
@@ -36,22 +35,29 @@ export class Flex extends Box {
     this.direction = direction
   }
 
-  computeSizes (constraints: BoxConstraints, layoutChild: LayoutChildHandle) {
+
+  computeSizes (
+    constraints: BoxConstraints, 
+    layoutChild: LayoutChildHandle
+  ) {
     invariant(constraints !== null)
 
     let totalFlex = 0
-    final double maxMainSize = _direction == Axis.horizontal ? constraints.maxWidth : constraints.maxHeight;
-    final bool canFlex = maxMainSize < double.infinity;
+    const maxMainSize = this.direction === Skia.AxisKind.Horizontal 
+      ? constraints.maxWidth 
+      : constraints.maxHeight
+    const canFlex = maxMainSize < Number.POSITIVE_INFINITY
 
-    double crossSize = 0.0;
-    double allocatedSize = 0.0; // Sum of the sizes of the non-flexible children.
-    RenderBox? child = firstChild;
-    RenderBox? lastFlexChild;
-    while (child != null) {
+    let crossSize = 0.0
+    let allocatedSize = 0.0
+    let child = this.firstChild
+    let lastFlexChild
+    
+    while (child !== null) {
       final FlexParentData childParentData = child.parentData! as FlexParentData;
-      final int flex = _getFlex(child);
+      const flex = child.flex
       if (flex > 0) {
-        totalFlex += flex;
+        totalFlex += flex
         lastFlexChild = child;
       } else {
         final BoxConstraints innerConstraints;

@@ -84,7 +84,6 @@ App.ready((instance) => {
       })
 
       const paragraph = Paragraph.create({
-        left : 0,
         width: 400,
         delegate,
       })
