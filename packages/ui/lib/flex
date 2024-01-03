@@ -12,6 +12,11 @@ export interface LayoutSizes {
   allocatedSize: number
 }
 
+export enum FlexFit {
+  Tight,
+  Loose,
+}
+
 export class Flex extends Box {
   protected _direction: Skia.AxisKind = Skia.AxisKind.Horizontal
   public get direction () {
@@ -50,11 +55,10 @@ export class Flex extends Box {
 
     let crossSize = 0.0
     let allocatedSize = 0.0
-    let child = this.firstChild
+    let child = this.firstChild as Flex
     let lastFlexChild
     
     while (child !== null) {
-      final FlexParentData childParentData = child.parentData! as FlexParentData;
       const flex = child.flex
       if (flex > 0) {
         totalFlex += flex
