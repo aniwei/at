@@ -46,7 +46,7 @@ export class Stack extends Box {
 
   // => layoutPositionedChild
   // 布局子对象
-  static layoutPositionedChild (child: Box, size: Size, alignment: Alignment): boolean {
+  static layoutPositionedChild (child: Po, size: Size, alignment: Alignment): boolean {
     invariant(child.positioned, `The "child" must be a positioned object.`)
     // 是否溢出
     let overflowed = false

@@ -117,88 +117,6 @@ export abstract class Box extends Container {
     }
   }
 
-  // => left
-  // 坐标
-  protected _left: number | null = null
-  public get left () {
-    return this._left
-  }
-  public set left (left: number | null) {
-    if (this._left === null || this._left !== left) {
-      this._left = left
-      this.markNeedsLayout()
-      this.markParentNeedsLayout()
-    }
-  }
-
-  // => top
-  // 坐标
-  protected _top: number | null = null
-  public get top () {
-    return this._top
-  }
-  public set top (top: number | null) {
-    if (this._top === null || this._top !== top) {
-      this._top = top
-      this.markNeedsLayout()
-      this.markParentNeedsLayout()
-    }
-  }
-
-  // => right
-  // 右坐标
-  protected _right: number | null = null
-  public get right () {
-    return this._right
-  }
-  public set right (right: number | null) {
-    if (this._right === null || this._right !== right) {
-      this._right = right
-      this.markNeedsLayout()
-      this.markParentNeedsLayout()
-    }
-  }
-
-  // => bottom
-  // 底部坐标
-  protected _bottom: number | null = null
-  public get bottom () {
-    return this._bottom
-  }
-  public set bottom (bottom: number | null) {
-    if (this._bottom === null || this._bottom !== bottom) {
-      this._bottom = bottom
-      this.markNeedsLayout()
-      this.markParentNeedsLayout()
-    }
-  }
-  
-  // => width
-  // 宽度
-  protected _width: number | null = null
-  public get width () {
-    return this._width
-  }
-  public set width (width: number | null) {
-    if (this._width === null || this._width !== width) {
-      this._width = width
-      this.markNeedsLayout()
-    }
-  }
-
-  // => height
-  // 高度
-  protected _height: number | null = null
-  public get height () {
-    return this._height
-  }
-  public set height (height: number | null) {
-    if (this._height === null || this._height !== height) {
-      this._height = height
-      this.markNeedsLayout()
-    }
-  }
-
   // => scale
   protected _scale: number = 1.0
   public get scale () {
@@ -239,23 +157,6 @@ export abstract class Box extends Container {
   public get bounds () {
     invariant(this.size !== null)
     return Offset.ZERO.and(this.size)
-  }
-
-  // => hasSize
-  public get hasSize () {
-    return this.size !== null
-  }
-
-  // => positioned
-  public get positioned () {
-    return (
-      this.left !== null || 
-      this.top !== null || 
-      this.right !== null || 
-      this.bottom !== null || 
-      this.width !== null || 
-      this.height !== null
-    )
   }
 
   // => detector
@@ -308,13 +209,6 @@ export abstract class Box extends Container {
   constructor (...rests: unknown[])
   constructor (
     child: Box | null = null,
-    left: number | null = null,
-    top: number | null = null,
-    right: number | null = null,
-    bottom: number | null = null,
-    width: number | null = null,
-    height: number | null = null,
-    scale: number = 1.0,
     ...rests: unknown[]
   ) {
     super()
@@ -322,14 +216,6 @@ export abstract class Box extends Container {
     if (child !== null) {
       this.append(child)
     }
-
-    this.left = left
-    this.top = top
-    this.right = right
-    this.bottom = bottom
-    this.width = width
-    this.height = height
-    this.scale = scale
   }
 
   handleEvent (event: SanitizedPointerEvent, entry: BoxHitTestEntry) {
@@ -495,7 +381,7 @@ export abstract class Box extends Container {
     parentUsesSize: boolean = false
   ) {
     if (
-      this.hasSize && 
+      this.size !== null && 
       this.constraints?.notEqual(constraints) &&
       this.cachedBaselines !== null && 
       this.cachedBaselines.size > 0
@@ -509,8 +395,6 @@ export abstract class Box extends Container {
   
   performResize() {
     this.size = this.computeDryLayout(this.constraints as BoxConstraints)
-    // @TODO 
-    // invariant(this.size.isFinite);
   }
   
   performLayout () {
@@ -671,7 +555,8 @@ export abstract class Box extends Container {
 
       child = child.previousSibling as Box
     }
-    return false;
+
+    return false
   }
 
   hitTestChildren (
@@ -689,7 +574,7 @@ export abstract class Box extends Container {
     result: BoxHitTestResult, 
     position: Offset 
   ) {
-    invariant(this.size)
+    invariant(this.size, 'The "Box.size" cannot be null.')
     if (this.size.contains(position)) {
       if (this.hitTestChildren(result, position) || this.hitTestSelf(position)) {
         result.add(new BoxHitTestEntry(this, position))

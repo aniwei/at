@@ -84,20 +84,10 @@ App.ready((instance) => {
       })
 
       const paragraph = Paragraph.create({
-        width: 400,
         delegate,
       })
 
-      const dragger = Dragger.create(paragraph)
-      dragger.onDragUpdate = (detail) => {
-        invariant(detail && detail.delta)
-        // invariant(paragraph.left !== null && paragraph.top !== null)
-        paragraph.left = paragraph.left + detail.delta.dx
-        paragraph.top = paragraph.top + detail.delta.dy
-      }
-
-      const draggers = [dragger]
-
+     
       const image = Image.create({
         left: 10 ,
         top: 10,
@@ -117,8 +107,9 @@ App.ready((instance) => {
 
       const stack = Stack.create({ 
         alignment: Alignment.TOP_CENTER,
-      }, [...draggers, dragger1])    
+      }, [dragger1])    
 
+      instance.view.append(paragraph)
       instance.view.append(stack)
       instance.flush()
     })

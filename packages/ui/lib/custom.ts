@@ -68,7 +68,6 @@ export class Custom<T extends CustomPainter = CustomPainter> extends Stack {
     }
   }
   
-  
   public isComplex: boolean
   public willChange: boolean
 

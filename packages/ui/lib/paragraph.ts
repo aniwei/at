@@ -27,8 +27,8 @@ import {
   TextSelection 
 } from '@at/engine'
 import { Box } from './box'
-import { BoxHitTestResult } from './box-hit-test'
 import { ViewportOffset } from './viewport'
+import { BoxHitTestResult } from './box-hit-test'
 import { PipelineOwner } from './pipeline-owner'
 import { BoxConstraints } from './constraints'
 import { PaintingContext } from './painting-context'
@@ -70,8 +70,9 @@ export class ParagraphPaint extends Box {
   public sizedByParent = true
     
   // => painter
-  protected _painter: ParagraphPainter | null
+  protected _painter: ParagraphPainter | null = null
   public get painter (): ParagraphPainter | null {
+    invariant(this._painter !== null, 'The "ParagraphPainter.painter" cannot be null.')
     return this._painter
   }
   public set painter (painter: ParagraphPainter | null ) {
@@ -82,7 +83,7 @@ export class ParagraphPaint extends Box {
 
       if (this.attached) {
         this._painter?.unsubscribe()
-        painter?.subscribe(() => this.markNeedsPaint)
+        painter?.subscribe(() => this.markNeedsPaint())
       }
 
       this._painter = painter
@@ -91,7 +92,7 @@ export class ParagraphPaint extends Box {
   
   constructor (painter: ParagraphPainter) {
     super()
-    this._painter = painter
+    this.painter = painter
   } 
 
   paint (context: PaintingContext, offset: Offset) {
@@ -107,6 +108,10 @@ export class ParagraphPaint extends Box {
     }
   }
 
+  computeDryLayout (constraints: BoxConstraints): Size {
+    return constraints.biggest
+  }
+
   attach (owner: PipelineOwner) {
     super.attach(owner)
     this.painter?.subscribe(() => this.markNeedsPaint())
@@ -116,21 +121,11 @@ export class ParagraphPaint extends Box {
     this.painter?.unsubscribe()
     super.detach()
   }
-
-  computeDryLayout (constraints: BoxConstraints): Size {
-    return constraints.biggest
-  }
 }
 
 //// => Paragraph
-export type ParagraphOptions = {
+export interface ParagraphOptions {
   delegate: ParagraphDelegate, 
-  width?: number | null,
-  height?: number | null,
-  left?: number | null,
-  top?: number | null,
-  right?: number | null,
-  bottom?: number | null,
   scale?: number,
   viewport?: ViewportOffset,
   paintCaretAboveText?: boolean,
@@ -160,12 +155,6 @@ export class Paragraph extends Box {
   static create(options: ParagraphOptions) {
     return new Paragraph(
       options.delegate,
-      options.left,
-      options.top,
-      options.right,
-      options.bottom,
-      options.width,
-      options.height,
       options.scale,
       options.viewport,
       options.paintCaretAboveText,
@@ -611,12 +600,6 @@ export class Paragraph extends Box {
    */
   constructor (
     delegate: ParagraphDelegate, 
-    left: number | null = null,
-    top: number | null = null,
-    right: number | null = null,
-    bottom: number | null = null,
-    width: number | null = null,
-    height: number | null = null,
     scale: number = 1.0,
     viewport: ViewportOffset = ViewportOffset.ZERO,
     paintCaretAboveText: boolean = true,
@@ -638,12 +621,6 @@ export class Paragraph extends Box {
   ) {
     super(
       null,
-      left,
-      top,
-      right,
-      bottom,
-      width,
-      height,
       scale,
     )
 
