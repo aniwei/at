@@ -3,7 +3,7 @@ import { invariant } from '@at/utils'
 import { ApiStateKind, ApiTransport } from '@at/api'
 import { EngineConfiguration } from '@at/engine'
 import { Alignment, TextPaintingStyle, TextSpan } from '@at/painting'
-import { Image, Stack, ParagraphDelegate, Paragraph, Dragger } from '@at/ui'
+import { Image, Stack, ParagraphDelegate, Paragraph, Column, Expanded, Row } from '@at/ui'
 import { AtInstance } from './kit'
 import * as Engine from '@at/engine'
 
@@ -89,28 +89,23 @@ App.ready((instance) => {
 
      
       const image = Image.create({
-        left: 10 ,
-        top: 10,
-        width: 50,
-        height: 50,
         image: Engine.Image.create(App.skia.MakeImageFromEncoded(data))
       })  
 
-      const dragger1 = Dragger.create(image)
-      dragger1.onDragUpdate = (detail) => {
-        invariant(detail && detail.delta)
-        invariant(image.left !== null && image.top !== null)
-        image.left = image.left + detail.delta.dx
-        image.top = image.top + detail.delta.dy
-      }
+      const flex = Column.create({
+        children: [
+          Expanded.create({
+            flex: 2,
+            child: paragraph,
+          }),
+          Expanded.create({
+            child: image,
+          })
+        ]
+      })
 
-
-      const stack = Stack.create({ 
-        alignment: Alignment.TOP_CENTER,
-      }, [dragger1])    
-
-      instance.view.append(paragraph)
-      instance.view.append(stack)
+      // instance.view.append(paragraph)
+      instance.view.append(flex)
       instance.flush()
     })
  

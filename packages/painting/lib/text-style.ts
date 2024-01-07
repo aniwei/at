@@ -532,7 +532,7 @@ export class TextPaintingStyle {
     })
   }
 
-  compareTo (other: TextPaintingStyle): Skia.RenderComparisonKind {
+  compareTo (other: TextPaintingStyle): Skia.RenderComparison {
     if (
       this.inherit !== other.inherit ||
       this.fontFamily !== other.fontFamily ||
@@ -550,7 +550,7 @@ export class TextPaintingStyle {
       listNotEquals(this.shadows, other.shadows) ||
       listNotEquals(this.fontFeatures, other.fontFeatures) 
     ) {
-      return Skia.RenderComparisonKind.Layout
+      return Skia.RenderComparison.Layout
     }
 
     if (
@@ -561,10 +561,10 @@ export class TextPaintingStyle {
       this.color?.notEqual(other.color) ||
       this.backgroundColor?.notEqual(other.backgroundColor) 
     ) {
-      return Skia.RenderComparisonKind.Paint
+      return Skia.RenderComparison.Paint
     }
 
-    return Skia.RenderComparisonKind.Identical
+    return Skia.RenderComparison.Identical
   }
 
   equal (other: TextPaintingStyle | null) {

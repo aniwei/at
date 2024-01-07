@@ -57,7 +57,7 @@ export abstract class InlineSpan extends Equalable<InlineSpan> {
   abstract getSpanForPositionVisitor (position: TextPosition, offset: Accumulator): InlineSpan | null
   abstract computeToPlainText (buffer: string, includePlaceholders: boolean): string
   abstract codeUnitAtVisitor (index: number, offset: Accumulator): number | null
-  abstract compareTo (other: InlineSpan): Skia.RenderComparisonKind
+  abstract compareTo (other: InlineSpan): Skia.RenderComparison
 
   getSpanForPosition (position: TextPosition): InlineSpan | null {
     const offset = new Accumulator()

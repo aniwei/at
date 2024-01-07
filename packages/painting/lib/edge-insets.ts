@@ -121,13 +121,13 @@ export abstract class EdgeInsetsGeometry {
   abstract modulo (other: number): EdgeInsetsGeometry
   abstract resolve (direction: Skia.TextDirection): EdgeInsets
 
-  along (axis: Skia.AxisKind) {
+  along (axis: Skia.Axis) {
     invariant(axis !== null)
 
     switch (axis) {
-      case Engine.skia.AxisKind.Horizontal:
+      case Engine.skia.Axis.Horizontal:
         return this.horizontal
-      case Engine.skia.AxisKind.Vertical:
+      case Engine.skia.Axis.Vertical:
         return this.vertical
     }
   }

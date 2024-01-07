@@ -92,43 +92,6 @@ export class Base<T extends BasePainter> extends Stack {
     this.foregroundPainter = foregroundPainter
   }
 
-  computeMinIntrinsicWidth (height: number) {
-    if (this.child === null) {
-      return Number.isFinite(this.preferredSize.width) 
-        ? this.preferredSize.width 
-        : 0
-    }
-    return super.computeMinIntrinsicWidth(height);
-  }
-
-  computeMaxIntrinsicWidth (height: number) {
-    if (this.child === null) {
-      return Number.isFinite(this.preferredSize.width) 
-        ? this.preferredSize.width 
-        : 0
-    }
-    return super.computeMaxIntrinsicWidth(height);
-  }
-
-  computeMinIntrinsicHeight (width: number) {
-    if (this.child === null) {
-      return Number.isFinite(this.preferredSize.height) 
-        ? this.preferredSize.height 
-        : 0
-    }
-    return super.computeMinIntrinsicHeight(width)
-  }
-
-  computeMaxIntrinsicHeight (width: number) {
-    if (this.child === null) {
-      return Number.isFinite(this.preferredSize.height) 
-        ? this.preferredSize.height 
-        : 0
-    }
-
-    return super.computeMaxIntrinsicHeight(width)
-  }
-
   computeSizeForNoChild (constraints: BoxConstraints) {
     return constraints.constrain(this.preferredSize)
   }

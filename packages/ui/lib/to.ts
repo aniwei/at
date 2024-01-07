@@ -1,36 +1,36 @@
 import { Skia, Engine } from '@at/engine'
 
-export function axisDirectionToAxis (axisDirection: Skia.AxisDirectionKind): Skia.AxisKind {
+export function axisDirectionToAxis (axisDirection: Skia.AxisDirection): Skia.Axis {
   switch (axisDirection) {
-    case Engine.skia.AxisDirectionKind.Up:
-    case Engine.skia.AxisDirectionKind.Down:
-      return Engine.skia.AxisKind.Vertical
-    case Engine.skia.AxisDirectionKind.Left:
-    case Engine.skia.AxisDirectionKind.Right:
-      return Engine.skia.AxisKind.Horizontal
+    case Engine.skia.AxisDirection.Up:
+    case Engine.skia.AxisDirection.Down:
+      return Engine.skia.Axis.Vertical
+    case Engine.skia.AxisDirection.Left:
+    case Engine.skia.AxisDirection.Right:
+      return Engine.skia.Axis.Horizontal
   }
 }
 
-export function flipScrollDirection (direction: Skia.ScrollDirectionKind): Skia.ScrollDirectionKind {
+export function flipScrollDirection (direction: Skia.ScrollDirection): Skia.ScrollDirection {
   switch (direction) {
-    case Engine.skia.ScrollDirectionKind.Idle:
-      return Engine.skia.ScrollDirectionKind.Idle
-    case Engine.skia.ScrollDirectionKind.Forward:
-      return Engine.skia.ScrollDirectionKind.Reverse
-    case Engine.skia.ScrollDirectionKind.Reverse:
-      return Engine.skia.ScrollDirectionKind.Forward
+    case Engine.skia.ScrollDirection.Idle:
+      return Engine.skia.ScrollDirection.Idle
+    case Engine.skia.ScrollDirection.Forward:
+      return Engine.skia.ScrollDirection.Reverse
+    case Engine.skia.ScrollDirection.Reverse:
+      return Engine.skia.ScrollDirection.Forward
   }
 }
 
-export function flipAxisDirection (axisDirection: Skia.AxisDirectionKind): Skia.AxisDirectionKind {
+export function flipAxisDirection (axisDirection: Skia.AxisDirection): Skia.AxisDirection {
   switch (axisDirection) {
-    case Engine.skia.AxisDirectionKind.Up:
-      return Engine.skia.AxisDirectionKind.Down;
-    case Engine.skia.AxisDirectionKind.Right:
-      return Engine.skia.AxisDirectionKind.Left;
-    case Engine.skia.AxisDirectionKind.Down:
-      return Engine.skia.AxisDirectionKind.Up;
-    case Engine.skia.AxisDirectionKind.Left:
-      return Engine.skia.AxisDirectionKind.Right;
+    case Engine.skia.AxisDirection.Up:
+      return Engine.skia.AxisDirection.Down;
+    case Engine.skia.AxisDirection.Right:
+      return Engine.skia.AxisDirection.Left;
+    case Engine.skia.AxisDirection.Down:
+      return Engine.skia.AxisDirection.Up;
+    case Engine.skia.AxisDirection.Left:
+      return Engine.skia.AxisDirection.Right;
   }
 }

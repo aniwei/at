@@ -51,7 +51,7 @@ export abstract class ImageRefBox {
     this.box.ref(this)
   }
 
-  async toByteData (format: Skia.ImageByteFormatKind = Engine.skia.ImageByteFormatKind.RawRGBA) {
+  async toByteData (format: Skia.ImageByteFormat = Engine.skia.ImageByteFormat.RawRGBA) {
     return this.readPixelsFromSkiaImage(format)
   }
 
@@ -59,15 +59,15 @@ export abstract class ImageRefBox {
    * @param {ImageByteFormat} format
    * @return {ArrayBuffer | Buffer}
    */
-  readPixelsFromSkiaImage (format: Skia.ImageByteFormatKind) {
-    const alphaType = Engine.skia.ImageByteFormatKind.RawStraightRGBA 
+  readPixelsFromSkiaImage (format: Skia.ImageByteFormat) {
+    const alphaType = Engine.skia.ImageByteFormat.RawStraightRGBA 
       ? Engine.skia.AlphaType.Unpremul 
       : Engine.skia.AlphaType.Premul
 
     let bytes: Uint8Array
     if (
-      format === Engine.skia.ImageByteFormatKind.RawRGBA || 
-      format === Engine.skia.ImageByteFormatKind.RawStraightRGBA
+      format === Engine.skia.ImageByteFormat.RawRGBA || 
+      format === Engine.skia.ImageByteFormat.RawStraightRGBA
     ) {
       bytes = this.skia.readPixels(0, 0, {
         width: this.width,

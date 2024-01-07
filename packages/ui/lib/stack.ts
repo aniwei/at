@@ -8,10 +8,10 @@ import {
   AlignmentGeometry 
 } from '@at/painting'
 import { Box } from './box'
-import { RelativeRect } from './relative-rect'
 import { BoxConstraints } from './constraints'
 import { PaintingContext } from './painting-context'
 import { BoxHitTestResult } from './box-hit-test'
+import { Positioned } from './positioned'
 
 // => Child Layout
 export type ChildLayoutHandle = (child: Box, constraints: BoxConstraints) => Size
@@ -29,7 +29,7 @@ export type StackOptions = {
   fit?: StackFitKind,
   alignment?: AlignmentDirectional,
   textDirection?: Skia.TextDirection,
-  clipBehavior?: Skia.ClipKind,
+  clipBehavior?: Skia.Clip,
 }
 
 export class Stack extends Box {
@@ -46,7 +46,7 @@ export class Stack extends Box {
 
   // => layoutPositionedChild
   // 布局子对象
-  static layoutPositionedChild (child: Po, size: Size, alignment: Alignment): boolean {
+  static layoutPositionedChild (child: Positioned, size: Size, alignment: Alignment): boolean {
     invariant(child.positioned, `The "child" must be a positioned object.`)
     // 是否溢出
     let overflowed = false
@@ -104,7 +104,7 @@ export class Stack extends Box {
 
   // 布局定位元素
   // 需要根据父层来计算
-  static layoutPositioned (box: Box, size: Size): boolean {
+  static layoutPositioned (box: Positioned, size: Size): boolean {
     invariant(box.positioned, `The box object must be a positiond object.`)
     
     let overflowed = false
@@ -236,32 +236,16 @@ export class Stack extends Box {
   }
 
   // => clipBehavior
-  private _clipBehavior: Skia.ClipKind = Engine.skia.ClipKind.HardEdge
+  private _clipBehavior: Skia.Clip = Engine.skia.Clip.HardEdge
   public get clipBehavior () {
     return this._clipBehavior
   }
-  public set clipBehavior (value: Skia.ClipKind) {
+  public set clipBehavior (value: Skia.Clip) {
     invariant(value !== null, 'The "Stack.clipBehavior" cannot be assigned to null.')
     if (this._clipBehavior === null || value !== this._clipBehavior) {
       this._clipBehavior = value
       this.markNeedsPaint()
     }
-  }
-
-  // => rect
-  get rect () {
-    return RelativeRect.fromLTRB(
-      this.left ?? Infinity, 
-      this.top ?? Infinity, 
-      this.right ?? Infinity, 
-      this.bottom ?? Infinity
-    )
-  }
-  set rect (value: RelativeRect) {
-    this.top = value.top
-    this.right = value.right
-    this.bottom = value.bottom
-    this.left = value.left
   }
 
   // 视图有溢出
@@ -285,7 +269,7 @@ export class Stack extends Box {
     alignment: AlignmentDirectional = AlignmentDirectional.TOP_START,
     textDirection: Skia.TextDirection = Engine.skia.TextDirection.LTR,
     fit: StackFitKind = StackFitKind.Loose,
-    clipBehavior: Skia.ClipKind = Engine.skia.ClipKind.HardEdge,
+    clipBehavior: Skia.Clip = Engine.skia.Clip.HardEdge,
     ...rests: unknown[]
   ) {
     super(...rests)
@@ -315,22 +299,6 @@ export class Stack extends Box {
   markNeedResolution () {
     this.resolvedAlignment = null
     this.markNeedsLayout()
-  }
-  
-  computeMinIntrinsicWidth (height: number) {
-    return Stack.getIntrinsicDimension(this.firstChild as Box, child => child.getMinIntrinsicWidth(height))
-  }
-
-  computeMaxIntrinsicWidth (height: number) {
-    return Stack.getIntrinsicDimension(this.firstChild as Box, child => child.getMaxIntrinsicWidth(height))
-  }
-  
-  computeMinIntrinsicHeight (width: number) {
-    return Stack.getIntrinsicDimension(this.firstChild as Box, child => child.getMinIntrinsicHeight(width))
-  }
-
-  computeMaxIntrinsicHeight (width: number) {
-    return Stack.getIntrinsicDimension(this.firstChild as Box, child => child.getMaxIntrinsicHeight(width))
   }
 
   computeDistanceToActualBaseline (baseline: Skia.TextBaseline) {
@@ -414,7 +382,7 @@ export class Stack extends Box {
     
     while (child !== null) {
       if (child.positioned) {
-        this.overflowed = Stack.layoutPositionedChild(child, this.size, this.resolvedAlignment) || this.overflowed
+        this.overflowed = Stack.layoutPositionedChild(child as Positioned, this.size, this.resolvedAlignment) || this.overflowed
       } else {
         invariant(child.size, `The "Box.size" cannot be null.`)
         child.offset = this.resolvedAlignment.alongOffset(this.size.subtract(child.size) as unknown as Offset)
@@ -439,7 +407,7 @@ export class Stack extends Box {
    */
   paint (context: PaintingContext, offset: Offset) {
     invariant(this.size, `The "Box.size" cannot be null.`)
-    if (this.clipBehavior !== Engine.skia.ClipKind.None && this.overflowed) {
+    if (this.clipBehavior !== Engine.skia.Clip.None && this.overflowed) {
       this.clipRectLayer.layer = context.pushClipRect(
         this.needsCompositing,
         this.offset,
@@ -457,11 +425,11 @@ export class Stack extends Box {
   describeApproximatePaintClip (child: object) {
     invariant(this.size)
     switch (this.clipBehavior) {
-      case Skia.ClipKind.None:
+      case Skia.Clip.None:
         return null
-      case Skia.ClipKind.HardEdge:
-      case Skia.ClipKind.AntiAlias:
-      case Skia.ClipKind.AntiAliasWithSaveLayer:
+      case Skia.Clip.HardEdge:
+      case Skia.Clip.AntiAlias:
+      case Skia.Clip.AntiAliasWithSaveLayer:
         return this.overflowed 
           ? Offset.ZERO.and(this.size) 
           : null

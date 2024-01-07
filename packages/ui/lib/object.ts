@@ -120,7 +120,6 @@ export abstract class Object extends AbstractNode<Object> implements HitTestTarg
   abstract bounds: Rect
 
   abstract performResize (): void
-
   abstract performLayout (): void
   abstract performLayout (size?: Size): void
 

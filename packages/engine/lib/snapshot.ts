@@ -281,7 +281,7 @@ export class DrawImageNineCommand extends PaintCommand {
       this.image.skia,
       this.center,
       this.dest,
-      this.paint.filter?.quality === Engine.skia.FilterQualityKind.None 
+      this.paint.filter?.quality === Engine.skia.FilterQuality.None 
         ? Engine.skia.FilterMode.Nearest 
         : Engine.skia.FilterMode.Linear,
       this.paint.skia

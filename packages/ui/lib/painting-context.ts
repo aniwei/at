@@ -241,7 +241,7 @@ export class PaintingContext extends ClipContext {
     offset: Offset,
     clipRect: Rect, 
     painter: PaintingContextCallback,
-    clipBehavior: Skia.ClipKind = Engine.skia.ClipKind.HardEdge, 
+    clipBehavior: Skia.Clip = Engine.skia.Clip.HardEdge, 
     oldLayer?: ClipRectLayer | null
   ): ClipRectLayer | null {
     const offsetClipRect = clipRect.shift(offset)
@@ -266,7 +266,7 @@ export class PaintingContext extends ClipContext {
     bounds: Rect, 
     clipRRect: RRect, 
     painter: PaintingContextCallback,
-    clipBehavior: Skia.ClipKind = Engine.skia.ClipKind.AntiAlias, 
+    clipBehavior: Skia.Clip = Engine.skia.Clip.AntiAlias, 
     oldLayer?: ClipRRectLayer | null
   ): ClipRRectLayer | null  {
     invariant(clipBehavior !== null)
@@ -292,7 +292,7 @@ export class PaintingContext extends ClipContext {
     bounds: Rect,
     clipPath: Path, 
     painter: PaintingContextCallback,
-    clipBehavior: Skia.ClipKind = Engine.skia.ClipKind.AntiAlias, 
+    clipBehavior: Skia.Clip = Engine.skia.Clip.AntiAlias, 
     oldLayer?: ClipPathLayer | null
   ): ClipPathLayer | null {
     invariant(clipBehavior !== null, `The argument "clipBehavior" cannot be null.`)

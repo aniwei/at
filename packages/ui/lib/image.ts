@@ -15,10 +15,6 @@ export interface ImageOptions {
   image?: AtEngine.Image | null,
   width?: number | null,
   height?: number | null,
-  left?: number | null,
-  top?: number | null,
-  right?: number | null,
-  bottom?: number | null,
   scale?: number,
   color?: Color | null ,
   opacity?: number | null,
@@ -31,17 +27,19 @@ export interface ImageOptions {
   textDirection?: Skia.TextDirection | null,
   invertColors?: boolean,
   isAntiAlias?: boolean,
-  quality?: Skia.FilterQualityKind,
+  quality?: Skia.FilterQuality,
 }
 
 export class Image extends Box {
+  /// => 
+  /**
+   * 
+   * @param options 
+   * @returns 
+   */
   static create (options: ImageOptions) {
     return super.create(
       options.image,
-      options.left,
-      options.top,
-      options.right,
-      options.bottom,
       options.width,
       options.height,
       options.scale,
@@ -60,6 +58,7 @@ export class Image extends Box {
     ) as Image
   }
 
+  // => bounds
   public get bounds () {
     return Offset.ZERO.and(this.size as Size)
   }
@@ -104,13 +103,38 @@ export class Image extends Box {
     }
   }
 
+  // => width
+  // 宽度
+  protected _width: number | null = null
+  public get width () {
+    return this._width
+  }
+  public set width (width: number | null) {
+    if (this._width === null || this._width !== width) {
+      this._width = width
+      this.markNeedsLayout()
+    }
+  }
+
+  // => height
+  // 高度
+  protected _height: number | null = null
+  public get height () {
+    return this._height
+  }
+  public set height (height: number | null) {
+    if (this._height === null || this._height !== height) {
+      this._height = height
+      this.markNeedsLayout()
+    }
+  }
 
   // => filterQuality
-  private _quality: Skia.FilterQualityKind | null = null
+  private _quality: Skia.FilterQuality | null = null
   public get quality () {
     return this._quality
   }
-  public set quality (quality: Skia.FilterQualityKind | null) {
+  public set quality (quality: Skia.FilterQuality | null) {
     if (this._quality !== quality) {
       this._quality = quality
       this.markNeedsPaint()
@@ -265,7 +289,7 @@ export class Image extends Box {
     textDirection: Skia.TextDirection | null = null,
     invertColors: boolean = false,
     isAntiAlias: boolean = false,
-    quality: Skia.FilterQualityKind = Engine.skia.FilterQualityKind.Low,
+    quality: Skia.FilterQuality = Engine.skia.FilterQuality.Low,
   ) {
     super(
       null,

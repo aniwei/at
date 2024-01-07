@@ -29,13 +29,13 @@ export class EngineRasterizer extends Rasterizer {
 //// => basic types
 // 基础类型定义
 export interface EngineSkia extends CanvasKit {
-  AxisKind: typeof Skia.AxisKind,
-  ClipKind: typeof Skia.ClipKind,
-  FilterQualityKind: typeof Skia.FilterQualityKind,
-  ImageByteFormatKind: typeof Skia.ImageByteFormatKind,
-  AxisDirectionKind: typeof Skia.AxisDirectionKind,
-  ScrollDirectionKind: typeof Skia.ScrollDirectionKind,
-  VerticalDirectionKind: typeof Skia.VerticalDirectionKind
+  Axis: typeof Skia.Axis,
+  Clip: typeof Skia.Clip,
+  FilterQuality: typeof Skia.FilterQuality,
+  ImageByteFormat: typeof Skia.ImageByteFormat,
+  AxisDirection: typeof Skia.AxisDirection,
+  ScrollDirection: typeof Skia.ScrollDirection,
+  VerticalDirection: typeof Skia.VerticalDirection
 }
 
 // 环境变量
@@ -46,7 +46,8 @@ export interface EngineEnvironments {
   ATKIT_TEXT_FONTSIZE: number,
   ATKIT_FONT_FAMILY: string,
   ATKIT_IMAGE_CACHE_MAXIMUM_BYTES: number,
-  ATKIT_IMAGE_CACHE_MAXIMUM_SIZE: number
+  ATKIT_IMAGE_CACHE_MAXIMUM_SIZE: number,
+  PRECISION_ERROR_TOLERANCE: number
 }
 
 
@@ -97,13 +98,13 @@ export abstract class Engine extends AssetsManager {
   static set skia (skia: EngineSkia) {
     /// => extending skia
     // 扩展 Skia
-    defineReadOnly(skia, 'AxisDirectionKind', Skia.AxisDirectionKind)
-    defineReadOnly(skia, 'AxisKind', Skia.AxisKind)
-    defineReadOnly(skia, 'ClipKind', Skia.ClipKind)
-    defineReadOnly(skia, 'FilterQualityKind', Skia.FilterQualityKind)
-    defineReadOnly(skia, 'ImageByteFormatKind', Skia.ImageByteFormatKind)
-    defineReadOnly(skia, 'ScrollDirectionKind', Skia.ScrollDirectionKind)
-    defineReadOnly(skia, 'VerticalDirectionKind', Skia.ImageByteFormatKind)
+    defineReadOnly(skia, 'AxisDirection', Skia.AxisDirection)
+    defineReadOnly(skia, 'Axis', Skia.Axis)
+    defineReadOnly(skia, 'Clip', Skia.Clip)
+    defineReadOnly(skia, 'FilterQuality', Skia.FilterQuality)
+    defineReadOnly(skia, 'ImageByteFormat', Skia.ImageByteFormat)
+    defineReadOnly(skia, 'ScrollDirection', Skia.ScrollDirection)
+    defineReadOnly(skia, 'VerticalDirection', Skia.ImageByteFormat)
  
     this._skia = skia
   }

@@ -124,8 +124,8 @@ export class Mutator extends Equalable<Mutator> {
     })
   }
 
-  // => isClipKind
-  public get isClipKind (): boolean {
+  // => isClip
+  public get isClip (): boolean {
     return (
       this.kind === MutatorKind.ClipRect ||
       this.kind === MutatorKind.ClipRRect ||

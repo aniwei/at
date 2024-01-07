@@ -26,7 +26,7 @@ export abstract class Shader extends Skia.ManagedSkiaRef<Skia.Shader> {
     super.skia = skia
   }
 
-  withQuality (quality: Skia.FilterQualityKind) {
+  withQuality (quality: Skia.FilterQuality) {
     return this.skia
   }
 }
@@ -509,7 +509,7 @@ export interface ImageShaderOptions {
   image: Image,
   tileModeX: Skia.TileMode,
   tileModeY: Skia.TileMode,
-  quality: Skia.FilterQualityKind,
+  quality: Skia.FilterQuality,
   matrix4: number[] | null
 }
 
@@ -527,9 +527,9 @@ export class ImageShader extends Shader {
   protected tileModeX: Skia.TileMode
   protected tileModeY: Skia.TileMode
   protected image: Image
-  protected quality: Skia.FilterQualityKind
+  protected quality: Skia.FilterQuality
   protected matrix4: number[] | null
-  protected cachedQuality: Skia.FilterQualityKind | null = null
+  protected cachedQuality: Skia.FilterQuality | null = null
 
   /**
    * @description: 
@@ -540,7 +540,7 @@ export class ImageShader extends Shader {
     image: Image,
     tileModeX: Skia.TileMode,
     tileModeY: Skia.TileMode,
-    quality: Skia.FilterQualityKind,
+    quality: Skia.FilterQuality,
     matrix4: number[] | null
   ) {
     super(image.skia)
@@ -556,12 +556,12 @@ export class ImageShader extends Shader {
    * @param {FilterQuality} quality
    * @return {IShader}
    */  
-  withQuality (quality: Skia.FilterQualityKind): Skia.Shader {
+  withQuality (quality: Skia.FilterQuality): Skia.Shader {
     const q = this.quality ?? quality
     let shader = this.skia
     
     if (this.cachedQuality !== q || shader === null) {
-      if (q === Engine.skia.FilterQualityKind.High) {
+      if (q === Engine.skia.FilterQuality.High) {
         shader = this.image.skia.makeShaderCubic(
           this.tileModeX,
           this.tileModeY,
@@ -590,6 +590,6 @@ export class ImageShader extends Shader {
    * @return {Shader}
    */  
   resurrect () {
-    return this.withQuality(this.cachedQuality ?? Engine.skia.FilterQualityKind.None)
+    return this.withQuality(this.cachedQuality ?? Engine.skia.FilterQuality.None)
   } 
 }

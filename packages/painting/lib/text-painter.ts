@@ -159,14 +159,14 @@ export class TextPainter {
       // }
   
       let comparison = value === null
-        ? Skia.RenderComparisonKind.Layout
-        : this._text?.compareTo(value) ?? Skia.RenderComparisonKind.Layout
+        ? Skia.RenderComparison.Layout
+        : this._text?.compareTo(value) ?? Skia.RenderComparison.Layout
       
       this._text = value
   
-      if (comparison >= Skia.RenderComparisonKind.Layout) {
+      if (comparison >= Skia.RenderComparison.Layout) {
         this.markNeedsLayout()
-      } else if (comparison >= Skia.RenderComparisonKind.Paint) {
+      } else if (comparison >= Skia.RenderComparison.Paint) {
         this.rebuildParagraphForPaint = true
       }
     }

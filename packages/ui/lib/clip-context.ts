@@ -14,22 +14,22 @@ export abstract class ClipContext {
    */
   clipAndPaint (
     clipCallback: (doAntiAlias: boolean) => void,
-    clipBehavior: Skia.ClipKind, 
+    clipBehavior: Skia.Clip, 
     bounds: Rect, 
     painter: VoidFunction
   ) {
     this.canvas?.save()
 
     switch (clipBehavior) {
-      case Engine.skia.ClipKind.None:
+      case Engine.skia.Clip.None:
         break
-      case Engine.skia.ClipKind.HardEdge:
+      case Engine.skia.Clip.HardEdge:
         clipCallback(false)
         break
-      case Engine.skia.ClipKind.AntiAlias:
+      case Engine.skia.Clip.AntiAlias:
         clipCallback(true)
         break
-      case Engine.skia.ClipKind.AntiAliasWithSaveLayer:
+      case Engine.skia.Clip.AntiAliasWithSaveLayer:
         clipCallback(true)
         this.canvas?.saveLayer(bounds, Paint.create())
         break
@@ -37,7 +37,7 @@ export abstract class ClipContext {
 
     painter()
     
-    if (clipBehavior === Engine.skia.ClipKind.AntiAliasWithSaveLayer) {
+    if (clipBehavior === Engine.skia.Clip.AntiAliasWithSaveLayer) {
       this.canvas?.restore()
     }
 
@@ -53,7 +53,7 @@ export abstract class ClipContext {
    */
   clipPathAndPaint (
     path: Path, 
-    clipBehavior: Skia.ClipKind, 
+    clipBehavior: Skia.Clip, 
     bounds: Rect, 
     painter: VoidFunction 
   ) {
@@ -74,7 +74,7 @@ export abstract class ClipContext {
    */
   clipRRectAndPaint (
     rrect: RRect, 
-    clipBehavior: Skia.ClipKind, 
+    clipBehavior: Skia.Clip, 
     bounds: Rect, 
     painter: VoidFunction
   ) {
@@ -95,7 +95,7 @@ export abstract class ClipContext {
    */
   clipRectAndPaint (
     rect: Rect, 
-    clipBehavior: Skia.ClipKind, 
+    clipBehavior: Skia.Clip, 
     bounds: Rect, 
     painter: VoidFunction
   ) {

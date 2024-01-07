@@ -86,7 +86,12 @@ export class BoxConstraints extends Constraints {
     })
   }
 
-  static tightFor (width: number | null = null, height: number | null = null) {
+  /**
+   * 约束
+   * @param {number | Size | null} width 
+   * @param {number | null | undefined} height
+   */
+  static tightFor (width: number | null = null, height: number | null = null): BoxConstraints {
     return BoxConstraints.create({
       minWidth: width ?? 0,
       maxWidth: width ?? Number.POSITIVE_INFINITY,

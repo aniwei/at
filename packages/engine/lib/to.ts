@@ -90,29 +90,29 @@ export function toSigma (radius: number) {
  * @param {FilterQuality} filterQuality
  * @return {*}
  */
-export function toFilterQuality (filterQuality: Skia.FilterQualityKind): {
+export function toFilterQuality (filterQuality: Skia.FilterQuality): {
   filter: Skia.FilterMode,
   mipmap: Skia.MipmapMode
 } | {
   B: number,
   C: number
 } {
-  if (filterQuality === Engine.skia.FilterQualityKind.None) {
+  if (filterQuality === Engine.skia.FilterQuality.None) {
    return {
      filter: Engine.skia.FilterMode.Nearest,
      mipmap: Engine.skia.MipmapMode.None
    }
- } else if (filterQuality === Engine.skia.FilterQualityKind.Low) {
+ } else if (filterQuality === Engine.skia.FilterQuality.Low) {
    return {
      filter: Engine.skia.FilterMode.Linear,
      mipmap: Engine.skia.MipmapMode.None
    }
- } else if (filterQuality === Engine.skia.FilterQualityKind.Medium) {
+ } else if (filterQuality === Engine.skia.FilterQuality.Medium) {
    return {
      filter: Engine.skia.FilterMode.Linear,
      mipmap: Engine.skia.MipmapMode.Linear
    }
- } else if (filterQuality === Engine.skia.FilterQualityKind.High) {
+ } else if (filterQuality === Engine.skia.FilterQuality.High) {
    return {
      B: 1.0 / 3.0,
      C: 1.0 / 3.0
@@ -237,8 +237,8 @@ export function toColorStops (stops: number[] | null = null) {
  * @param {FilterQuality} filterQuality
  * @return {*}
  */
-export function toMipmapMode (filterQuality: Skia.FilterQualityKind) {
-  return filterQuality == Engine.skia.FilterQualityKind.Medium
+export function toMipmapMode (filterQuality: Skia.FilterQuality) {
+  return filterQuality == Engine.skia.FilterQuality.Medium
       ? Engine.skia.MipmapMode.Linear
       : Engine.skia.MipmapMode.None
 }
@@ -247,8 +247,8 @@ export function toMipmapMode (filterQuality: Skia.FilterQualityKind) {
  * @param {FilterQuality} filterQuality
  * @return {*}
  */
-export function toFilterMode (filterQuality: Skia.FilterQualityKind) {
-  return filterQuality == Engine.skia.FilterQualityKind.None
+export function toFilterMode (filterQuality: Skia.FilterQuality) {
+  return filterQuality == Engine.skia.FilterQuality.None
       ? Engine.skia.FilterMode.Nearest
       : Engine.skia.FilterMode.Linear
 }

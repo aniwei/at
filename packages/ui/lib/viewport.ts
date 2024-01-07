@@ -42,7 +42,7 @@ export abstract class ViewportOffset {
     }
   }
 
-  abstract userScrollDirection: Skia.ScrollDirectionKind
+  abstract userScrollDirection: Skia.ScrollDirection
   abstract allowImplicitScrolling: boolean
 
   toString () {
@@ -62,8 +62,8 @@ export class FixedViewportOffset extends ViewportOffset {
 
   public pixels: number
 
-  public get userScrollDirection (): Skia.ScrollDirectionKind {
-    return Engine.skia.ScrollDirectionKind.Idle
+  public get userScrollDirection (): Skia.ScrollDirection {
+    return Engine.skia.ScrollDirection.Idle
   }
 
   public get hasPixels () {

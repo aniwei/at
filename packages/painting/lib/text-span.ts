@@ -160,9 +160,9 @@ export class TextSpan extends InlineSpan {
     return null
   }
 
-  compareTo (other: InlineSpan): Skia.RenderComparisonKind {
+  compareTo (other: InlineSpan): Skia.RenderComparison {
     if (other === this) {
-      return Skia.RenderComparisonKind.Identical
+      return Skia.RenderComparison.Identical
     }
 
     const textSpan = other as TextSpan
@@ -171,10 +171,10 @@ export class TextSpan extends InlineSpan {
       this.children?.length !== textSpan.children?.length ||
       (this.style === null) !== (textSpan.style === null)
     ) {
-      return Skia.RenderComparisonKind.Layout
+      return Skia.RenderComparison.Layout
     }
       
-    let result = Skia.RenderComparisonKind.Identical
+    let result = Skia.RenderComparison.Identical
     
     if (this.style !== null) {
       invariant(textSpan.style)
@@ -184,7 +184,7 @@ export class TextSpan extends InlineSpan {
         result = candidate
       }
 
-      if (result === Skia.RenderComparisonKind.Layout) {
+      if (result === Skia.RenderComparison.Layout) {
         return result
       }
     }
@@ -199,7 +199,7 @@ export class TextSpan extends InlineSpan {
           result = candidate
         }
 
-        if (result === Skia.RenderComparisonKind.Layout)
+        if (result === Skia.RenderComparison.Layout)
           return result
       }
     }

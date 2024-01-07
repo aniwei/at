@@ -1,3 +1,4 @@
+import { Gesture } from "."
 
 class Vector {
   static fromVOL (values: number[], offset: number, length: number) {
@@ -80,8 +81,6 @@ export class PolynomialFit {
 //// => LeastSquaresSolver
 // 最小二乘法
 export class LeastSquaresSolver {
-  static PRECISION_ERROR_TOLERANCE = 1e-10
-
   static create (
     x: number[], 
     y: number[], 
@@ -137,7 +136,7 @@ export class LeastSquaresSolver {
       }
 
       const norm = q.row(j).norm()
-      if (norm < LeastSquaresSolver.PRECISION_ERROR_TOLERANCE) {
+      if (norm < Gesture.env<number>('PRECISION_ERROR_TOLERANCE', 1e-10)) {
         return null
       }
 
@@ -185,7 +184,7 @@ export class LeastSquaresSolver {
       sumSquaredTotal += this.w[h] * this.w[h] * v * v;
     }
 
-    result.confidence = sumSquaredTotal <= LeastSquaresSolver.PRECISION_ERROR_TOLERANCE 
+    result.confidence = sumSquaredTotal <= Gesture.env<number>('PRECISION_ERROR_TOLERANCE', 1e-10)
       ? 1.0 
       : 1.0 - (sumSquaredError / sumSquaredTotal)
 

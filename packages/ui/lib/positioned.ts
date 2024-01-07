@@ -34,7 +34,6 @@ export class Positioned extends Box {
     if (this._left === null || this._left !== left) {
       this._left = left
       this.markNeedsLayout()
-      this.markParentNeedsLayout()
     }
   }
 
@@ -48,7 +47,6 @@ export class Positioned extends Box {
     if (this._top === null || this._top !== top) {
       this._top = top
       this.markNeedsLayout()
-      this.markParentNeedsLayout()
     }
   }
 
@@ -62,7 +60,6 @@ export class Positioned extends Box {
     if (this._right === null || this._right !== right) {
       this._right = right
       this.markNeedsLayout()
-      this.markParentNeedsLayout()
     }
   }
 
@@ -76,7 +73,6 @@ export class Positioned extends Box {
     if (this._bottom === null || this._bottom !== bottom) {
       this._bottom = bottom
       this.markNeedsLayout()
-      this.markParentNeedsLayout()
     }
   }
   
@@ -183,5 +179,13 @@ export class Positioned extends Box {
     this.height = height
     
     this.dragTarget = DragTarget.create()
+  }
+
+  markNeedsLayout (): void {
+    super.markNeedsLayout()
+
+    if (this.needsLayout) {
+      this.parent?.markNeedsLayout()
+    }
   }
 }

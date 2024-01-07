@@ -253,14 +253,14 @@ export interface ParagraphStyle extends CanvasKit.ParagraphStyle, SkiaRef { }
 export interface TextStyle extends CanvasKit.TextStyle, SkiaRef { }
 
 //// => extend Skia
-export enum AxisKind {
+export enum Axis {
   Horizontal,
   Vertical
 }
 
 // => Clip
 // 裁剪方式
-export enum ClipKind {
+export enum Clip {
   None,
   HardEdge,
   AntiAlias,
@@ -268,46 +268,46 @@ export enum ClipKind {
 }
 
 // => FilterQuality
-export enum FilterQualityKind {
+export enum FilterQuality {
   None,
   Low,
   Medium,
   High,
 }
 
-// => ImageByteFormatKind
+// => ImageByteFormat
 // 位图格式
-export enum ImageByteFormatKind {
+export enum ImageByteFormat {
   RawRGBA,
   RawStraightRGBA,
   RawUnmodified,
   PNG
 }
 
-// => RenderComparisonKind
-export enum RenderComparisonKind {
+// => RenderComparison
+export enum RenderComparison {
   Identical,
   Metadata,
   Paint,
   Layout,
 }
 
-// => AxisDirectionKind
-export enum AxisDirectionKind {
+// => AxisDirection
+export enum AxisDirection {
   Up,
   Right,
   Down,
   Left,
 }
 
-// => VerticalDirectionKind
-export enum VerticalDirectionKind {
+// => VerticalDirection
+export enum VerticalDirection {
   Up,
   Down,
 }
 
-// => ScrollDirectionKind
-export enum ScrollDirectionKind {
+// => ScrollDirection
+export enum ScrollDirection {
   Idle,
   Forward,
   Reverse,

@@ -253,15 +253,15 @@ export class Paragraph extends Box {
   } 
   public set text (value: InlineSpan) {
     switch (this.painter.text.compareTo(value)) {
-      case Skia.RenderComparisonKind.Identical:
-      case Skia.RenderComparisonKind.Metadata:
+      case Skia.RenderComparison.Identical:
+      case Skia.RenderComparison.Metadata:
         return
-      case Skia.RenderComparisonKind.Paint:
+      case Skia.RenderComparison.Paint:
         this.painter.text = value
         this.extractPlaceholderSpans(value)
         this.markNeedsPaint()
         break
-      case Skia.RenderComparisonKind.Layout:
+      case Skia.RenderComparison.Layout:
         this.painter.text = value
         this.overflowShader = null
         this.extractPlaceholderSpans(value)
@@ -383,19 +383,19 @@ export class Paragraph extends Box {
   }
 
   // => viewportAxis
-  public get viewportAxis (): Skia.AxisKind {
+  public get viewportAxis (): Skia.Axis {
     return this.isMultiline 
-      ? Engine.skia.AxisKind.Vertical 
-      : Engine.skia.AxisKind.Horizontal
+      ? Engine.skia.Axis.Vertical 
+      : Engine.skia.Axis.Horizontal
   }
 
   // => paintAt
   public get paintAt (): Offset {
     invariant(this.viewport)
     switch (this.viewportAxis) {
-      case Engine.skia.AxisKind.Horizontal:
+      case Engine.skia.Axis.Horizontal:
         return new Offset(-this.viewport.pixels, 0.0)
-      case Engine.skia.AxisKind.Vertical:
+      case Engine.skia.Axis.Vertical:
         return new Offset(0.0, -this.viewport.pixels)
     }
   }
@@ -419,11 +419,11 @@ export class Paragraph extends Box {
   }
 
   // => clipBehavior
-  protected _clipBehavior: Skia.ClipKind = Skia.ClipKind.HardEdge
-  public get clipBehavior (): Skia.ClipKind {
+  protected _clipBehavior: Skia.Clip = Skia.Clip.HardEdge
+  public get clipBehavior (): Skia.Clip {
     return this._clipBehavior
   }
-  public set clipBehavior (value: Skia.ClipKind) {
+  public set clipBehavior (value: Skia.Clip) {
     if (this._clipBehavior === null || value !== this._clipBehavior) {
       this._clipBehavior = value
       this.markNeedsPaint()
@@ -758,67 +758,6 @@ export class Paragraph extends Box {
     this.layoutText(constraints.minWidth, constraints.maxWidth)
   }
 
-  /**
-   * 最小固定宽度
-   * @param {number} height 
-   * @returns {number}
-   */
-  computeMinIntrinsicWidth (height: number) {
-    if (!this.canComputeIntrinsics()) {
-      return 0.0
-    }
-
-    this.computeChildrenWidthWithMinIntrinsics(height)
-    this.layoutText()
-    
-    return this.painter.minIntrinsicWidth
-  }
-  
-  /**
-   * 最大固定宽度
-   * @param {number} height 
-   * @returns {number}
-   */
-  computeMaxIntrinsicWidth (height: number) {
-    if (!this.canComputeIntrinsics()) {
-      return 0.0
-    }
-    this.computeChildrenWidthWithMaxIntrinsics(height)
-    this.layoutText()
-    return this.painter.maxIntrinsicWidth
-  }
-
-  /**
-   * 计算固定高度
-   * @param {number} height 
-   * @returns {number}
-   */
-  computeIntrinsicHeight (height: number) {
-    if (!this.canComputeIntrinsics()) {
-      return 0.0;
-    }
-    this.computeChildrenHeightWithMinIntrinsics(height)
-    this.layoutText(height, height)
-    return this.painter.height
-  }
-
-  /**
-   * 计算最小高度
-   * @param {number} height 
-   * @returns 
-   */
-  computeMinIntrinsicHeight (width: number) {
-    return this.computeIntrinsicHeight(width)
-  }
-
-  /**
-   * 
-   * @param {number} width 
-   * @returns {number}
-   */
-  computeMaxIntrinsicHeight (width: number) {
-    return this.computeIntrinsicHeight(width)
-  }
 
   computeDistanceToActualBaseline (baseline: Skia.TextBaseline) {
     invariant(this.constraints !== null)
@@ -848,47 +787,6 @@ export class Paragraph extends Box {
     }
 
     return true
-  }
-
-  /**
-   * 
-   * @param {number} height 
-   */
-  computeChildrenWidthWithMaxIntrinsics (height: number) {
-    let child: Box | null = this.firstChild as Box
-    const placeholderDimensions = Array(this.count).fill(PlaceholderDimensions.EMPTY)
-    let childIndex = 0
-
-    while (child !== null) {
-      placeholderDimensions[childIndex] = PlaceholderDimensions.create({
-        size: new Size(child.getMaxIntrinsicWidth(Infinity), 0.0),
-        alignment: this.placeholderSpans[childIndex].alignment,
-        baseline: this.placeholderSpans[childIndex].baseline,
-      })
-
-      child = this.after(child) as Box | null
-      childIndex += 1
-    }
-    this.painter.placeholderDimensions = placeholderDimensions
-  }
-
-  computeChildrenWidthWithMinIntrinsics (height: number) {
-    const placeholderDimensions = Array(this.count).fill(PlaceholderDimensions.EMPTY)
-    let child: Box | null = this.firstChild as Box
-    let childIndex = 0
-    
-    while (child !== null) {
-      placeholderDimensions[childIndex] = PlaceholderDimensions.create({
-        size: new Size(child.getMinIntrinsicWidth(Infinity), 0.0),
-        alignment: this.placeholderSpans[childIndex].alignment,
-        baseline: this.placeholderSpans[childIndex].baseline,
-      })
-
-      child = this.after(child) as Box | null
-      childIndex += 1
-    }
-
-    this.painter.placeholderDimensions = placeholderDimensions
   }
 
   computeChildrenHeightWithMinIntrinsics (width: number) {
@@ -1284,7 +1182,7 @@ export class Paragraph extends Box {
     invariant(context.canvas)
     invariant(this.size)
 
-    if (this.hasVisualOverflow && this.clipBehavior !== Engine.skia.ClipKind.None) {
+    if (this.hasVisualOverflow && this.clipBehavior !== Engine.skia.Clip.None) {
       this.clipRectLayer.layer = context.pushClipRect(
         this.needsCompositing,
         this.offset,

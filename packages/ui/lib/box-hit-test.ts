@@ -4,12 +4,28 @@ import { Matrix4, MatrixUtils } from '@at/math'
 import { invariant } from '@at/utils'
 import { Box } from './box'
 
-export type BoxHitTestHandle = (result: BoxHitTestResult, position: Offset ) => boolean
-export type BoxHitTestWithOutOfBandPositionHandle = (result: BoxHitTestResult) => boolean
+/// => BoxHitTestHandle
+export interface BoxHitTestHandle {
+  (
+    result: BoxHitTestResult, 
+    position: Offset
+  ): boolean
+}
 
+export interface BoxHitTestWithOutOfBandPositionHandle {
+  (result: BoxHitTestResult): boolean
+}
+
+//// => BoxHitTestResult
+// 盒子碰撞测试结果
 export interface BoxHitTestResultOptions extends HitTestResultOptions { }
 
 export class BoxHitTestResult extends HitTestResult {
+  /**
+   * 静态创建函数
+   * @param {HitTestResultOptions} options 
+   * @returns 
+   */
   static create (options: HitTestResultOptions) {
     return new BoxHitTestResult(
       options.path,
@@ -26,13 +42,20 @@ export class BoxHitTestResult extends HitTestResult {
     })
   }
 
+  /**
+   * 
+   * @param {Matrix4 | null} transform 
+   * @param {Offset} position 
+   * @param {BoxHitTestHandle} hitTest 
+   * @returns 
+   */
   addWithPaintTransform (
     transform: Matrix4 | null,
     position: Offset,
     hitTest: BoxHitTestHandle,
   ) {
-    invariant(position !== null)
-    invariant(hitTest !== null)
+    invariant(position !== null, 'The argument "position" cannot be null.')
+    invariant(hitTest !== null, 'The argument "hitTest" cannot be null.')
 
     if (transform !== null) {
       transform = Matrix4.tryInvert(transform)
@@ -48,13 +71,20 @@ export class BoxHitTestResult extends HitTestResult {
     )
   }
 
+  /**
+   * 
+   * @param {Offset} offset 
+   * @param {Offset} position 
+   * @param {BoxHitTestHandle} hitTest 
+   * @returns 
+   */
   addWithPaintOffset(
     offset: Offset,
     position: Offset,
     hitTest: BoxHitTestHandle,
   ) {
-    invariant(position !== null)
-    invariant(hitTest !== null)
+    invariant(position !== null, 'The argument "position" cannot be null.')
+    invariant(hitTest !== null, 'The argument "hitTest" cannot be null.')
     
     const transformedPosition = offset === null 
       ? position 
@@ -73,14 +103,20 @@ export class BoxHitTestResult extends HitTestResult {
     return isHit
   }
 
+  /**
+   * 
+   * @param {Matrix4 | null} transform 
+   * @param {Offset} position 
+   * @param {BoxHitTestHandle} hitTest 
+   * @returns 
+   */
   addWithRawTransform (
     transform: Matrix4 | null,
     position: Offset,
     hitTest: BoxHitTestHandle,
   ) {
-    invariant(position !== null)
-    invariant(hitTest !== null)
-    invariant(position !== null)
+    invariant(position !== null, 'The argument "position" cannot be null.')
+    invariant(hitTest !== null, 'The argument "hitTest" cannot be null.')
 
     const transformedPosition = transform === null 
       ? position 
@@ -99,29 +135,24 @@ export class BoxHitTestResult extends HitTestResult {
   }
 
   addWithOutOfBandPosition(
-    paintOffset: Offset | null,
-    paintTransform: Matrix4 | null,
+    offset: Offset | null,
+    transform: Matrix4 | null,
     rawTransform: Matrix4 | null,
     hitTest: BoxHitTestWithOutOfBandPositionHandle,
   ) {
-    invariant(hitTest !== null)
-    invariant(
-      (paintOffset === null && paintTransform === null && rawTransform !== null) ||
-      (paintOffset === null && paintTransform !== null && rawTransform === null) ||
-      (paintOffset !== null && paintTransform === null && rawTransform === null),
-      'Exactly one transform or offset argument must be provided.',
-    )
-
-    if (paintOffset !== null) {
-      this.pushOffset(paintOffset.inverse())
+    invariant(hitTest !== null, 'The argument "hitTest" cannot be null.')
+   
+    if (offset !== null) {
+      this.pushOffset(offset.inverse())
     } else if (rawTransform !== null) {
       this.pushTransform(rawTransform)
     } else {
-      invariant(paintTransform !== null)
-      paintTransform = Matrix4.tryInvert(paintTransform)
+      
+      invariant(transform !== null, 'The argument "transform" cannot be null.')
+      transform = Matrix4.tryInvert(transform)
+      invariant(transform !== null, 'The "transform" must be invertible.')
 
-      invariant(paintTransform !== null, 'The "paintTransform" must be invertible.')
-      this.pushTransform(paintTransform)
+      this.pushTransform(transform)
     }
 
     const isHit = hitTest(this)
@@ -131,11 +162,11 @@ export class BoxHitTestResult extends HitTestResult {
   }
 }
 
-
+//// => BoxHitTestEntry
+// 盒子碰撞 Entry
 export class BoxHitTestEntry extends HitTestEntry {
   constructor (target: Box, position: Offset) {
     super(target)
-
     this.localPosition = position
   }
 

@@ -6,51 +6,18 @@ import { Matrix4, MatrixUtils, Vector3 } from '@at/math'
 import { Gesture, GestureDetector, GestureEventCallback, SanitizedPointerEvent } from '@at/gesture'
 
 import { Object } from './object'
-import { PaintingContext } from './painting-context'
-import { BoxConstraints } from './constraints'
 import { Container } from './container'
 import { Constraints } from './constraints'
+import { PaintingContext } from './painting-context'
+import { BoxConstraints } from './constraints'
 import { BoxHitTestEntry, BoxHitTestResult } from './box-hit-test'
 
 
 import { PipelineOwner } from './pipeline-owner'
 
 
-export enum IntrinsicDimensionKind { 
-  MinWidth, 
-  MaxWidth, 
-  MinHeight, 
-  MaxHeight 
-}
-
-export class IntrinsicDimensionsCacheEntry {
-  public dimension: IntrinsicDimensionKind
-  public argument: number
-
-
-  constructor (
-    dimension: IntrinsicDimensionKind,
-    argument: number
-  ) {
-    this.dimension = dimension
-    this.argument = argument
-  }
-  
-  equal (other: IntrinsicDimensionsCacheEntry | null) {
-    return (
-      other instanceof IntrinsicDimensionsCacheEntry &&
-      other.dimension === this.dimension &&
-      other.argument === this.argument
-    )
-  }
-
-  notEqual (other: IntrinsicDimensionsCacheEntry | null) {
-    return !this.equal(other)
-  }
-}
-
 //// => Box
-// 
+// 盒子选人对象
 export interface BoxFactory<T> {
   new (...rests: unknown[]): T,
   create (...rests: unknown[]): T
@@ -118,6 +85,7 @@ export abstract class Box extends Container {
   }
 
   // => scale
+  // 缩放系数
   protected _scale: number = 1.0
   public get scale () {
     invariant(this._scale !== null, 'The "Box.scale" cannot be null.')
@@ -131,6 +99,7 @@ export abstract class Box extends Container {
   }
 
   // => size
+  // 宽高
   protected _size: Size | null = null
   public get size () {
     return this._size
@@ -143,6 +112,7 @@ export abstract class Box extends Container {
   }
 
   // => offset
+  // 偏移
   protected _offset: Offset = Offset.ZERO
   public get offset () {
     return this._offset
@@ -154,12 +124,14 @@ export abstract class Box extends Container {
   }
   
   // => bounds
+  // 边界
   public get bounds () {
     invariant(this.size !== null)
     return Offset.ZERO.and(this.size)
   }
 
   // => detector
+  // 手势
   protected _detector: GestureDetector | null = null
   public get detector () {
     return this._detector as GestureDetector
@@ -201,103 +173,105 @@ export abstract class Box extends Container {
   }
 
   public transform: Matrix4 | null = null
-  public computingThisDryLayout: boolean = false
   public cachedDryLayoutSizes: Map<BoxConstraints, Size> | null = null
-  public cachedIntrinsicDimensions: Map<IntrinsicDimensionsCacheEntry, number> | null = null
   public cachedBaselines: Map<Skia.TextBaseline, number | null> | null = null
 
   constructor (...rests: unknown[])
   constructor (
-    child: Box | null = null,
+    children: Box[] | null = null,
     ...rests: unknown[]
   ) {
     super()
 
-    if (child !== null) {
-      this.append(child)
+    if (children !== null) {
+      for (const child of children) {
+        this.append(child)
+      }
     }
   }
 
+  /**
+   * 处理事件
+   * @param {SanitizedPointerEvent} event 
+   * @param {BoxHitTestEntry} entry 
+   */
   handleEvent (event: SanitizedPointerEvent, entry: BoxHitTestEntry) {
     this.detector?.handleEvent(event, entry)
   }
 
-  computeIntrinsicDimension (
-    dimension: IntrinsicDimensionKind, 
-    argument: number, 
-    computer: { (argument: number): number }
-  ) {
-    let shouldCache = true
-    
-    if (shouldCache) {
-      this.cachedIntrinsicDimensions ??= new Map<IntrinsicDimensionsCacheEntry, number>()
-      const entry = new IntrinsicDimensionsCacheEntry(dimension, argument)
-
-      for (const [key] of this.cachedIntrinsicDimensions) {
-        if (key.equal(entry)) {
-          return computer(argument)
-        }
+  /**
+   * 标记布局
+   */
+  markNeedsLayout() {
+    if (
+      (
+        this.cachedBaselines !== null && 
+        this.cachedBaselines.size > 0
+      ) ||
+      (
+        this.cachedDryLayoutSizes !== null && 
+        this.cachedDryLayoutSizes.size > 0
+      )
+    ) {
+      this.cachedBaselines?.clear()
+      this.cachedDryLayoutSizes?.clear()
+      
+      if (parent !== null) {
+        return this.markParentNeedsLayout()
       }
-
-      const result = computer(argument)
-      this.cachedIntrinsicDimensions.set(entry, result)
-
-      return result
     }
 
-    return computer(argument)
+    super.markNeedsLayout()
   }
 
-  getMinIntrinsicWidth (height: number) {
-    return this.computeIntrinsicDimension(
-      IntrinsicDimensionKind.MinWidth, 
-      height, 
-      this.computeMinIntrinsicWidth
-    )
-  }
-  
-  computeMinIntrinsicWidth (height: number) {
-    return 0
+  /**
+   * 坐标转换
+   * @param {Offset} point 
+   * @param {Object | null} ancestor 
+   * @returns 
+   */
+  globalToLocal (
+    point: Offset, 
+    ancestor: Object | null = null
+  ) {
+    const transform: Matrix4 = this.getTransformTo(ancestor)
+    const det = transform.invert()
+    
+    if (det === 0.0) {
+      return Offset.ZERO
+    }
+
+    // const n = new Vector3(0.0, 0.0, 1.0)
+    const i = transform.perspectiveTransform(new Vector3(0.0, 0.0, 0.0))
+    const d = transform.perspectiveTransform(new Vector3(0.0, 0.0, 1.0))
+    const s = transform.perspectiveTransform(new Vector3(point.dx, point.dy, 0.0))
+
+    d.subtract(i)
+    // s.subtract(d.multiply(n.dot(s) / n.dot(d)))
+
+    return Offset.create(s.x, s.y)
   }
 
-  getMaxIntrinsicWidth (height: number) {
-    return this.computeIntrinsicDimension(
-      IntrinsicDimensionKind.MaxWidth, 
-      height, 
-      this.computeMaxIntrinsicWidth
-    )
-  }
+  /**
+   * 坐标转换
+   * @param {Offset} point 
+   * @param {Object | null} ancestor 
+   * @returns 
+   */
+  localToGlobal (
+    point: Offset, 
+    ancestor: Object | null = null
+  ) {
+    return MatrixUtils.transformPoint(this.getTransformTo(ancestor), point);
+  }  
 
-  computeMaxIntrinsicWidth (height: number): number {
-    return 0.0
-  }
-
-  getMinIntrinsicHeight (width: number): number {
-    return this.computeIntrinsicDimension(
-      IntrinsicDimensionKind.MinHeight, 
-      width, 
-      this.computeMinIntrinsicHeight
-    )
-  }
-  
-  computeMinIntrinsicHeight (width: number) {
-    return 0
-  }
-
-  getMaxIntrinsicHeight (width: number) {
-    return this.computeIntrinsicDimension(
-      IntrinsicDimensionKind.MaxHeight, 
-      width, 
-      this.computeMaxIntrinsicHeight
-    )
-  }
-
-  computeMaxIntrinsicHeight (width: number) {
-    return 0
-  }
-
+  /**
+   * 获取布局
+   * @param {BoxConstraints} constraints 
+   * @returns {Size}
+   */
   getDryLayout (constraints: BoxConstraints): Size {
-    let shouldCache: boolean = true
+    const shouldCache: boolean = true
     
     if (shouldCache) {
       this.cachedDryLayoutSizes ??= new Map<BoxConstraints, Size>()
@@ -318,64 +292,20 @@ export abstract class Box extends Container {
     return this.computeDryLayout(constraints)
   }
 
+  /**
+   * 计算大小
+   * @param {BoxConstraints} constraints 
+   * @returns 
+   */
   computeDryLayout (constraints: BoxConstraints) {
-    const result = Size.ZERO
-    return result
-  }
-  
-  getDistanceToBaseline (
-    baseline: Skia.TextBaseline, 
-    onlyReal = false 
-  ): number | null {
-    const result = this.getDistanceToActualBaseline(baseline)
-
-    invariant(this.size !== null, `The "Box.size" cannot be null.`)
-
-    if (result === null && !onlyReal) {
-      return this.size.height
-    }
-    return result
+    return Size.ZERO
   }
 
-  getDistanceToActualBaseline (baseline: Skia.TextBaseline): number | null {
-    this.cachedBaselines ??= new Map<Skia.TextBaseline, number | null>()
-
-    if (!this.cachedBaselines.has(baseline)) {
-      this.cachedBaselines.set(baseline, this.computeDistanceToActualBaseline(baseline))
-    }
-
-    return this.cachedBaselines.get(baseline) ?? null
-  }
-
- 
-  computeDistanceToActualBaseline (baseline: Skia.TextBaseline): number | null {
-    return null
-  }
-
-  markParentNeedsLayout () {
-    if (this.parent !== null) {
-      super.markParentNeedsLayout()
-    }
-  }
-  
-  markNeedsLayout() {
-    if (
-      (this.cachedBaselines !== null && this.cachedBaselines.size > 0) ||
-      (this.cachedIntrinsicDimensions !== null && this.cachedIntrinsicDimensions.size > 0) ||
-      (this.cachedDryLayoutSizes !== null && this.cachedDryLayoutSizes.size > 0)
-    ) {
-      this.cachedBaselines?.clear()
-      this.cachedIntrinsicDimensions?.clear()
-      this.cachedDryLayoutSizes?.clear()
-      
-      if (parent !== null) {
-        return this.markParentNeedsLayout()
-      }
-    }
-
-    super.markNeedsLayout()
-  }
-
+  /**
+   * 
+   * @param {Constraints} constraints 
+   * @param {boolean} parentUsesSize 
+   */
   layout (
     constraints: Constraints, 
     parentUsesSize: boolean = false
@@ -392,14 +322,20 @@ export abstract class Box extends Container {
     super.layout(constraints, parentUsesSize)
   }
 
-  
+  /**
+   * 计算布局
+   */
   performResize() {
     this.size = this.computeDryLayout(this.constraints as BoxConstraints)
   }
   
+  /**
+   * 布局
+   */
   performLayout () {
     if (this.child !== null) {
       invariant(this.constraints, 'The "Box.constraints" cannot be null.')
+
       this.child.layout(this.constraints, true)
       this.size = (this.child as Box).size
     } else {
@@ -407,10 +343,20 @@ export abstract class Box extends Container {
     }
   }
 
+  /**
+   * 计算没有子节点大小
+   * @param {BoxConstraints} constraints 
+   * @returns {BoxConstraints}
+   */
   computeSizeForNoChild (constraints: BoxConstraints) {
     return constraints.smallest
   }
   
+  /**
+   * 应用矩阵
+   * @param {Box} child 
+   * @param {Matrix4} transform 
+   */
   applyPaintTransform (
     child: Box, 
     transform: Matrix4
@@ -419,19 +365,26 @@ export abstract class Box extends Container {
     transform.translate(offset.dx, offset.dy)
   }
 
+  /**
+   * 获取矩阵
+   * @param {object | null} ancestor 
+   * @returns 
+   */
   getTransformTo (ancestor?: Object | null) {
     const ancestorSpecified = ancestor !== null
     invariant(this.attached)
     
     if (ancestor === null) {
-      invariant(this.owner)
+      invariant(this.owner, 'The "Box.owner" cannot be null.')
       const root = this.owner.root
+
       if (root instanceof Object) {
         ancestor = root
       }
     }
 
     const renderers: Object[] = []
+
     for (
       let renderer = this as Object; 
       renderer !== ancestor; 
@@ -453,32 +406,55 @@ export abstract class Box extends Container {
     return transform
   }
 
-  globalToLocal (point: Offset, ancestor: Object | null = null) {
-    const transform: Matrix4 = this.getTransformTo(ancestor)
-    const det = transform.invert()
-    
-    if (det === 0.0) {
-      return Offset.ZERO
+  /**
+   * 获取距离
+   * @param {Skia.TextBaseline} baseline 
+   * @param {boolean} onlyReal 
+   * @returns {number | null}
+   */
+  getDistanceToBaseline (
+    baseline: Skia.TextBaseline, 
+    onlyReal = false 
+  ): number | null {
+    const result = this.getDistanceToActualBaseline(baseline)
+    invariant(this.size !== null, `The "Box.size" cannot be null.`)
+
+    if (result === null && !onlyReal) {
+      return this.size.height
     }
 
-    // const n = new Vector3(0.0, 0.0, 1.0)
-    const i = transform.perspectiveTransform(new Vector3(0.0, 0.0, 0.0))
-    const d = transform.perspectiveTransform(new Vector3(0.0, 0.0, 1.0))
-    const s = transform.perspectiveTransform(new Vector3(point.dx, point.dy, 0.0))
-
-    d.subtract(i)
-    // s.subtract(d.multiply(n.dot(s) / n.dot(d)))
-
-    return Offset.create(s.x, s.y)
+    return result
   }
 
-  localToGlobal (
-    point: Offset, 
-    ancestor: Object | null = null
-  ) {
-    return MatrixUtils.transformPoint(this.getTransformTo(ancestor), point);
-  }  
+  /**
+   * 获取距离
+   * @param {Skia.TextBaseline} baseline 
+   * @returns {number | null}
+   */
+  getDistanceToActualBaseline (baseline: Skia.TextBaseline): number | null {
+    this.cachedBaselines ??= new Map<Skia.TextBaseline, number | null>()
 
+    if (!this.cachedBaselines.has(baseline)) {
+      this.cachedBaselines.set(baseline, this.computeDistanceToActualBaseline(baseline))
+    }
+
+    return this.cachedBaselines.get(baseline) ?? null
+  }
+
+  /**
+   * 计算距离
+   * @param {Skia.TextBaseline} baseline 
+   * @returns {number | null}
+   */
+  computeDistanceToActualBaseline (baseline: Skia.TextBaseline): number | null {
+    return null
+  }
+
+  /**
+   * 默认计算距离
+   * @param {Skia.TextBaseline} baseline 
+   * @returns {number | null}
+   */
   defaultComputeDistanceToFirstActualBaseline (baseline: Skia.TextBaseline): number | null {
     let child = this.firstChild as Box
 
@@ -494,6 +470,11 @@ export abstract class Box extends Container {
     return null
   }
 
+  /**
+   * 默认计算距离
+   * @param {Skia.TextBaseline} baseline 
+   * @returns {number | null}
+   */
   defaultComputeDistanceToHighestActualBaseline (baseline: Skia.TextBaseline): number | null {
     let result: number | null = null
     let child: Box | null = this.firstChild as Box
@@ -514,11 +495,16 @@ export abstract class Box extends Container {
     return result
   }
 
+  /**
+   * 默认绘制
+   * @param {PaintingContext} context 
+   * @param {Offset} offset 
+   */
   defaultPaint (
     context: PaintingContext,
     offset: Offset
   ) {
-    let child = this.firstChild as Box
+    let child: Box | null = this.firstChild as Box
     
     while (child !== null) {
       context.paintChild(
@@ -532,6 +518,12 @@ export abstract class Box extends Container {
     }
   }
 
+  /**
+   * 子节点碰撞测试
+   * @param {BoxHitTestResult} result 
+   * @param {Offset} position 
+   * @returns {boolean}
+   */
   defaultHitTestChildren (
     result: BoxHitTestResult, 
     position: Offset
@@ -539,15 +531,10 @@ export abstract class Box extends Container {
     let child: Box | null  = this.lastChild as Box
 
     while (child !== null) {  
-      const isHit = result.addWithPaintOffset(
-        child.offset,
-        position,
-        (result: BoxHitTestResult, transformed: Offset) => {
-          invariant(child)
-          invariant(transformed.equal(position.subtract(child.offset)))
-          return child.hitTest(result, transformed)
-        }
-      )
+      const isHit = result.addWithPaintOffset(child.offset, position, (result: BoxHitTestResult, transformed: Offset) => {
+        invariant(child)
+        return child.hitTest(result, transformed)
+      })
 
       if (isHit) {
         return true
@@ -559,6 +546,12 @@ export abstract class Box extends Container {
     return false
   }
 
+  /**
+   * 自定义子节点碰撞测试
+   * @param {BoxHitTestResult} result 
+   * @param {Offset} position 
+   * @returns {boolean}
+   */
   hitTestChildren (
     result: BoxHitTestResult, 
     position: Offset
@@ -566,21 +559,37 @@ export abstract class Box extends Container {
     return false
   }
 
+  /**
+   * 自身碰撞测试
+   * @param {Offset} position 
+   * @returns {boolean}
+   */
   hitTestSelf (position: Offset) {
     return false
   }
 
+  /**
+   * 碰撞测试
+   * @param {BoxHitTestResult} result 
+   * @param {Offset} position 
+   * @returns {boolean}
+   */
   hitTest (
     result: BoxHitTestResult, 
     position: Offset 
   ) {
     invariant(this.size, 'The "Box.size" cannot be null.')
+
     if (this.size.contains(position)) {
-      if (this.hitTestChildren(result, position) || this.hitTestSelf(position)) {
+      if (
+        this.hitTestChildren(result, position) || 
+        this.hitTestSelf(position)
+      ) {
         result.add(new BoxHitTestEntry(this, position))
         return true
       }
     }
+
     return false
   }
 }
