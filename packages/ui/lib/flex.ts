@@ -336,7 +336,7 @@ export class Flex extends Box {
 
           if (this.crossAxisAlignment === CrossAxisAlignment.Stretch) {
             switch (this.direction) {
-              case Skia.Axis.Horizontal:
+              case Engine.skia.Axis.Horizontal:
                 inner = BoxConstraints.create({
                   minWidth: minChildExtent,
                   maxWidth: maxChildExtent,
@@ -344,7 +344,7 @@ export class Flex extends Box {
                   maxHeight: constraints.maxHeight,
                 })
                 break
-              case Skia.Axis.Vertical:
+              case Engine.skia.Axis.Vertical:
                 inner = BoxConstraints.create({
                   minWidth: constraints.maxWidth,
                   maxWidth: constraints.maxWidth,
@@ -355,14 +355,14 @@ export class Flex extends Box {
             }
           } else {
             switch (this.direction) {
-              case Skia.Axis.Horizontal:
+              case Engine.skia.Axis.Horizontal:
                 inner = BoxConstraints.create({
                   minWidth: minChildExtent,
                   maxWidth: maxChildExtent,
                   maxHeight: constraints.maxHeight,
                 })
                 break
-              case Skia.Axis.Vertical:
+              case Engine.skia.Axis.Vertical:
                 inner = BoxConstraints.create({
                   maxWidth: constraints.maxWidth,
                   minHeight: minChildExtent,
@@ -404,9 +404,9 @@ export class Flex extends Box {
     const sizes = this.computeSizes(constraints, (child) => child.getDryLayout(constraints))
 
     switch (this.direction) {
-      case Skia.Axis.Horizontal:
+      case Engine.skia.Axis.Horizontal:
         return constraints.constrain(Size.create(sizes.mainSize, sizes.crossSize))
-      case Skia.Axis.Vertical:
+      case Engine.skia.Axis.Vertical:
         return constraints.constrain(Size.create(sizes.crossSize, sizes.mainSize))
     }
   }
@@ -451,15 +451,19 @@ export class Flex extends Box {
     }
 
     switch (this.direction) {
-      case Skia.Axis.Horizontal:
+      case Engine.skia.Axis.Horizontal:
         this.size = constraints.constrain(Size.create(actualSize, crossSize))
+        
         invariant(this.size)
+        
         actualSize = this.size.width
         crossSize = this.size.height
         break;
-      case Skia.Axis.Vertical:
+      case Engine.skia.Axis.Vertical:
         this.size = constraints.constrain(Size.create(crossSize, actualSize))
+        
         invariant(this.size)
+        
         actualSize = this.size.height
         crossSize = this.size.width
         break
@@ -556,10 +560,10 @@ export class Flex extends Box {
       }
 
       switch (this.direction) {
-        case Skia.Axis.Horizontal:
+        case Engine.skia.Axis.Horizontal:
           this.offset = Offset.create(childMainPosition, childCrossPosition)
           break
-        case Skia.Axis.Vertical:
+        case Engine.skia.Axis.Vertical:
           this.offset = Offset.create(childCrossPosition, childMainPosition)
           break
       }
@@ -672,9 +676,9 @@ const startIsTopLeft = (
       break
     case Engine.skia.Axis.Horizontal:
       switch (verticalDirection) {
-        case Skia.VerticalDirection.Down:
+        case Engine.skia.VerticalDirection.Down:
           return true
-        case Skia.VerticalDirection.Up:
+        case Engine.skia.VerticalDirection.Up:
           return false
         case null:
           return null
