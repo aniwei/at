@@ -1,0 +1,34 @@
+{
+  "name": "@at/mouse",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "index.d.ts"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "types/lib",
+  "exports": {
+    "types": "./types/lib/index.d.ts",
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
+  },
+  "scripts": {
+    "dev": "vite",
+    "test": "vitest",
+    "build": "tsc && vite build"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vite": "^5.0.10"
+  },
+  "dependencies": {
+    "@at/basic": "workspace:^",
+    "@at/geometry": "workspace:^",
+    "@at/gesture": "workspace:^",
+    "@at/math": "workspace:^",
+    "@at/utils": "workspace:^"
+  }
+}

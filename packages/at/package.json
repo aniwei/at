@@ -1,0 +1,45 @@
+{
+  "name": "@at/core",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "index.d.ts"
+  ],
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "types/lib",
+  "exports": {
+    "types": "./types/lib/index.d.ts",
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build"
+  },
+  "devDependencies": {
+    "@rollup/plugin-inject": "^5.0.5",
+    "@types/bytes": "^3.1.1",
+    "@types/node": "^20.8.10",
+    "ts-invariant": "^0.10.3",
+    "typescript": "^5.1.3",
+    "vite": "^4.3.9",
+    "vitest": "^0.28.3"
+  },
+  "dependencies": {
+    "@at/api": "workspace:^",
+    "@at/asset": "workspace:^",
+    "@at/basic": "workspace:^",
+    "@at/document": "workspace:^",
+    "@at/engine": "workspace:^",
+    "@at/geometry": "workspace:^",
+    "@at/gesture": "workspace:^",
+    "@at/mouse": "workspace:^",
+    "@at/painting": "workspace:^",
+    "@at/ui": "workspace:^",
+    "@at/utils": "workspace:^",
+    "canvaskit-wasm": "^0.38.0"
+  }
+}

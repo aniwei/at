@@ -1,0 +1,27 @@
+{
+  "protocol": "protocol.json",
+  "fonts": [
+    {
+      "family": "Roboto",
+      "dir": "fonts/roboto.ttf"
+    },
+    {
+      "family": "PingFang",
+      "dir": "fonts/pingfang.otf"
+    },
+    {
+      "family": "SourceHanSansSC-VF",
+      "dir": "fonts/SourceHanSansSC-VF.ttf"
+    }
+  ],
+  "theme": {
+    "highlightColor": [0, 110, 243, 1],
+    "layerBackgroundColor": [217, 217, 217, 1],
+    "layerHighlightColor": [0, 110, 243, 1],
+    "layerBorderColor": [0, 110, 243, 1],
+    "layerBorderWidth": 1.5,
+    "layerAnchorBorderColor": [0, 110, 243, 1],
+    "layerAnchorColor": [255, 255, 255, 1],
+    "layerAnchorWidth": 8
+  }
+}

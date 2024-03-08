@@ -1,0 +1,81 @@
+{
+  "version": "0.1.0",
+  "domains": [
+    {
+      "domain": "Stage",
+      "description": "",
+      "dependencies": [
+        "Runtime"
+      ],
+      "types": [],
+      "commands": [
+        {
+          "name": "dispatchDragEvent",
+          "description": "",
+          "parameters": [
+            {
+              "name": "type",
+              "description": "Type of the drag event.",
+              "type": "string",
+              "enum": [
+                "dragStart",
+                "dragUpdate",
+                "dropEnd"
+              ]
+            },
+            {
+              "name": "x",
+              "description": "X coordinate of the event relative to the main frame's viewport in CSS pixels.",
+              "type": "number"
+            },
+            {
+              "name": "y",
+              "description": "Y coordinate of the event relative to the main frame's viewport in CSS pixels. 0 refers to\nthe top of the viewport and Y increases as it proceeds towards the bottom of the viewport.",
+              "type": "number"
+            }
+          ]
+        }
+      ],
+      "events": [
+        {
+
+        }
+      ]
+    },
+    {
+      "domain": "Layer",
+      "description": "",
+      "dependencies": [
+        "Runtime"
+      ],
+      "types": [],
+      "commands": [
+        {
+          "name": "requestLayer",
+          "description": ""
+        },
+        {
+          "name": "hideHighlight",
+          "description": "Hides any highlight.",
+          "redirect": "Overlay"
+        },
+        {
+          "name": "highlightLayer",
+          "description": "Highlights layer.",
+          "redirect": "Overlay"
+        },
+        {
+          "name": "removeLayer",
+          "description": "Removes layer with given id.",
+          "parameters": [
+            {
+              "name": "layerId",
+              "description": "Id of the layer to remove.",
+              "$ref": "LayerId"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

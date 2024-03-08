@@ -1,0 +1,109 @@
+{
+  "version": "1.0.0",
+  "domains": [
+    {
+      "name": "engine",
+      "description": "引擎接口",
+      "dependencies": [],
+      "types": [],
+      "commands": [
+       
+      ],
+      "events": [
+        {
+          "name": "publish",
+          "description": "发布事件",
+          "parameters": [{
+            "name": "name",
+            "type": "enum",
+            "description": "事件名称",
+            "enum": [
+              "runtime.state.change",
+              "runtime.lifecycle.change",
+              "resource.canvaskit.loader.change",
+              "resource.fonts.loader.change",
+              "pipeline.phase.change",
+              "schedule.phase.change",
+              "view.composite.start",
+              "view.composite.end",
+              "document.state.change",
+              "system.cursor.change"
+            ]
+          }, {
+            "name": "parameters",
+            "type": "any",
+            "description": "事件数据"
+          }]
+        }
+      ]
+    },
+    {
+      "name": "client",
+      "description": "客户端接口",
+      "dependencies": [],
+      "types": [],
+      "commands": [
+        
+      ],
+      "events": [
+        {
+          "name": "publish",
+          "description": "发布事件",
+          "parameters": [{
+            "name": "name",
+            "type": "enum",
+            "description": "事件名称",
+            "enum": [
+              "pointer.event",
+              "viewport.resize"
+            ]
+          }, {
+            "name": "parameters",
+            "type": "object",
+            "description": "事件数据"
+          }]
+        }
+      ]
+    }, {
+      "name": "document",
+      "description": "文档接口",
+      "dependencies": [],
+      "types": [],
+      "commands": [
+        {
+          "name": "load",
+          "description": "加载文档",
+          "parameters": [{
+            "name": "uri",
+            "type": "string"
+          }, {
+            "name": "options",
+            "type": "object",
+            "optional": true
+          }]
+        }
+      ],
+      "events": [
+        {
+          "name": "publish",
+          "description": "发布事件",
+          "parameters": [{
+            "name": "name",
+            "type": "enum",
+            "description": "事件名称",
+            "enum": [
+              "statechange",
+              "progress",
+              "error",
+              "end"
+            ]
+          }, {
+            "name": "parameters",
+            "type": "any",
+            "description": "事件数据"
+          }]
+        }
+      ]
+    }
+  ]
+}
